@@ -19,7 +19,7 @@ class TenantsRepository {
   Future<void> addTenant(
           {required String uid,
           required String name,
-          required Float amount}) async =>
+          required int amount}) async =>
       _firestore
           .collection(tenantsPath(uid))
           .add({'name': name, 'amount': amount});
@@ -58,6 +58,13 @@ class TenantsRepository {
 @Riverpod(keepAlive: true)
 TenantsRepository tenantsRepository(Ref ref) {
   return TenantsRepository(FirebaseFirestore.instance);
+}
+
+@Riverpod(keepAlive: true)
+Stream<List<Tenant>> tenantsStream(Ref ref) {
+  final user = ref.watch(firebaseAuthProvider).currentUser!;
+  final repository = ref.watch(tenantsRepositoryProvider);
+  return repository.watchTenants(uid: user.uid);
 }
 
 @riverpod

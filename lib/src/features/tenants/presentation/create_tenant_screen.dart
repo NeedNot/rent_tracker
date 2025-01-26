@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 
 class CreateTenantScreen extends StatelessWidget {
   @override
@@ -8,7 +9,7 @@ class CreateTenantScreen extends StatelessWidget {
         title: Text("Create tenant"),
         centerTitle: true,
       ),
-      body: Center(child: const Text("Create tenant")),
+      body: Text("Create tenant"),
     );
   }
 }

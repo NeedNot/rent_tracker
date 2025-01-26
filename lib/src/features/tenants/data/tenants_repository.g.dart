@@ -23,6 +23,23 @@ final tenantsRepositoryProvider = Provider<TenantsRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TenantsRepositoryRef = ProviderRef<TenantsRepository>;
+String _$tenantsStreamHash() => r'064d69f0075f3640e71637b487b70df216904de1';
+
+/// See also [tenantsStream].
+@ProviderFor(tenantsStream)
+final tenantsStreamProvider = StreamProvider<List<Tenant>>.internal(
+  tenantsStream,
+  name: r'tenantsStreamProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$tenantsStreamHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef TenantsStreamRef = StreamProviderRef<List<Tenant>>;
 String _$tenantStreamHash() => r'e4e4b05f5bbf911a8a07a991872e7bcee2029401';
 
 /// Copied from Dart SDK
