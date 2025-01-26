@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/authentication/presentation/custom_login_screen.dart';
+import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen.dart';
 import 'package:rent_tracker/src/routing/go_router_refresh_stream.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,7 +27,7 @@ GoRouter goRouter(Ref ref) {
         return "/login";
       }
       if (isLoggedIn && path.startsWith("/login")) {
-        return "/";
+        return "/tenants";
       }
       return null;
     },
@@ -40,9 +41,17 @@ GoRouter goRouter(Ref ref) {
       ),
       GoRoute(
         name: AppRoute.home.name,
-        path: "/",
+        path: "/tenants",
         pageBuilder: (context, state) =>
-            const NoTransitionPage(child: Text("Home")),
+            const NoTransitionPage(child: TenantsScreen()),
+        routes: [
+          GoRoute(
+            name: AppRoute.createTenant.name,
+            path: "/create",
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: Text("create")),
+          ),
+        ],
       ),
     ],
   );
