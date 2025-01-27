@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
@@ -40,6 +41,24 @@ class EditTenantScreenController extends _$EditTenantScreenController {
 
     state = await AsyncValue.guard(
         () => repository.deleteTenant(uid: currentUser.uid, id: id));
+    return state.hasError == false;
+  }
+
+  Future<bool> markTenantPayment(
+      {required String id, required DateTime month, required bool paid}) async {
+    final currentUser = ref.watch(firebaseAuthProvider).currentUser!;
+
+    state = const AsyncLoading().copyWithPrevious(state);
+
+    state = await AsyncValue.guard(() async {
+      ref.read(tenantsRepositoryProvider).markTenantPayment(
+            uid: currentUser.uid,
+            id: id,
+            month: DateFormat('yyyy-MM').format(month),
+            paid: paid,
+          );
+    });
+
     return state.hasError == false;
   }
 }

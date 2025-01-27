@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
+import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen_controller.dart';
+import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen_controller.dart';
 import 'package:rent_tracker/src/routing/app_router.dart';
 
 class EditTenantScreen extends ConsumerStatefulWidget {
@@ -117,7 +121,13 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
           ),
         ],
       ),
-      body: _buildContents(),
+      body: Column(children: [
+        _buildContents(),
+        if (widget.tenant != null)
+          Expanded(
+            child: _TenantPaymentHistory(id: widget.tenant!.id),
+          )
+      ]),
     );
   }
 
@@ -180,4 +190,65 @@ String? unsignedIntValidator(String? value) {
   }
 
   return null;
+}
+
+class _TenantPaymentHistory extends ConsumerWidget {
+  const _TenantPaymentHistory({required this.id});
+
+  final String id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tenantStream = ref.watch(tenantStreamProvider(id));
+
+    return tenantStream.when(
+        data: (tenant) => Builder(builder: (context) {
+              final oldestDate = tenant.createdAt;
+              final monthsSince =
+                  DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
+              return ListView.builder(
+                itemBuilder: (context, index) {
+                  final month =
+                      DateUtils.addMonthsToMonthDate(oldestDate, index);
+                  return ListTile(
+                    title: Text(DateFormat('MMMM yyyy').format(month)),
+                    subtitle: Text("\$${tenant.amount}"),
+                    trailing: IntrinsicWidth(
+                      child: Row(
+                        mainAxisSize: MainAxisSize
+                            .min, // Shrink the Row to the minimum size
+                        children: [
+                          Text("Has paid",
+                              style: Theme.of(context).textTheme.bodyLarge),
+                          Checkbox.adaptive(
+                            value: tenant
+                                .payments[DateFormat('yyyy-MM').format(month)],
+                            onChanged: (value) => {
+                              if (value != null)
+                                {
+                                  ref
+                                      .read(editTenantScreenControllerProvider
+                                          .notifier)
+                                      .markTenantPayment(
+                                          id: tenant.id,
+                                          month: month,
+                                          paid: value)
+                                }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                itemCount: monthsSince,
+              );
+            }),
+        error: (error, stack) {
+          debugPrint('Error: $error');
+          debugPrint('Stack: $stack');
+          return Center(child: Text(error.toString()));
+        },
+        loading: () => const Center(child: CircularProgressIndicator()));
+  }
 }
