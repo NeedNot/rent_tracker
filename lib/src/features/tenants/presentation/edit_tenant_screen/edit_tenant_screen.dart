@@ -5,16 +5,15 @@ import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen_controller.dart';
 import 'package:rent_tracker/src/routing/app_router.dart';
 
-class CreateTenantScreen extends ConsumerStatefulWidget {
-  const CreateTenantScreen({super.key, this.id, this.tenant});
-  final String? id;
+class EditTenantScreen extends ConsumerStatefulWidget {
+  const EditTenantScreen({super.key, this.tenant});
   final Tenant? tenant;
 
   @override
-  ConsumerState<CreateTenantScreen> createState() => _CreateTenantScreenState();
+  ConsumerState<EditTenantScreen> createState() => _CreateTenantScreenState();
 }
 
-class _CreateTenantScreenState extends ConsumerState<CreateTenantScreen> {
+class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String? _name;
@@ -52,6 +51,35 @@ class _CreateTenantScreenState extends ConsumerState<CreateTenantScreen> {
     }
   }
 
+  Future<void> _delete(BuildContext context) async {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Delete Tenant?'),
+            content: const Text('Are you sure you want to delete this tenant?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => context.pop(),
+              ),
+              TextButton(
+                child: const Text('Delete'),
+                onPressed: () async {
+                  final success = await ref
+                      .read(editTenantScreenControllerProvider.notifier)
+                      .delete(widget.tenant!.id);
+                  if (success && mounted) {
+                    context.pop();
+                    context.pop();
+                  }
+                },
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue>(
@@ -77,8 +105,12 @@ class _CreateTenantScreenState extends ConsumerState<CreateTenantScreen> {
     final state = ref.watch(editTenantScreenControllerProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.id == null ? 'Create Tenant' : 'Edit Tenant'),
+        title: Text(widget.tenant == null ? 'Create Tenant' : 'Edit Tenant'),
         actions: <Widget>[
+          TextButton(
+            onPressed: state.isLoading ? null : () => _delete(context),
+            child: const Text('Delete'),
+          ),
           TextButton(
             onPressed: state.isLoading ? null : _submit,
             child: const Text('Save'),

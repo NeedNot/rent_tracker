@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/authentication/presentation/custom_login_screen.dart';
+import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen.dart';
 import 'package:rent_tracker/src/routing/go_router_refresh_stream.dart';
@@ -12,7 +13,7 @@ part 'app_router.g.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-enum AppRoute { home, login, createTenant, manageTenant }
+enum AppRoute { home, login, createTenant, editTenant }
 
 @riverpod
 GoRouter goRouter(Ref ref) {
@@ -48,10 +49,22 @@ GoRouter goRouter(Ref ref) {
         routes: [
           GoRoute(
             name: AppRoute.createTenant.name,
-            path: "/create",
+            path: "create",
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CreateTenantScreen()),
+                const NoTransitionPage(child: EditTenantScreen()),
           ),
+          GoRoute(
+            path: ":id",
+            name: AppRoute.editTenant.name,
+            pageBuilder: (context, state) {
+              final tenant = state.extra! as Tenant;
+              return MaterialPage(
+                child: EditTenantScreen(
+                  tenant: tenant,
+                ),
+              );
+            },
+          )
         ],
       ),
     ],

@@ -133,10 +133,12 @@ class _TenantStatus extends StatelessWidget {
       {super.key,
       required this.tenant,
       required this.hasPaid,
-      required this.onSetPayment});
+      required this.onSetPayment,
+      this.onTap});
   final Tenant tenant;
   final bool hasPaid;
   final void Function(bool) onSetPayment;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -164,6 +166,7 @@ class _TenantStatus extends StatelessWidget {
           ],
         ),
       ),
+      onTap: onTap,
     );
   }
 }
@@ -200,14 +203,17 @@ class _MonthStatus extends ConsumerWidget {
             final hasPaid =
                 tenant.payments[DateFormat('yyyy-MM').format(month)] == true;
             return _TenantStatus(
-                tenant: tenant,
-                hasPaid: hasPaid,
-                onSetPayment: (value) {
-                  ref
-                      .read(tenantsScreenControllerProvider.notifier)
-                      .markTenantPayment(
-                          id: tenant.id, month: month, paid: value);
-                });
+              tenant: tenant,
+              hasPaid: hasPaid,
+              onSetPayment: (value) {
+                ref
+                    .read(tenantsScreenControllerProvider.notifier)
+                    .markTenantPayment(
+                        id: tenant.id, month: month, paid: value);
+              },
+              onTap: () => context.goNamed(AppRoute.editTenant.name,
+                  pathParameters: {"id": tenant.id}, extra: tenant),
+            );
           },
           itemCount: filteredTenants.length,
         ),
