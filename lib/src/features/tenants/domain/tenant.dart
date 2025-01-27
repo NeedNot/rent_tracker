@@ -26,7 +26,8 @@ class Tenant extends Equatable {
   factory Tenant.fromMap(Map<String, dynamic> data, String id) {
     final name = data['name'] as String;
     final amount = data['amount'] as int;
-    final createdAt = (data['created_at'] as Timestamp).toDate();
+    final createdAt =
+        ((data['created_at'] ?? Timestamp.now()) as Timestamp).toDate();
     final payments = (data['payments'] as Map<String, dynamic>? ?? {})
         .map((key, value) => MapEntry(key, value == true));
     return Tenant(

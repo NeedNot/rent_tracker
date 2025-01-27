@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/authentication/presentation/custom_login_screen.dart';
+import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen.dart';
 import 'package:rent_tracker/src/routing/go_router_refresh_stream.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -49,7 +50,7 @@ GoRouter goRouter(Ref ref) {
             name: AppRoute.createTenant.name,
             path: "/create",
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: Text("create")),
+                const NoTransitionPage(child: CreateTenantScreen()),
           ),
         ],
       ),

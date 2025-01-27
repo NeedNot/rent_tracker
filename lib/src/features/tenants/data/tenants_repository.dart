@@ -18,13 +18,20 @@ class TenantsRepository {
           {required String uid,
           required String name,
           required int amount}) async =>
-      _firestore
-          .collection(tenantsPath(uid))
-          .add({'name': name, 'amount': amount});
+      _firestore.collection(tenantsPath(uid)).add({
+        'name': name,
+        'amount': amount,
+        'created_at': FieldValue.serverTimestamp()
+      });
 
   Future<void> updateTenant(
-          {required String uid, required Tenant tenant}) async =>
-      _firestore.doc(tenantPath(uid, tenant.id)).update(tenant.toMap());
+          {required String uid,
+          required String id,
+          required String name,
+          required int amount}) async =>
+      _firestore
+          .doc(tenantPath(uid, id))
+          .update({'name': name, 'amount': amount});
 
   Future<void> markTenantPayment({
     required String uid,
