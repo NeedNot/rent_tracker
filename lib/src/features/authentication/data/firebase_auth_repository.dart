@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'firebase_auth_repository.g.dart';
@@ -19,7 +20,10 @@ class AuthRepository {
           {required String email, required String password}) =>
       _auth.createUserWithEmailAndPassword(email: email, password: password);
 
-  Future<void>? signOut() => _auth.signOut();
+  Future<void>? signOut() async {
+    await _auth.signOut();
+    await GoogleSignIn().signOut();
+  }
 }
 
 @Riverpod(keepAlive: true)
