@@ -67,7 +67,7 @@ TenantsRepository tenantsRepository(Ref ref) {
   return TenantsRepository(FirebaseFirestore.instance);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<List<Tenant>> tenantsStream(Ref ref) {
   final user = ref.watch(firebaseAuthProvider).currentUser!;
   final repository = ref.watch(tenantsRepositoryProvider);
