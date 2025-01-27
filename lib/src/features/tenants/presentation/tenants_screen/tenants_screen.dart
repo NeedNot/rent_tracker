@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
+import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen_controller.dart';
 import 'package:rent_tracker/src/routing/app_router.dart';
 
 class TenantsScreen extends StatelessWidget {
@@ -37,16 +39,35 @@ class TenantsScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: tenantsStream.when(
                 data: (tenants) {
+                  tenants.sort((tenant1, tenant2) =>
+                      tenant1.createdAt.compareTo(tenant2.createdAt));
+                  final oldestDate = tenants.first.createdAt;
+                  final monthsSince =
+                      DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
                   return ListView.builder(
-                    itemCount: tenants.length,
+                    padding: const EdgeInsets.only(bottom: 64),
+                    itemCount: monthsSince,
                     itemBuilder: (context, index) {
-                      final tenant = tenants[index];
-                      return _TenantStatus(tenant: tenant, hasPaid: false);
+                      final month =
+                          DateUtils.addMonthsToMonthDate(oldestDate, index);
+                      final filteredTenants = tenants.where((tenant) {
+                        final tenantDate = tenant.createdAt;
+                        return tenantDate.difference(month).isNegative ||
+                            DateUtils.isSameMonth(month, tenantDate);
+                      }).toList();
+                      return _MonthStatus(
+                        month: month,
+                        tenants: filteredTenants,
+                      );
                     },
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
+                error: (error, stack) {
+                  debugPrint('Error: $error');
+                  debugPrint('Stack: $stack');
+                  return Center(child: Text(error.toString()));
+                },
               ),
             );
           },
@@ -108,9 +129,14 @@ class _ProfileMenu extends ConsumerWidget {
 }
 
 class _TenantStatus extends StatelessWidget {
-  const _TenantStatus({super.key, required this.tenant, required this.hasPaid});
+  const _TenantStatus(
+      {super.key,
+      required this.tenant,
+      required this.hasPaid,
+      required this.onSetPayment});
   final Tenant tenant;
   final bool hasPaid;
+  final void Function(bool) onSetPayment;
 
   @override
   Widget build(BuildContext context) {
@@ -131,11 +157,61 @@ class _TenantStatus extends StatelessWidget {
             Text("Has paid", style: textTheme.bodyLarge),
             Checkbox.adaptive(
               value: hasPaid,
-              onChanged: (_) => {},
+              onChanged: (value) => {
+                if (value != null) {onSetPayment(value)}
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MonthStatus extends ConsumerWidget {
+  const _MonthStatus({super.key, required this.month, required this.tenants});
+  final DateTime month;
+  final List<Tenant> tenants;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isCurrentMonth = DateUtils.isSameMonth(month, DateTime.now());
+    final filteredTenants = tenants
+        .where((tenant) =>
+            isCurrentMonth ||
+            tenant.payments[DateFormat('yyyy-MM').format(month)] != true)
+        .toList();
+
+    if (filteredTenants.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        //month, year
+        Text(DateFormat('MMMM yyyy').format(month),
+            style: Theme.of(context).textTheme.headlineMedium),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            final tenant = filteredTenants[index];
+            final hasPaid =
+                tenant.payments[DateFormat('yyyy-MM').format(month)] == true;
+            return _TenantStatus(
+                tenant: tenant,
+                hasPaid: hasPaid,
+                onSetPayment: (value) {
+                  ref
+                      .read(tenantsScreenControllerProvider.notifier)
+                      .markTenantPayment(
+                          id: tenant.id, month: month, paid: value);
+                });
+          },
+          itemCount: filteredTenants.length,
+        ),
+      ],
     );
   }
 }

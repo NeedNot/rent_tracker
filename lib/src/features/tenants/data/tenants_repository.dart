@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
@@ -27,6 +25,15 @@ class TenantsRepository {
   Future<void> updateTenant(
           {required String uid, required Tenant tenant}) async =>
       _firestore.doc(tenantPath(uid, tenant.id)).update(tenant.toMap());
+
+  Future<void> markTenantPayment({
+    required String uid,
+    required String id,
+    required String month,
+    required bool paid,
+  }) async {
+    _firestore.doc(tenantPath(uid, id)).update({'payments.$month': paid});
+  }
 
   Future<void> deleteTenant({required String uid, required String id}) async {
     // todo delete payments associated with tenant

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 @immutable
 class Tenant extends Equatable {
@@ -8,11 +9,13 @@ class Tenant extends Equatable {
       {required this.id,
       required this.name,
       required this.amount,
-      required this.createdAt});
+      required this.createdAt,
+      required this.payments});
   final String id;
   final String name;
   final int amount;
   final DateTime createdAt;
+  final Map<String, bool> payments;
 
   @override
   List<Object?> get props => [name, amount, createdAt];
@@ -24,7 +27,14 @@ class Tenant extends Equatable {
     final name = data['name'] as String;
     final amount = data['amount'] as int;
     final createdAt = (data['created_at'] as Timestamp).toDate();
-    return Tenant(id: id, name: name, amount: amount, createdAt: createdAt);
+    final payments = (data['payments'] as Map<String, dynamic>? ?? {})
+        .map((key, value) => MapEntry(key, value == true));
+    return Tenant(
+        id: id,
+        name: name,
+        amount: amount,
+        createdAt: createdAt,
+        payments: payments);
   }
 
   Map<String, dynamic> toMap() {
