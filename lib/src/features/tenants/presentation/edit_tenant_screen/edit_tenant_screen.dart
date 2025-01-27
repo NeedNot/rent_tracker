@@ -19,6 +19,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
 
   String? _name;
   int? _amount;
+  String? _note;
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
     if (widget.tenant != null) {
       _name = widget.tenant?.name;
       _amount = widget.tenant?.amount;
+      _note = widget.tenant?.note;
     }
   }
 
@@ -45,6 +47,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
                 oldTenant: widget.tenant,
                 name: _name ?? '',
                 amount: _amount ?? 0,
+                note: _note,
               );
       if (success && mounted) {
         context.pop();
@@ -156,7 +159,6 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
     return [
       TextFormField(
         decoration: const InputDecoration(labelText: 'Tenant name'),
-        keyboardAppearance: Brightness.light,
         initialValue: _name,
         validator: (value) =>
             (value ?? '').isNotEmpty ? null : 'Name can\'t be empty',
@@ -165,7 +167,6 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
       const SizedBox(height: 16),
       TextFormField(
         decoration: const InputDecoration(labelText: 'Rent amount'),
-        keyboardAppearance: Brightness.light,
         initialValue: _amount != null ? '$_amount' : null,
         keyboardType: const TextInputType.numberWithOptions(
           signed: false,
@@ -173,6 +174,12 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
         ),
         validator: unsignedIntValidator,
         onSaved: (value) => _amount = int.tryParse(value ?? '') ?? 0,
+      ),
+      const SizedBox(height: 16),
+      TextFormField(
+        decoration: const InputDecoration(labelText: 'Note'),
+        initialValue: _note != null ? '$_note' : null,
+        onSaved: (value) => _note = value,
       ),
     ];
   }

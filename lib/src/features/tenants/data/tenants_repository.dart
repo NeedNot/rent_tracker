@@ -17,21 +17,24 @@ class TenantsRepository {
   Future<void> addTenant(
           {required String uid,
           required String name,
-          required int amount}) async =>
+          required int amount,
+          required String? note}) async =>
       _firestore.collection(tenantsPath(uid)).add({
         'name': name,
         'amount': amount,
-        'created_at': FieldValue.serverTimestamp()
+        'created_at': FieldValue.serverTimestamp(),
+        'note': note
       });
 
   Future<void> updateTenant(
           {required String uid,
           required String id,
           required String name,
-          required int amount}) async =>
+          required int amount,
+          required String? note}) async =>
       _firestore
           .doc(tenantPath(uid, id))
-          .update({'name': name, 'amount': amount});
+          .update({'name': name, 'amount': amount, 'note': note});
 
   Future<void> markTenantPayment(
       {required String uid,

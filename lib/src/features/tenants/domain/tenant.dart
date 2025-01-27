@@ -9,12 +9,14 @@ class Tenant extends Equatable {
       required this.name,
       required this.amount,
       required this.createdAt,
-      required this.payments});
+      required this.payments,
+      required this.note});
   final String id;
   final String name;
   final int amount;
   final DateTime createdAt;
   final Map<String, int> payments;
+  final String? note;
 
   @override
   List<Object?> get props => [name, amount, createdAt];
@@ -29,15 +31,17 @@ class Tenant extends Equatable {
         ((data['created_at'] ?? Timestamp.now()) as Timestamp).toDate();
     final payments = (data['payments'] as Map<String, dynamic>? ?? {})
         .map((key, value) => MapEntry(key, value as int));
+    final note = data['note'] as String?;
     return Tenant(
         id: id,
         name: name,
         amount: amount,
         createdAt: createdAt,
-        payments: payments);
+        payments: payments,
+        note: note);
   }
 
   Map<String, dynamic> toMap() {
-    return {'name': name, "amount": amount};
+    return {'name': name, "amount": amount, "note": note};
   }
 }

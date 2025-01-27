@@ -12,7 +12,10 @@ class EditTenantScreenController extends _$EditTenantScreenController {
   FutureOr<void> build() {}
 
   Future<bool> submit(
-      {Tenant? oldTenant, required String name, required int amount}) async {
+      {Tenant? oldTenant,
+      required String name,
+      required int amount,
+      required String? note}) async {
     final currentUser = ref.read(authRepositoryProvider).currentUser!;
 
     state = const AsyncLoading().copyWithPrevious(state);
@@ -21,12 +24,12 @@ class EditTenantScreenController extends _$EditTenantScreenController {
     if (oldTenant != null) {
       state = await AsyncValue.guard(
         () => repository.updateTenant(
-            uid: currentUser.uid, id: oldTenant.id, name: name, amount: amount),
+            uid: currentUser.uid, id: oldTenant.id, name: name, amount: amount, note: note),
       );
     } else {
       state = await AsyncValue.guard(
         () => repository.addTenant(
-            uid: currentUser.uid, name: name, amount: amount),
+            uid: currentUser.uid, name: name, amount: amount, note: note),
       );
     }
     return state.hasError == false;
