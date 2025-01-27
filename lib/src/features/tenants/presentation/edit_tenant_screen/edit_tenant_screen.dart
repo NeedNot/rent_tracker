@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen_controller.dart';
-import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen_controller.dart';
-import 'package:rent_tracker/src/routing/app_router.dart';
 
 class EditTenantScreen extends ConsumerStatefulWidget {
   const EditTenantScreen({super.key, this.tenant});
@@ -111,10 +108,11 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
       appBar: AppBar(
         title: Text(widget.tenant == null ? 'Create Tenant' : 'Edit Tenant'),
         actions: <Widget>[
-          TextButton(
-            onPressed: state.isLoading ? null : () => _delete(context),
-            child: const Text('Delete'),
-          ),
+          if (widget.tenant != null)
+            TextButton(
+              onPressed: state.isLoading ? null : () => _delete(context),
+              child: const Text('Delete'),
+            ),
           TextButton(
             onPressed: state.isLoading ? null : _submit,
             child: const Text('Save'),
@@ -210,9 +208,11 @@ class _TenantPaymentHistory extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final month =
                       DateUtils.addMonthsToMonthDate(oldestDate, index);
+                  final payment =
+                      tenant.payments[DateFormat('yyyy-MM').format(month)] ?? 0;
                   return ListTile(
                     title: Text(DateFormat('MMMM yyyy').format(month)),
-                    subtitle: Text("\$${tenant.amount}"),
+                    subtitle: Text("\$$payment"),
                     trailing: IntrinsicWidth(
                       child: Row(
                         mainAxisSize: MainAxisSize
@@ -221,8 +221,7 @@ class _TenantPaymentHistory extends ConsumerWidget {
                           Text("Has paid",
                               style: Theme.of(context).textTheme.bodyLarge),
                           Checkbox.adaptive(
-                            value: tenant
-                                .payments[DateFormat('yyyy-MM').format(month)],
+                            value: payment > 0,
                             onChanged: (value) => {
                               if (value != null)
                                 {
@@ -232,7 +231,7 @@ class _TenantPaymentHistory extends ConsumerWidget {
                                       .markTenantPayment(
                                           id: tenant.id,
                                           month: month,
-                                          paid: value)
+                                          amountPaid: value ? tenant.amount : 0)
                                 }
                             },
                           ),

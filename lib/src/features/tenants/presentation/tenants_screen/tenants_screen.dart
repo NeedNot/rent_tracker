@@ -182,7 +182,7 @@ class _MonthStatus extends ConsumerWidget {
     final filteredTenants = tenants
         .where((tenant) =>
             isCurrentMonth ||
-            tenant.payments[DateFormat('yyyy-MM').format(month)] != true)
+            (tenant.payments[DateFormat('yyyy-MM').format(month)] ?? 0) == 0)
         .toList();
 
     if (filteredTenants.isEmpty) {
@@ -201,7 +201,7 @@ class _MonthStatus extends ConsumerWidget {
           itemBuilder: (context, index) {
             final tenant = filteredTenants[index];
             final hasPaid =
-                tenant.payments[DateFormat('yyyy-MM').format(month)] == true;
+                (tenant.payments[DateFormat('yyyy-MM').format(month)] ?? 0) > 0;
             return _TenantStatus(
               tenant: tenant,
               hasPaid: hasPaid,
@@ -209,7 +209,9 @@ class _MonthStatus extends ConsumerWidget {
                 ref
                     .read(tenantsScreenControllerProvider.notifier)
                     .markTenantPayment(
-                        id: tenant.id, month: month, paid: value);
+                        id: tenant.id,
+                        month: month,
+                        amountPaid: value ? tenant.amount : 0);
               },
               onTap: () => context.goNamed(AppRoute.editTenant.name,
                   pathParameters: {"id": tenant.id}, extra: tenant),

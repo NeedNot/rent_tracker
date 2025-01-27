@@ -45,7 +45,9 @@ class EditTenantScreenController extends _$EditTenantScreenController {
   }
 
   Future<bool> markTenantPayment(
-      {required String id, required DateTime month, required bool paid}) async {
+      {required String id,
+      required DateTime month,
+      required int amountPaid}) async {
     final currentUser = ref.watch(firebaseAuthProvider).currentUser!;
 
     state = const AsyncLoading().copyWithPrevious(state);
@@ -55,7 +57,7 @@ class EditTenantScreenController extends _$EditTenantScreenController {
             uid: currentUser.uid,
             id: id,
             month: DateFormat('yyyy-MM').format(month),
-            paid: paid,
+            amountPaid: amountPaid,
           );
     });
 

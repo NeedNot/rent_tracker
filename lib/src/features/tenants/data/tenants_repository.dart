@@ -33,13 +33,12 @@ class TenantsRepository {
           .doc(tenantPath(uid, id))
           .update({'name': name, 'amount': amount});
 
-  Future<void> markTenantPayment({
-    required String uid,
-    required String id,
-    required String month,
-    required bool paid,
-  }) async {
-    _firestore.doc(tenantPath(uid, id)).update({'payments.$month': paid});
+  Future<void> markTenantPayment(
+      {required String uid,
+      required String id,
+      required String month,
+      required int amountPaid}) async {
+    _firestore.doc(tenantPath(uid, id)).update({'payments.$month': amountPaid});
   }
 
   Future<void> deleteTenant({required String uid, required String id}) async {
