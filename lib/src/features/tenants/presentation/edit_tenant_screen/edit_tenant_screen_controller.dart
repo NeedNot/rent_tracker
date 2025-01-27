@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';

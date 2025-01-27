@@ -71,7 +71,9 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
                       .read(editTenantScreenControllerProvider.notifier)
                       .delete(widget.tenant!.id);
                   if (success && mounted) {
+                    // ignore: use_build_context_synchronously
                     context.pop();
+                    // ignore: use_build_context_synchronously
                     context.pop();
                   }
                 },
