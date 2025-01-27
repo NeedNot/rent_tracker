@@ -212,7 +212,7 @@ class _TenantPaymentHistory extends ConsumerWidget {
         data: (tenant) => Builder(builder: (context) {
               final oldestDate = tenant.createdAt;
               final monthsSince =
-                  DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
+                  DateUtils.monthDelta(oldestDate, DateTime.now()) + 2;
               return ListView.builder(
                 itemBuilder: (context, index) {
                   final month =
