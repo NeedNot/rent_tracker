@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:async/async.dart';
 
 part 'tenants_repository.g.dart';
 
@@ -10,16 +14,15 @@ class TenantsRepository {
   const TenantsRepository(this._firestore);
   final FirebaseFirestore _firestore;
 
-  static String tenantPath(String uid, String tenantId) =>
-      "users/$uid/tenants/$tenantId";
-  static String tenantsPath(String uid) => "users/$uid/tenants";
+  static String tenantPath(String id) => "tenants/$id";
+  static String tenantsPath() => "tenants";
 
   Future<void> addTenant(
           {required String uid,
           required String name,
           required int amount,
           required String? note}) async =>
-      _firestore.collection(tenantsPath(uid)).add({
+      _firestore.collection(tenantsPath()).add({
         'name': name,
         'amount': amount,
         'created_at': FieldValue.serverTimestamp(),
@@ -33,7 +36,7 @@ class TenantsRepository {
           required int amount,
           required String? note}) async =>
       _firestore
-          .doc(tenantPath(uid, id))
+          .doc(tenantPath(id))
           .update({'name': name, 'amount': amount, 'note': note});
 
   Future<void> markTenantPayment(
@@ -41,34 +44,44 @@ class TenantsRepository {
       required String id,
       required String month,
       required int amountPaid}) async {
-    _firestore.doc(tenantPath(uid, id)).update({'payments.$month': amountPaid});
+    _firestore.doc(tenantPath(id)).update({'payments.$month': amountPaid});
   }
 
   Future<void> deleteTenant({required String uid, required String id}) async {
     // todo delete payments associated with tenant
-    _firestore.doc(tenantPath(uid, id)).delete();
+    _firestore.doc(tenantPath(id)).delete();
   }
 
-  Stream<Tenant> watchTenant({required String uid, required String id}) =>
-      _firestore
-          .doc(tenantPath(uid, id))
-          .withConverter(
-              fromFirestore: (snapshot, _) =>
-                  Tenant.fromMap(snapshot.data()!, id),
-              toFirestore: (tenant, _) => tenant.toMap())
-          .snapshots()
-          .map((snapshot) => snapshot.data()!);
+  Stream<Tenant> watchTenant({required String id}) => _firestore
+      .doc(tenantPath(id))
+      .withConverter(
+          fromFirestore: (snapshot, _) => Tenant.fromMap(snapshot.data()!, id),
+          toFirestore: (tenant, _) => tenant.toMap())
+      .snapshots()
+      .map((snapshot) => snapshot.data()!);
 
-  Stream<List<Tenant>> watchTenants({required String uid}) =>
-      queryTenants(uid: uid)
-          .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  Stream<List<Tenant>> watchTenants({required List<String> ids}) {
+    var chunks = [];
+    for (var i = 0; i < ids.length; i += 10) {
+      chunks.add(ids.sublist(i, i + 10 > ids.length ? ids.length : i + 10));
+    }
+    List<Stream<QuerySnapshot>> combineList = [];
+    for (var i = 0; i < chunks.length; i++) {
+      combineList.add(queryTenants()
+          .where(FieldPath.documentId, whereIn: chunks[i])
+          .snapshots());
+    }
 
-  Query<Tenant> queryTenants({required String uid}) =>
-      _firestore.collection(tenantsPath(uid)).withConverter(
-          fromFirestore: (snapshot, _) =>
-              Tenant.fromMap(snapshot.data()!, snapshot.id),
-          toFirestore: (tenant, _) => tenant.toMap());
+    return StreamGroup.merge(combineList).map((querySnapshot) =>
+        querySnapshot.docs.map((doc) => doc.data() as Tenant).toList());
+  }
+
+  Query<Tenant> queryTenants() =>
+      _firestore.collection(tenantsPath()).withConverter<Tenant>(
+            fromFirestore: (snapshot, _) =>
+                Tenant.fromMap(snapshot.data()!, snapshot.id),
+            toFirestore: (tenant, _) => tenant.toMap(),
+          );
 }
 
 @Riverpod(keepAlive: true)
@@ -77,15 +90,7 @@ TenantsRepository tenantsRepository(Ref ref) {
 }
 
 @riverpod
-Stream<List<Tenant>> tenantsStream(Ref ref) {
-  final user = ref.watch(firebaseAuthProvider).currentUser!;
-  final repository = ref.watch(tenantsRepositoryProvider);
-  return repository.watchTenants(uid: user.uid);
-}
-
-@riverpod
 Stream<Tenant> tenantStream(Ref ref, String id) {
-  final user = ref.watch(firebaseAuthProvider).currentUser!;
   final repository = ref.watch(tenantsRepositoryProvider);
-  return repository.watchTenant(uid: user.uid, id: id);
+  return repository.watchTenant(id: id);
 }

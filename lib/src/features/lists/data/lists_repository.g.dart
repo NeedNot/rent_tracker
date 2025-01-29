@@ -1,29 +1,46 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'tenants_repository.dart';
+part of 'lists_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tenantsRepositoryHash() => r'4b0d2bc7ca753c39a517e90fda19a54cd2a6eec5';
+String _$listsRepositoryHash() => r'2ce239b513ac7bfe90133f873b6973f9360456ae';
 
-/// See also [tenantsRepository].
-@ProviderFor(tenantsRepository)
-final tenantsRepositoryProvider = Provider<TenantsRepository>.internal(
-  tenantsRepository,
-  name: r'tenantsRepositoryProvider',
+/// See also [listsRepository].
+@ProviderFor(listsRepository)
+final listsRepositoryProvider = Provider<ListsRepository>.internal(
+  listsRepository,
+  name: r'listsRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$tenantsRepositoryHash,
+      : _$listsRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef TenantsRepositoryRef = ProviderRef<TenantsRepository>;
-String _$tenantStreamHash() => r'526684c84ab9ee25cf131826deb9fa5318af618c';
+typedef ListsRepositoryRef = ProviderRef<ListsRepository>;
+String _$listsStreamHash() => r'8fac0dbbe305b94fa52ba66b2e87e3bd99401f33';
+
+/// See also [listsStream].
+@ProviderFor(listsStream)
+final listsStreamProvider =
+    AutoDisposeStreamProvider<List<TenantList>>.internal(
+  listsStream,
+  name: r'listsStreamProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$listsStreamHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ListsStreamRef = AutoDisposeStreamProviderRef<List<TenantList>>;
+String _$listStreamHash() => r'62ced8198f517b444a2d8eaba3c2c6de1c75ca20';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -46,27 +63,27 @@ class _SystemHash {
   }
 }
 
-/// See also [tenantStream].
-@ProviderFor(tenantStream)
-const tenantStreamProvider = TenantStreamFamily();
+/// See also [listStream].
+@ProviderFor(listStream)
+const listStreamProvider = ListStreamFamily();
 
-/// See also [tenantStream].
-class TenantStreamFamily extends Family<AsyncValue<Tenant>> {
-  /// See also [tenantStream].
-  const TenantStreamFamily();
+/// See also [listStream].
+class ListStreamFamily extends Family<AsyncValue<TenantList>> {
+  /// See also [listStream].
+  const ListStreamFamily();
 
-  /// See also [tenantStream].
-  TenantStreamProvider call(
+  /// See also [listStream].
+  ListStreamProvider call(
     String id,
   ) {
-    return TenantStreamProvider(
+    return ListStreamProvider(
       id,
     );
   }
 
   @override
-  TenantStreamProvider getProviderOverride(
-    covariant TenantStreamProvider provider,
+  ListStreamProvider getProviderOverride(
+    covariant ListStreamProvider provider,
   ) {
     return call(
       provider.id,
@@ -85,32 +102,32 @@ class TenantStreamFamily extends Family<AsyncValue<Tenant>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'tenantStreamProvider';
+  String? get name => r'listStreamProvider';
 }
 
-/// See also [tenantStream].
-class TenantStreamProvider extends AutoDisposeStreamProvider<Tenant> {
-  /// See also [tenantStream].
-  TenantStreamProvider(
+/// See also [listStream].
+class ListStreamProvider extends AutoDisposeStreamProvider<TenantList> {
+  /// See also [listStream].
+  ListStreamProvider(
     String id,
   ) : this._internal(
-          (ref) => tenantStream(
-            ref as TenantStreamRef,
+          (ref) => listStream(
+            ref as ListStreamRef,
             id,
           ),
-          from: tenantStreamProvider,
-          name: r'tenantStreamProvider',
+          from: listStreamProvider,
+          name: r'listStreamProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$tenantStreamHash,
-          dependencies: TenantStreamFamily._dependencies,
+                  : _$listStreamHash,
+          dependencies: ListStreamFamily._dependencies,
           allTransitiveDependencies:
-              TenantStreamFamily._allTransitiveDependencies,
+              ListStreamFamily._allTransitiveDependencies,
           id: id,
         );
 
-  TenantStreamProvider._internal(
+  ListStreamProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -124,12 +141,12 @@ class TenantStreamProvider extends AutoDisposeStreamProvider<Tenant> {
 
   @override
   Override overrideWith(
-    Stream<Tenant> Function(TenantStreamRef provider) create,
+    Stream<TenantList> Function(ListStreamRef provider) create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: TenantStreamProvider._internal(
-        (ref) => create(ref as TenantStreamRef),
+      override: ListStreamProvider._internal(
+        (ref) => create(ref as ListStreamRef),
         from: from,
         name: null,
         dependencies: null,
@@ -141,13 +158,13 @@ class TenantStreamProvider extends AutoDisposeStreamProvider<Tenant> {
   }
 
   @override
-  AutoDisposeStreamProviderElement<Tenant> createElement() {
-    return _TenantStreamProviderElement(this);
+  AutoDisposeStreamProviderElement<TenantList> createElement() {
+    return _ListStreamProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is TenantStreamProvider && other.id == id;
+    return other is ListStreamProvider && other.id == id;
   }
 
   @override
@@ -161,17 +178,17 @@ class TenantStreamProvider extends AutoDisposeStreamProvider<Tenant> {
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin TenantStreamRef on AutoDisposeStreamProviderRef<Tenant> {
+mixin ListStreamRef on AutoDisposeStreamProviderRef<TenantList> {
   /// The parameter `id` of this provider.
   String get id;
 }
 
-class _TenantStreamProviderElement
-    extends AutoDisposeStreamProviderElement<Tenant> with TenantStreamRef {
-  _TenantStreamProviderElement(super.provider);
+class _ListStreamProviderElement
+    extends AutoDisposeStreamProviderElement<TenantList> with ListStreamRef {
+  _ListStreamProviderElement(super.provider);
 
   @override
-  String get id => (origin as TenantStreamProvider).id;
+  String get id => (origin as ListStreamProvider).id;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

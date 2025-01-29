@@ -1,75 +1,118 @@
+import 'dart:async';
+
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
+import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
+import 'package:rent_tracker/src/features/lists/presentation/lists_screen/lists_screen_controller.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
-import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen_controller.dart';
 import 'package:rent_tracker/src/routing/app_router.dart';
 
-class TenantsScreen extends StatelessWidget {
-  const TenantsScreen({super.key});
+class ListsScreen extends ConsumerWidget {
+  const ListsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "Tenants",
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          centerTitle: true,
-          actions: const [
-            _ProfileMenu(),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: const Icon(Icons.add),
-          onPressed: () => context.goNamed(AppRoute.createTenant.name),
-        ),
-        body: Consumer(
-          builder: (context, ref, child) {
-            final tenantsStream = ref.watch(tenantsStreamProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tenantLists = ref.watch(listsStreamProvider);
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: tenantsStream.when(
-                data: (tenants) {
-                  tenants.sort((tenant1, tenant2) =>
-                      tenant1.createdAt.compareTo(tenant2.createdAt));
-                  final oldestDate = tenants.first.createdAt;
-                  final monthsSince =
-                      DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
-                  return ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 64),
-                    itemCount: monthsSince,
-                    itemBuilder: (context, index) {
-                      final month =
-                          DateUtils.addMonthsToMonthDate(oldestDate, index);
-                      final filteredTenants = tenants.where((tenant) {
-                        final tenantDate = tenant.createdAt;
-                        return tenantDate.difference(month).isNegative ||
-                            DateUtils.isSameMonth(month, tenantDate);
-                      }).toList();
-                      return _MonthStatus(
-                        month: month,
-                        tenants: filteredTenants,
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) {
-                  debugPrint('Error: $error');
-                  debugPrint('Stack: $stack');
-                  return Center(child: Text(error.toString()));
-                },
+    return tenantLists.when(
+      data: (data) {
+        if (data.isEmpty) {
+          ref.read(listsScreenControllerProvider.notifier).createDefaultList();
+        }
+        return DefaultTabController(
+          length: data.length,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                "Tenants",
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
+              bottom: TabBar(
+                tabs: data.map((list) => Tab(text: list.name)).toList(),
+                isScrollable: true,
+              ),
+              centerTitle: true,
+              actions: const [
+                _ProfileMenu(),
+              ],
+            ),
+            floatingActionButton: FloatingActionButton(
+              child: const Icon(Icons.add),
+              onPressed: () => context.goNamed(AppRoute.createTenant.name),
+            ),
+            body: TabBarView(
+                children: data
+                    .map((list) => _TenantListView(ids: list.tenants))
+                    .toList()),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator.adaptive()),
+      error: (error, stackTrace) {
+        return Center(child: Text(error.toString()));
+      },
+    );
+  }
+}
+
+class _TenantListView extends ConsumerWidget {
+  const _TenantListView({super.key, required this.ids});
+  final List<String> ids;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tenantsStream =
+        ref.read(tenantsRepositoryProvider).watchTenants(ids: ids);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: StreamBuilder(
+        initialData: const [],
+        stream: tenantsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text(snapshot.error.toString());
+          } else if (!snapshot.hasData) {
+            return const Text("No data");
+          } else {
+            final tenants = snapshot.data!;
+
+            if (tenants.isEmpty) {
+              return const Text("No tenants");
+            }
+            tenants.sort((tenant1, tenant2) =>
+                tenant1.createdAt.compareTo(tenant2.createdAt));
+
+            final oldestDate = tenants.first.createdAt;
+            final monthsSince =
+                DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
+
+            return ListView.builder(
+              padding: const EdgeInsets.only(bottom: 64),
+              itemCount: monthsSince,
+              itemBuilder: (context, index) {
+                final month = DateUtils.addMonthsToMonthDate(oldestDate, index);
+                final filteredTenants = tenants.where((tenant) {
+                  final tenantDate = tenant.createdAt;
+                  return tenantDate.difference(month).isNegative ||
+                      DateUtils.isSameMonth(month, tenantDate);
+                }).toList();
+                return _MonthStatus(
+                  month: month,
+                  tenants: filteredTenants as List<Tenant>,
+                );
+              },
             );
-          },
-        ));
+          }
+        },
+      ),
+    );
   }
 }
 
@@ -204,12 +247,12 @@ class _MonthStatus extends ConsumerWidget {
               tenant: tenant,
               hasPaid: hasPaid,
               onSetPayment: (value) {
-                ref
-                    .read(tenantsScreenControllerProvider.notifier)
-                    .markTenantPayment(
-                        id: tenant.id,
-                        month: month,
-                        amountPaid: value ? tenant.amount : 0);
+                // ref
+                //     .read(tenantsScreenControllerProvider.notifier)
+                //     .markTenantPayment(
+                //         id: tenant.id,
+                //         month: month,
+                //         amountPaid: value ? tenant.amount : 0);
               },
               onTap: () => context.goNamed(AppRoute.editTenant.name,
                   pathParameters: {"id": tenant.id}, extra: tenant),

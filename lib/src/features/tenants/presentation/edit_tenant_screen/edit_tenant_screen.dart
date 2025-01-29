@@ -50,6 +50,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
                 note: _note,
               );
       if (success && mounted) {
+        // todo the routes have nothing to pop to
         context.pop();
       }
     }

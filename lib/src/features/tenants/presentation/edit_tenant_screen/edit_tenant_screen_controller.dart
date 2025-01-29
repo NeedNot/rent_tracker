@@ -24,7 +24,11 @@ class EditTenantScreenController extends _$EditTenantScreenController {
     if (oldTenant != null) {
       state = await AsyncValue.guard(
         () => repository.updateTenant(
-            uid: currentUser.uid, id: oldTenant.id, name: name, amount: amount, note: note),
+            uid: currentUser.uid,
+            id: oldTenant.id,
+            name: name,
+            amount: amount,
+            note: note),
       );
     } else {
       state = await AsyncValue.guard(
@@ -50,7 +54,7 @@ class EditTenantScreenController extends _$EditTenantScreenController {
       {required String id,
       required DateTime month,
       required int amountPaid}) async {
-    final currentUser = ref.watch(firebaseAuthProvider).currentUser!;
+    final currentUser = ref.read(firebaseAuthProvider).currentUser!;
 
     state = const AsyncLoading().copyWithPrevious(state);
 
