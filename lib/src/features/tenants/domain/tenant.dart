@@ -4,14 +4,15 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 class Tenant extends Equatable {
-  const Tenant(
-      {required this.id,
-      required this.owners,
-      required this.name,
-      required this.amount,
-      required this.createdAt,
-      required this.payments,
-      required this.note});
+  const Tenant({
+    required this.id,
+    required this.owners,
+    required this.name,
+    required this.amount,
+    required this.createdAt,
+    required this.payments,
+    required this.note,
+  });
   final String id;
   final List<String> owners;
   final String name;

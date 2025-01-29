@@ -61,19 +61,13 @@ class TenantsRepository {
       .map((snapshot) => snapshot.data()!);
 
   Stream<List<Tenant>> watchTenants({required List<String> ids}) {
-    var chunks = [];
-    for (var i = 0; i < ids.length; i += 10) {
-      chunks.add(ids.sublist(i, i + 10 > ids.length ? ids.length : i + 10));
-    }
-    List<Stream<QuerySnapshot>> combineList = [];
-    for (var i = 0; i < chunks.length; i++) {
-      combineList.add(queryTenants()
-          .where(FieldPath.documentId, whereIn: chunks[i])
-          .snapshots());
-    }
+    // Create a stream for each tenant ID
+    List<Stream<Tenant>> tenantStreams = ids.map((id) {
+      return watchTenant(id: id);
+    }).toList();
 
-    return StreamGroup.merge(combineList).map((querySnapshot) =>
-        querySnapshot.docs.map((doc) => doc.data() as Tenant).toList());
+    // Combine the streams using Rx.combineLatestList
+    return Rx.combineLatestList(tenantStreams);
   }
 
   Query<Tenant> queryTenants() =>

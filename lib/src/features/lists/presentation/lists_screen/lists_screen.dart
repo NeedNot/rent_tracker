@@ -81,7 +81,9 @@ class _TenantListView extends ConsumerWidget {
           } else if (!snapshot.hasData) {
             return const Text("No data");
           } else {
-            final tenants = snapshot.data!;
+            final tenants = List.from(snapshot.data!)
+                .map((tenant) => tenant as Tenant)
+                .toList();
 
             if (tenants.isEmpty) {
               return const Text("No tenants");
@@ -105,7 +107,7 @@ class _TenantListView extends ConsumerWidget {
                 }).toList();
                 return _MonthStatus(
                   month: month,
-                  tenants: filteredTenants as List<Tenant>,
+                  tenants: filteredTenants,
                 );
               },
             );
