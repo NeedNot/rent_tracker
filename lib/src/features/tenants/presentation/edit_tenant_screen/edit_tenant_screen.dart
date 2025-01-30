@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
+import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen_controller.dart';
@@ -20,6 +22,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
   String? _name;
   int? _amount;
   String? _note;
+  String? _listId;
 
   @override
   void initState() {
@@ -33,7 +36,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
 
   bool _validateAndSaveForm() {
     final form = _formKey.currentState!;
-    if (form.validate()) {
+    if (form.validate() && _listId != null) {
       form.save();
       return true;
     }
@@ -45,6 +48,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
       final success =
           await ref.read(editTenantScreenControllerProvider.notifier).submit(
                 oldTenant: widget.tenant,
+                listId: _listId!,
                 name: _name ?? '',
                 amount: _amount ?? 0,
                 note: _note,
@@ -182,6 +186,8 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
         initialValue: _note != null ? '$_note' : null,
         onSaved: (value) => _note = value,
       ),
+      const SizedBox(height: 16),
+      _TenantListsDropdown(onSelected: (value) => _listId = value),
     ];
   }
 }
@@ -207,57 +213,85 @@ class _TenantPaymentHistory extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tenantStream = ref.watch(tenantStreamProvider(id));
+    final currentUser = ref.watch(authRepositoryProvider).currentUser!;
+    final tenantStream = ref
+        .watch(tenantsRepositoryProvider)
+        .watchTenant(uid: currentUser.uid, id: id);
 
-    return tenantStream.when(
-        data: (tenant) => Builder(builder: (context) {
-              final oldestDate = tenant.createdAt;
-              final monthsSince =
-                  DateUtils.monthDelta(oldestDate, DateTime.now()) + 2;
-              return ListView.builder(
-                itemBuilder: (context, index) {
-                  final month =
-                      DateUtils.addMonthsToMonthDate(oldestDate, index);
-                  final payment =
-                      tenant.payments[DateFormat('yyyy-MM').format(month)] ?? 0;
-                  return ListTile(
-                    title: Text(DateFormat('MMMM yyyy').format(month)),
-                    subtitle: Text("\$$payment"),
-                    trailing: IntrinsicWidth(
-                      child: Row(
-                        mainAxisSize: MainAxisSize
-                            .min, // Shrink the Row to the minimum size
-                        children: [
-                          Text("Has paid",
-                              style: Theme.of(context).textTheme.bodyLarge),
-                          Checkbox.adaptive(
-                            value: payment > 0,
-                            onChanged: (value) => {
-                              if (value != null)
-                                {
-                                  ref
-                                      .read(editTenantScreenControllerProvider
-                                          .notifier)
-                                      .markTenantPayment(
-                                          id: tenant.id,
-                                          month: month,
-                                          amountPaid: value ? tenant.amount : 0)
-                                }
-                            },
-                          ),
-                        ],
-                      ),
+    return StreamBuilder(
+        stream: tenantStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          }
+          if (snapshot.hasError) {
+            return Text(snapshot.error.toString());
+          }
+          if (snapshot.hasData) {
+            final tenant = snapshot.data!;
+            final oldestDate = tenant.createdAt;
+            final monthsSince =
+                DateUtils.monthDelta(oldestDate, DateTime.now()) + 2;
+            return ListView.builder(
+              itemBuilder: (context, index) {
+                final month = DateUtils.addMonthsToMonthDate(oldestDate, index);
+                final payment =
+                    tenant.payments[DateFormat('yyyy-MM').format(month)] ?? 0;
+                return ListTile(
+                  title: Text(DateFormat('MMMM yyyy').format(month)),
+                  subtitle: Text("\$$payment"),
+                  trailing: IntrinsicWidth(
+                    child: Row(
+                      mainAxisSize: MainAxisSize
+                          .min, // Shrink the Row to the minimum size
+                      children: [
+                        Text("Has paid",
+                            style: Theme.of(context).textTheme.bodyLarge),
+                        Checkbox.adaptive(
+                          value: payment > 0,
+                          onChanged: (value) => {
+                            if (value != null)
+                              {
+                                ref
+                                    .read(editTenantScreenControllerProvider
+                                        .notifier)
+                                    .updatePayment(
+                                        id: tenant.id,
+                                        month: month,
+                                        amountPaid: value ? tenant.amount : 0)
+                              }
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                },
-                itemCount: monthsSince,
-              );
-            }),
-        error: (error, stack) {
-          debugPrint('Error: $error');
-          debugPrint('Stack: $stack');
-          return Center(child: Text(error.toString()));
-        },
-        loading: () => const Center(child: CircularProgressIndicator()));
+                  ),
+                );
+              },
+              itemCount: monthsSince,
+            );
+          }
+          return const Text("No data");
+        });
+  }
+}
+
+class _TenantListsDropdown extends ConsumerWidget {
+  const _TenantListsDropdown({this.onSelected});
+  final ValueChanged<String?>? onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tenantLists = ref.watch(listsStreamProvider);
+    return tenantLists.when(
+      data: (data) => DropdownMenu(
+        initialSelection: data.isNotEmpty ? data.first.id : null,
+        dropdownMenuEntries: data
+            .map((list) => DropdownMenuEntry(value: list.id, label: list.name))
+            .toList(),
+        onSelected: onSelected,
+      ),
+      error: (error, stack) => Text(error.toString()),
+      loading: () => const CircularProgressIndicator(),
+    );
   }
 }

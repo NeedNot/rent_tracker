@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -12,7 +13,7 @@ class ListsScreenController extends _$ListsScreenController {
   Future<void> createDefaultList() async {
     final user = ref.read(firebaseAuthProvider).currentUser!;
     final listsRepository = ref.read(listsRepositoryProvider);
-
-    listsRepository.addList(uid: user.uid, name: "List 1");
+    
+    listsRepository.addList(uid: user.uid, name: "List 1", sharedWith: []);
   }
 }

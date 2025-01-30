@@ -19,6 +19,7 @@ class ListsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tenantLists = ref.watch(listsStreamProvider);
 
+    tenantLists.whenData((data) => debugPrint("lists ${data.toString()}"));
     return tenantLists.when(
       data: (data) {
         if (data.isEmpty) {
@@ -45,15 +46,18 @@ class ListsScreen extends ConsumerWidget {
               child: const Icon(Icons.add),
               onPressed: () => context.goNamed(AppRoute.createTenant.name),
             ),
-            body: TabBarView(
-                children: data
-                    .map((list) => _TenantListView(ids: list.tenants))
-                    .toList()),
+            body: data.isNotEmpty
+                ? TabBarView(
+                    children: data
+                        .map((list) => _TenantListView(id: list.id))
+                        .toList())
+                : const Center(child: Text("Creating list...")),
           ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator.adaptive()),
       error: (error, stackTrace) {
+        debugPrint(error.toString());
         return Center(child: Text(error.toString()));
       },
     );
@@ -61,13 +65,13 @@ class ListsScreen extends ConsumerWidget {
 }
 
 class _TenantListView extends ConsumerWidget {
-  const _TenantListView({super.key, required this.ids});
-  final List<String> ids;
+  const _TenantListView({super.key, required this.id});
+  final String id;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tenantsStream =
-        ref.read(tenantsRepositoryProvider).watchTenants(ids: ids);
+        ref.read(tenantsRepositoryProvider).watchTenants(listId: id);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: StreamBuilder(

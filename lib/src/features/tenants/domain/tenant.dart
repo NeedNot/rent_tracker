@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 class Tenant extends Equatable {
   const Tenant({
     required this.id,
-    required this.owners,
+    required this.listId,
     required this.name,
     required this.amount,
     required this.createdAt,
@@ -14,33 +14,31 @@ class Tenant extends Equatable {
     required this.note,
   });
   final String id;
-  final List<String> owners;
+  final String listId;
   final String name;
   final int amount;
+  final String? note;
   final DateTime createdAt;
   final Map<String, int> payments;
-  final String? note;
 
   @override
-  List<Object?> get props => [owners, name, amount, createdAt];
+  List<Object?> get props => [listId, name, amount, createdAt];
 
   @override
   bool get stringify => true;
 
   factory Tenant.fromMap(Map<String, dynamic> data, String id) {
     final name = data['name'] as String;
-    final owners = ((data['owners'] as List<dynamic>?) ?? [])
-        .map((value) => value.toString())
-        .toList();
+    final listId = data['listId'] as String;
     final amount = data['amount'] as int;
     final createdAt =
-        ((data['created_at'] ?? Timestamp.now()) as Timestamp).toDate();
+        ((data['createdAt'] ?? Timestamp.now()) as Timestamp).toDate();
     final payments = (data['payments'] as Map<String, dynamic>? ?? {})
         .map((key, value) => MapEntry(key, value as int));
     final note = data['note'] as String?;
     return Tenant(
         id: id,
-        owners: owners,
+        listId: listId,
         name: name,
         amount: amount,
         createdAt: createdAt,
@@ -50,7 +48,7 @@ class Tenant extends Equatable {
 
   Map<String, dynamic> toMap() {
     return {
-      "owners": owners,
+      "listId": listId,
       'name': name,
       "amount": amount,
       "note": note,

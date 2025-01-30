@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
@@ -10,11 +11,16 @@ class ListsRepository {
   const ListsRepository(this._firestore);
   final FirebaseFirestore _firestore;
 
-  static String listsPath(String uid) => "/users/$uid/lists";
+  static String listsPath() => "lists";
   static String listPath(String uid, String id) => "/users/$uid/lists/$id";
 
-  Future<void> addList({required String uid, required String name}) async =>
-      _firestore.collection(listsPath(uid)).add({'name': name});
+  Future<void> addList(
+          {required String uid,
+          required String name,
+          required List<String> sharedWith}) async =>
+      _firestore
+          .collection(listsPath())
+          .add({'name': name, 'ownerId': uid, 'sharedWith': sharedWith});
 
   Future<void> deleteList({required String uid, required String id}) async =>
       _firestore.doc(listPath(uid, id)).delete();
@@ -23,26 +29,24 @@ class ListsRepository {
           {required String uid, required TenantList list}) async =>
       _firestore.doc(listPath(uid, list.id)).update(list.toMap());
 
-  Stream<TenantList> watchList({required String uid, required String id}) =>
-      _firestore
-          .doc(listPath(uid, id))
-          .withConverter(
-              fromFirestore: (snapshot, _) =>
-                  TenantList.fromMap(snapshot.data()!, id),
-              toFirestore: (list, _) => list.toMap())
-          .snapshots()
-          .map((snapshot) => snapshot.data()!);
-
-  Stream<List<TenantList>> watchLists({required String uid}) =>
-      queryLists(uid: uid)
+  Stream<List<TenantList>> watchLists({required String uid, String? id}) =>
+      queryLists(uid: uid, id: id)
           .snapshots()
           .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
 
-  Query<TenantList> queryLists({required String uid}) =>
-      _firestore.collection(listsPath(uid)).withConverter(
-          fromFirestore: (snapshot, _) =>
-              TenantList.fromMap(snapshot.data()!, snapshot.id),
-          toFirestore: (list, _) => list.toMap());
+  Query<TenantList> queryLists({required String uid, String? id}) {
+    Query<TenantList> query = _firestore
+        .collection(listsPath())
+        .where('ownerId', isEqualTo: uid)
+        .withConverter(
+            fromFirestore: (snapshot, _) =>
+                TenantList.fromMap(snapshot.data()!, snapshot.id),
+            toFirestore: (TenantList list, _) => list.toMap());
+    if (id != null) {
+      query = query.where('id', isEqualTo: id);
+    }
+    return query;
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -52,14 +56,8 @@ ListsRepository listsRepository(Ref ref) {
 
 @riverpod
 Stream<List<TenantList>> listsStream(Ref ref) {
-  final user = ref.watch(firebaseAuthProvider).currentUser!;
+  debugPrint("watching lists stream");
+  final user = ref.read(firebaseAuthProvider).currentUser!;
   final repository = ref.watch(listsRepositoryProvider);
   return repository.watchLists(uid: user.uid);
-}
-
-@riverpod
-Stream<TenantList> listStream(Ref ref, String id) {
-  final user = ref.watch(firebaseAuthProvider).currentUser!;
-  final repository = ref.watch(listsRepositoryProvider);
-  return repository.watchList(uid: user.uid, id: id);
 }

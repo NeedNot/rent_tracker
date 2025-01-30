@@ -4,31 +4,39 @@ import 'package:flutter/material.dart';
 @immutable
 class TenantList extends Equatable {
   const TenantList(
-      {required this.id, required this.name, required this.tenants});
+      {required this.id,
+      required this.name,
+      required this.ownerId,
+      required this.sharedWith});
   final String id;
   final String name;
-  final List<String> tenants;
+  final String ownerId;
+  final List<String> sharedWith;
 
   @override
-  List<Object> get props => [name, tenants];
+  List<Object> get props => [name, ownerId, sharedWith];
 
   @override
   bool get stringify => true;
 
   factory TenantList.fromMap(Map<String, dynamic> data, String id) {
     final name = data['name'] as String;
-    final tenants = (data['tenants'] ?? []) as List<dynamic>;
+    final ownerId = data['ownerId'] as String;
+    final sharedWith = ((data['sharedWith'] ?? []) as List<dynamic>)
+        .map((e) => e as String)
+        .toList();
     return TenantList(
       id: id,
       name: name,
-      tenants: tenants.map((e) => e as String).toList(),
+      ownerId: ownerId,
+      sharedWith: sharedWith,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'tenants': tenants,
+      'sharedWith': sharedWith,
     };
   }
 }

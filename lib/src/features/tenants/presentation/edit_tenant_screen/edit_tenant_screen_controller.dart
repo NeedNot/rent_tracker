@@ -14,6 +14,7 @@ class EditTenantScreenController extends _$EditTenantScreenController {
   Future<bool> submit(
       {Tenant? oldTenant,
       required String name,
+      required String listId,
       required int amount,
       required String? note}) async {
     final currentUser = ref.read(authRepositoryProvider).currentUser!;
@@ -31,10 +32,12 @@ class EditTenantScreenController extends _$EditTenantScreenController {
             note: note),
       );
     } else {
-      state = await AsyncValue.guard(
-        () => repository.addTenant(
-            uid: currentUser.uid, name: name, amount: amount, note: note),
-      );
+      state = await AsyncValue.guard(() => repository.addTenant(
+          uid: currentUser.uid,
+          listId: listId,
+          name: name,
+          amount: amount,
+          note: note));
     }
     return state.hasError == false;
   }
@@ -50,7 +53,7 @@ class EditTenantScreenController extends _$EditTenantScreenController {
     return state.hasError == false;
   }
 
-  Future<bool> markTenantPayment(
+  Future<bool> updatePayment(
       {required String id,
       required DateTime month,
       required int amountPaid}) async {
@@ -59,7 +62,7 @@ class EditTenantScreenController extends _$EditTenantScreenController {
     state = const AsyncLoading().copyWithPrevious(state);
 
     state = await AsyncValue.guard(() async {
-      ref.read(tenantsRepositoryProvider).markTenantPayment(
+      ref.read(tenantsRepositoryProvider).updatePayment(
             uid: currentUser.uid,
             id: id,
             month: DateFormat('yyyy-MM').format(month),
