@@ -46,7 +46,6 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
 
   Future<void> _submit() async {
     if (_validateAndSaveForm()) {
-      debugPrint("validated");
       final success =
           await ref.read(editTenantScreenControllerProvider.notifier).submit(
                 oldTenant: widget.tenant,

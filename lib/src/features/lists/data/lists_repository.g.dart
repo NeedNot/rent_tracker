@@ -23,7 +23,7 @@ final listsRepositoryProvider = Provider<ListsRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ListsRepositoryRef = ProviderRef<ListsRepository>;
-String _$listsStreamHash() => r'90264c03ea7bd4931e1795324c5c6b7ad3e97637';
+String _$listsStreamHash() => r'4dc706f2861e4a1110f6ba7912292488adf9bfc4';
 
 /// See also [listsStream].
 @ProviderFor(listsStream)

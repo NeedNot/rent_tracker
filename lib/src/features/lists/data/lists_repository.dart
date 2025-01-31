@@ -56,7 +56,6 @@ ListsRepository listsRepository(Ref ref) {
 
 @riverpod
 Stream<List<TenantList>> listsStream(Ref ref) {
-  debugPrint("watching lists stream");
   final user = ref.read(firebaseAuthProvider).currentUser!;
   final repository = ref.watch(listsRepositoryProvider);
   return repository.watchLists(uid: user.uid);

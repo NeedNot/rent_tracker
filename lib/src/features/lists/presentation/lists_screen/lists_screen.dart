@@ -253,12 +253,10 @@ class _MonthStatus extends ConsumerWidget {
               tenant: tenant,
               hasPaid: hasPaid,
               onSetPayment: (value) {
-                // ref
-                //     .read(tenantsScreenControllerProvider.notifier)
-                //     .markTenantPayment(
-                //         id: tenant.id,
-                //         month: month,
-                //         amountPaid: value ? tenant.amount : 0);
+                ref.read(listsScreenControllerProvider.notifier).makePayment(
+                    id: tenant.id,
+                    month: DateFormat("yyyy-MM").format(month),
+                    amountPaid: value ? tenant.amount : 0);
               },
               onTap: () => context.pushNamed(AppRoute.editTenant.name,
                   pathParameters: {"id": tenant.id}, extra: tenant),
