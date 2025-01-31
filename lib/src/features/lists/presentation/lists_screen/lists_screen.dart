@@ -44,7 +44,7 @@ class ListsScreen extends ConsumerWidget {
             ),
             floatingActionButton: FloatingActionButton(
               child: const Icon(Icons.add),
-              onPressed: () => context.goNamed(AppRoute.createTenant.name),
+              onPressed: () => context.pushNamed(AppRoute.createTenant.name),
             ),
             body: data.isNotEmpty
                 ? TabBarView(
@@ -260,7 +260,7 @@ class _MonthStatus extends ConsumerWidget {
                 //         month: month,
                 //         amountPaid: value ? tenant.amount : 0);
               },
-              onTap: () => context.goNamed(AppRoute.editTenant.name,
+              onTap: () => context.pushNamed(AppRoute.editTenant.name,
                   pathParameters: {"id": tenant.id}, extra: tenant),
             );
           },

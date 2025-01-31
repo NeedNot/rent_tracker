@@ -228,9 +228,6 @@ class _TenantPaymentHistory extends ConsumerWidget {
     return StreamBuilder(
         stream: tenantStream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          }
           if (snapshot.hasError) {
             return Text(snapshot.error.toString());
           }
@@ -277,6 +274,9 @@ class _TenantPaymentHistory extends ConsumerWidget {
               },
               itemCount: monthsSince,
             );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
           }
           return const Text("No data");
         });
