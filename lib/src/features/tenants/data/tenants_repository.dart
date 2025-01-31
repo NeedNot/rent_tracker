@@ -70,7 +70,6 @@ class TenantsRepository {
           .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
 
   Query<Tenant> queryTenants({required String listId}) {
-    debugPrint("watching tenants for $listId");
     return _firestore
         .collection(tenantsPath())
         .where('listId', isEqualTo: listId)

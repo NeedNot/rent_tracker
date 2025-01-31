@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
+import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen_controller.dart';
@@ -45,6 +46,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
 
   Future<void> _submit() async {
     if (_validateAndSaveForm()) {
+      debugPrint("validated");
       final success =
           await ref.read(editTenantScreenControllerProvider.notifier).submit(
                 oldTenant: widget.tenant,
@@ -114,6 +116,7 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
       },
     );
     final state = ref.watch(editTenantScreenControllerProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.tenant == null ? 'Create Tenant' : 'Edit Tenant'),
@@ -161,6 +164,8 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
   }
 
   List<Widget> _buildFormChildren() {
+    final tenantLists = ref.watch(listsStreamProvider);
+
     return [
       TextFormField(
         decoration: const InputDecoration(labelText: 'Tenant name'),
@@ -187,7 +192,9 @@ class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
         onSaved: (value) => _note = value,
       ),
       const SizedBox(height: 16),
-      _TenantListsDropdown(onSelected: (value) => _listId = value),
+      _TenantListsDropdown(
+          tenantLists: tenantLists.asData?.value ?? [],
+          onSelected: (value) => _listId = value),
     ];
   }
 }
@@ -237,6 +244,7 @@ class _TenantPaymentHistory extends ConsumerWidget {
                 final month = DateUtils.addMonthsToMonthDate(oldestDate, index);
                 final payment =
                     tenant.payments[DateFormat('yyyy-MM').format(month)] ?? 0;
+
                 return ListTile(
                   title: Text(DateFormat('MMMM yyyy').format(month)),
                   subtitle: Text("\$$payment"),
@@ -275,23 +283,21 @@ class _TenantPaymentHistory extends ConsumerWidget {
   }
 }
 
-class _TenantListsDropdown extends ConsumerWidget {
-  const _TenantListsDropdown({this.onSelected});
+class _TenantListsDropdown extends StatelessWidget {
+  const _TenantListsDropdown({required this.tenantLists, this.onSelected});
+  final List<TenantList> tenantLists;
   final ValueChanged<String?>? onSelected;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tenantLists = ref.watch(listsStreamProvider);
-    return tenantLists.when(
-      data: (data) => DropdownMenu(
-        initialSelection: data.isNotEmpty ? data.first.id : null,
-        dropdownMenuEntries: data
-            .map((list) => DropdownMenuEntry(value: list.id, label: list.name))
-            .toList(),
-        onSelected: onSelected,
-      ),
-      error: (error, stack) => Text(error.toString()),
-      loading: () => const CircularProgressIndicator(),
+  Widget build(BuildContext context) {
+    final initialValue = tenantLists.isNotEmpty ? tenantLists.first.id : null;
+    onSelected?.call(initialValue);
+    return DropdownMenu(
+      initialSelection: initialValue,
+      dropdownMenuEntries: tenantLists
+          .map((list) => DropdownMenuEntry(value: list.id, label: list.name))
+          .toList(),
+      onSelected: onSelected,
     );
   }
 }
