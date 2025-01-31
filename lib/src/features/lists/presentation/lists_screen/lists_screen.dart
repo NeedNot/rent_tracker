@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
@@ -12,14 +14,19 @@ import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/routing/app_router.dart';
 
-class ListsScreen extends ConsumerWidget {
+class ListsScreen extends ConsumerStatefulWidget {
   const ListsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ListsScreen> createState() => _ListsScreenState();
+}
+
+class _ListsScreenState extends ConsumerState<ListsScreen> {
+  ValueNotifier<bool> isSpeedDialOpen = ValueNotifier(false);
+  @override
+  Widget build(BuildContext context) {
     final tenantLists = ref.watch(listsStreamProvider);
 
-    tenantLists.whenData((data) => debugPrint("lists ${data.toString()}"));
     return tenantLists.when(
       data: (data) {
         if (data.isEmpty) {
@@ -42,10 +49,32 @@ class ListsScreen extends ConsumerWidget {
                 _ProfileMenu(),
               ],
             ),
-            floatingActionButton: FloatingActionButton(
-              child: const Icon(Icons.add),
-              onPressed: () => context.pushNamed(AppRoute.createTenant.name),
-            ),
+            floatingActionButton: SpeedDial(
+                spacing: 3,
+                openCloseDial: isSpeedDialOpen,
+                renderOverlay: false,
+                children: [
+                  SpeedDialChild(
+                      child: const Icon(Icons.list),
+                      onTap: () {
+                        isSpeedDialOpen.value = false;
+                        context.pushNamed(AppRoute.createList.name);
+                      },
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainer,
+                      shape: const CircleBorder()),
+                  SpeedDialChild(
+                      child: const Icon(Icons.person),
+                      onTap: () {
+                        isSpeedDialOpen.value = false;
+                        context.pushNamed(AppRoute.createTenant.name);
+                      },
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainer,
+                      shape: const CircleBorder())
+                ],
+                icon: Icons.add,
+                activeIcon: Icons.close),
             body: data.isNotEmpty
                 ? TabBarView(
                     children: data

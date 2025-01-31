@@ -43,11 +43,17 @@ GoRouter goRouter(Ref ref) {
       ),
       // todo going back closes the app
       GoRoute(
-        name: AppRoute.home.name,
-        path: "/lists",
-        pageBuilder: (context, state) =>
-            const NoTransitionPage(child: ListsScreen()),
-      ),
+          name: AppRoute.home.name,
+          path: "/lists",
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ListsScreen()),
+          routes: [
+            GoRoute(
+                name: AppRoute.createList.name,
+                path: "/create",
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: Text("Create list"))),
+          ]),
       GoRoute(
         name: AppRoute.createTenant.name,
         path: "/tenants/create",
