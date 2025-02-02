@@ -2,6 +2,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
 import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen_controller/edit_list_screen_controller.dart';
 
@@ -103,12 +104,12 @@ class _EditListScreenState extends ConsumerState<EditListScreen> {
       },
     );
     final state = ref.watch(editListScrenControllerProvider);
-
+    final uid = ref.watch(firebaseAuthProvider).currentUser!.uid;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.list != null ? "Edit list" : "Create list"),
         actions: <Widget>[
-          if (widget.list != null)
+          if (widget.list != null && widget.list?.ownerId == uid)
             TextButton(
               onPressed: state.isLoading ? null : () => _delete(context),
               child: const Text('Delete'),

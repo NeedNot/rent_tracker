@@ -191,6 +191,7 @@ class _EditTenantScreenState extends ConsumerState<EditTenantScreen> {
       ),
       const SizedBox(height: 16),
       _TenantListsDropdown(
+          // todo initial value
           tenantLists: tenantLists.asData?.value ?? [],
           onSelected: (value) => _listId = value),
     ];

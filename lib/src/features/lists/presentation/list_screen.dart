@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
@@ -12,8 +11,9 @@ class ListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(firebaseAuthProvider).currentUser!;
-    final listsStream =
-        ref.watch(listsRepositoryProvider).watchLists(uid: currentUser.uid);
+    final listsStream = ref
+        .watch(listsRepositoryProvider)
+        .watchLists(uid: currentUser.uid, email: currentUser.email!);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Lists"),
