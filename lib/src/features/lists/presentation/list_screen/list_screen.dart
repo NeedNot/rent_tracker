@@ -19,6 +19,10 @@ class ListScreen extends ConsumerWidget {
         title: const Text("Lists"),
         centerTitle: true,
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.pushNamed(AppRoute.createList.name),
+        child: const Icon(Icons.add),
+      ),
       body: StreamBuilder(
         stream: listsStream,
         builder: (context, snapshot) {
