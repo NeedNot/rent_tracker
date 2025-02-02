@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/authentication/presentation/custom_login_screen.dart';
-import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen.dart';
+import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
+import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen_controller/edit_list_screen.dart';
+import 'package:rent_tracker/src/features/lists/presentation/list_screen/list_screen.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen.dart';
@@ -18,7 +20,15 @@ final _tenantNavigatorKey = GlobalKey<NavigatorState>(debugLabel: "tenants");
 final _tenantListNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: "tenantsList");
 
-enum AppRoute { home, login, createList, editList, createTenant, editTenant }
+enum AppRoute {
+  home,
+  login,
+  lists,
+  createList,
+  editList,
+  createTenant,
+  editTenant
+}
 
 @riverpod
 GoRouter goRouter(Ref ref) {
@@ -87,11 +97,31 @@ GoRouter goRouter(Ref ref) {
             navigatorKey: _tenantListNavigatorKey,
             routes: [
               GoRoute(
-                name: AppRoute.createList.name,
-                path: "/lists/create",
+                name: AppRoute.lists.name,
+                path: "/lists",
                 pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: EditListScreen()),
-              ),
+                    const NoTransitionPage(child: ListScreen()),
+                routes: [
+                  GoRoute(
+                    name: AppRoute.createList.name,
+                    path: "/create",
+                    pageBuilder: (context, state) =>
+                        const NoTransitionPage(child: EditListScreen()),
+                  ),
+                  GoRoute(
+                    name: AppRoute.editList.name,
+                    path: "/lists/:id",
+                    pageBuilder: (context, state) {
+                      final list = state.extra! as TenantList;
+                      return MaterialPage(
+                        child: EditListScreen(
+                          list: list,
+                        ),
+                      );
+                    },
+                  )
+                ],
+              )
             ],
           )
         ],

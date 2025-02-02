@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
-import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen_controller.dart';
+import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen_controller/edit_list_screen_controller.dart';
 
 class EditListScreen extends ConsumerStatefulWidget {
   const EditListScreen({super.key, this.list});
