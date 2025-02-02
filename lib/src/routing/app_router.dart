@@ -5,7 +5,7 @@ import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repo
 import 'package:rent_tracker/src/features/authentication/presentation/custom_login_screen.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
 import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen_controller/edit_list_screen.dart';
-import 'package:rent_tracker/src/features/lists/presentation/list_screen/list_screen.dart';
+import 'package:rent_tracker/src/features/lists/presentation/list_screen.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen.dart';

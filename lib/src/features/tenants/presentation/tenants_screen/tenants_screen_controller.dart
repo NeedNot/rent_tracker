@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';

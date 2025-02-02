@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
@@ -12,7 +11,7 @@ class ListsRepository {
   final FirebaseFirestore _firestore;
 
   static String listsPath() => "lists";
-  static String listPath(String uid, String id) => "/users/$uid/lists/$id";
+  static String listPath(String uid, String id) => "lists/$id";
 
   Future<void> addList(
           {required String uid,
@@ -22,6 +21,7 @@ class ListsRepository {
           .collection(listsPath())
           .add({'name': name, 'ownerId': uid, 'sharedWith': sharedWith});
 
+// todo delete tenants
   Future<void> deleteList({required String uid, required String id}) async =>
       _firestore.doc(listPath(uid, id)).delete();
 

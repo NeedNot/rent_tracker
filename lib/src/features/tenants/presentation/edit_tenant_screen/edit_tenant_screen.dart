@@ -50,12 +50,11 @@ class _EditTenantScreenState extends ConsumerState<EditTenantScreen> {
           await ref.read(editTenantScreenControllerProvider.notifier).submit(
                 oldTenant: widget.tenant,
                 listId: _listId!,
-                name: _name ?? '',
+                name: _name!,
                 amount: _amount ?? 0,
                 note: _note,
               );
       if (success && mounted) {
-        // todo the routes have nothing to pop to
         context.pop();
       }
     }
