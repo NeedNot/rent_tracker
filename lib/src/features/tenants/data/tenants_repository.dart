@@ -34,10 +34,10 @@ class TenantsRepository {
           required String id,
           required String name,
           required int amount,
-          required String? note}) async =>
-      _firestore
-          .doc(tenantPath(id))
-          .update({'name': name, 'amount': amount, 'note': note});
+          required String? note,
+          required String listId}) async =>
+      _firestore.doc(tenantPath(id)).update(
+          {'name': name, 'amount': amount, 'note': note, 'listId': listId});
 
   Future<void> updatePayment(
       {required String uid,

@@ -29,7 +29,8 @@ class EditTenantScreenController extends _$EditTenantScreenController {
             id: oldTenant.id,
             name: name,
             amount: amount,
-            note: note),
+            note: note,
+            listId: listId),
       );
     } else {
       state = await AsyncValue.guard(() => repository.addTenant(
