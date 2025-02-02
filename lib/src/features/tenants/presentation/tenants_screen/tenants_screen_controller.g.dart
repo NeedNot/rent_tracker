@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'lists_screen_controller.dart';
+part of 'tenants_screen_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator

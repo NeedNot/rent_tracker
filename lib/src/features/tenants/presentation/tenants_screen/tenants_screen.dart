@@ -1,28 +1,23 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
-import 'package:rent_tracker/src/features/lists/presentation/lists_screen/lists_screen_controller.dart';
+import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen_controller.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/routing/app_router.dart';
 
-class ListsScreen extends ConsumerStatefulWidget {
-  const ListsScreen({super.key});
+class TenantsScreen extends ConsumerStatefulWidget {
+  const TenantsScreen({super.key});
 
   @override
-  ConsumerState<ListsScreen> createState() => _ListsScreenState();
+  ConsumerState<TenantsScreen> createState() => _TenantsScreenState();
 }
 
-class _ListsScreenState extends ConsumerState<ListsScreen> {
-  ValueNotifier<bool> isSpeedDialOpen = ValueNotifier(false);
+class _TenantsScreenState extends ConsumerState<TenantsScreen> {
   @override
   Widget build(BuildContext context) {
     final tenantLists = ref.watch(listsStreamProvider);
@@ -49,32 +44,10 @@ class _ListsScreenState extends ConsumerState<ListsScreen> {
                 _ProfileMenu(),
               ],
             ),
-            floatingActionButton: SpeedDial(
-                spacing: 3,
-                openCloseDial: isSpeedDialOpen,
-                renderOverlay: false,
-                children: [
-                  SpeedDialChild(
-                      child: const Icon(Icons.list),
-                      onTap: () {
-                        isSpeedDialOpen.value = false;
-                        context.pushNamed(AppRoute.createList.name);
-                      },
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainer,
-                      shape: const CircleBorder()),
-                  SpeedDialChild(
-                      child: const Icon(Icons.person),
-                      onTap: () {
-                        isSpeedDialOpen.value = false;
-                        context.pushNamed(AppRoute.createTenant.name);
-                      },
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainer,
-                      shape: const CircleBorder())
-                ],
-                icon: Icons.add,
-                activeIcon: Icons.close),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => context.pushNamed(AppRoute.createTenant.name),
+              child: const Icon(Icons.add),
+            ),
             body: data.isNotEmpty
                 ? TabBarView(
                     children: data
@@ -129,6 +102,7 @@ class _TenantListView extends ConsumerWidget {
                 DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
 
             return ListView.builder(
+              reverse: true,
               padding: const EdgeInsets.only(bottom: 64),
               itemCount: monthsSince,
               itemBuilder: (context, index) {

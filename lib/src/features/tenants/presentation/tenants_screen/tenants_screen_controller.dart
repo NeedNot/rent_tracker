@@ -4,7 +4,7 @@ import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
 import 'package:rent_tracker/src/features/tenants/data/tenants_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part "lists_screen_controller.g.dart";
+part "tenants_screen_controller.g.dart";
 
 @riverpod
 class ListsScreenController extends _$ListsScreenController {

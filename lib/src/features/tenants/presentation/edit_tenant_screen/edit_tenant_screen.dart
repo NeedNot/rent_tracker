@@ -14,10 +14,10 @@ class EditTenantScreen extends ConsumerStatefulWidget {
   final Tenant? tenant;
 
   @override
-  ConsumerState<EditTenantScreen> createState() => _CreateTenantScreenState();
+  ConsumerState<EditTenantScreen> createState() => _EditTenantScreenState();
 }
 
-class _CreateTenantScreenState extends ConsumerState<EditTenantScreen> {
+class _EditTenantScreenState extends ConsumerState<EditTenantScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String? _name;

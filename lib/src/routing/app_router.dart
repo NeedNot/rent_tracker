@@ -3,15 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/authentication/presentation/custom_login_screen.dart';
+import 'package:rent_tracker/src/features/lists/presentation/edit_list_screen.dart';
 import 'package:rent_tracker/src/features/tenants/domain/tenant.dart';
 import 'package:rent_tracker/src/features/tenants/presentation/edit_tenant_screen/edit_tenant_screen.dart';
-import 'package:rent_tracker/src/features/lists/presentation/lists_screen/lists_screen.dart';
+import 'package:rent_tracker/src/features/tenants/presentation/tenants_screen/tenants_screen.dart';
 import 'package:rent_tracker/src/routing/go_router_refresh_stream.dart';
+import 'package:rent_tracker/src/routing/scaffold_with_nested_navigation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_router.g.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _tenantNavigatorKey = GlobalKey<NavigatorState>(debugLabel: "tenants");
+final _tenantListNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: "tenantsList");
 
 enum AppRoute { home, login, createList, editList, createTenant, editTenant }
 
@@ -29,7 +34,7 @@ GoRouter goRouter(Ref ref) {
         return "/login";
       }
       if (isLoggedIn && path.startsWith("/login")) {
-        return "/lists";
+        return "/tenants";
       }
       return null;
     },
@@ -41,37 +46,56 @@ GoRouter goRouter(Ref ref) {
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: CustomLoginScreen()),
       ),
-      // todo going back closes the app
-      GoRoute(
-          name: AppRoute.home.name,
-          path: "/lists",
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: ListsScreen()),
-          routes: [
-            GoRoute(
-                name: AppRoute.createList.name,
-                path: "/create",
+      StatefulShellRoute.indexedStack(
+        pageBuilder: (context, state, navigationShell) => NoTransitionPage(
+          child: ScaffoldWithNestedNavigation(
+            navigationShell: navigationShell,
+          ),
+        ),
+        branches: [
+          StatefulShellBranch(
+            navigatorKey: _tenantNavigatorKey,
+            routes: [
+              GoRoute(
+                name: AppRoute.home.name,
+                path: "/tenants",
                 pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: Text("Create list"))),
-          ]),
-      GoRoute(
-        name: AppRoute.createTenant.name,
-        path: "/tenants/create",
-        pageBuilder: (context, state) =>
-            const NoTransitionPage(child: EditTenantScreen()),
+                    const NoTransitionPage(child: TenantsScreen()),
+                routes: [
+                  GoRoute(
+                      name: AppRoute.createTenant.name,
+                      path: "/create",
+                      pageBuilder: (context, state) =>
+                          const NoTransitionPage(child: EditTenantScreen())),
+                  GoRoute(
+                    name: AppRoute.editTenant.name,
+                    path: "/tenants/:id",
+                    pageBuilder: (context, state) {
+                      final tenant = state.extra! as Tenant;
+                      return MaterialPage(
+                        child: EditTenantScreen(
+                          tenant: tenant,
+                        ),
+                      );
+                    },
+                  )
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _tenantListNavigatorKey,
+            routes: [
+              GoRoute(
+                name: AppRoute.createList.name,
+                path: "/lists/create",
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: EditListScreen()),
+              ),
+            ],
+          )
+        ],
       ),
-      GoRoute(
-        path: "/tenants/:id",
-        name: AppRoute.editTenant.name,
-        pageBuilder: (context, state) {
-          final tenant = state.extra! as Tenant;
-          return MaterialPage(
-            child: EditTenantScreen(
-              tenant: tenant,
-            ),
-          );
-        },
-      )
     ],
   );
 }
