@@ -48,7 +48,6 @@ class TenantsRepository {
   }
 
   Future<void> deleteTenant({required String uid, required String id}) async {
-    // todo delete payments associated with tenant
     _firestore.doc(tenantPath(id)).delete();
   }
 

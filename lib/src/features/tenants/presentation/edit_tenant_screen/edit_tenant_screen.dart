@@ -163,7 +163,10 @@ class _EditTenantScreenState extends ConsumerState<EditTenantScreen> {
 
   List<Widget> _buildFormChildren() {
     final tenantLists = ref.watch(listsStreamProvider);
-
+    _listId = tenantLists.value?.isNotEmpty == true
+        ? (widget.tenant?.listId ?? tenantLists.value?.first.id)
+        : null;
+    debugPrint(_listId);
     return [
       TextFormField(
         decoration: const InputDecoration(labelText: 'Tenant name'),
@@ -191,7 +194,7 @@ class _EditTenantScreenState extends ConsumerState<EditTenantScreen> {
       ),
       const SizedBox(height: 16),
       _TenantListsDropdown(
-          // todo initial value
+          initialValue: _listId,
           tenantLists: tenantLists.asData?.value ?? [],
           onSelected: (value) => _listId = value),
     ];
@@ -283,14 +286,14 @@ class _TenantPaymentHistory extends ConsumerWidget {
 }
 
 class _TenantListsDropdown extends StatelessWidget {
-  const _TenantListsDropdown({required this.tenantLists, this.onSelected});
+  const _TenantListsDropdown(
+      {required this.tenantLists, this.initialValue, this.onSelected});
+  final String? initialValue;
   final List<TenantList> tenantLists;
   final ValueChanged<String?>? onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final initialValue = tenantLists.isNotEmpty ? tenantLists.first.id : null;
-    onSelected?.call(initialValue);
     return DropdownMenu(
       initialSelection: initialValue,
       dropdownMenuEntries: tenantLists
