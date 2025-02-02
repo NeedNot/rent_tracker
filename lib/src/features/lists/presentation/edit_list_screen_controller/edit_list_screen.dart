@@ -1,3 +1,4 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,11 +17,13 @@ class _EditListScreenState extends ConsumerState<EditListScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String? _name;
+  List<String>? _sharedWith;
 
   @override
   void initState() {
     super.initState();
     _name = widget.list?.name;
+    _sharedWith = widget.list?.sharedWith;
   }
 
   bool _validateAndSaveForm() {
@@ -36,7 +39,10 @@ class _EditListScreenState extends ConsumerState<EditListScreen> {
     if (_validateAndSaveForm()) {
       final success = await ref
           .read(editListScrenControllerProvider.notifier)
-          .submit(oldList: widget.list, name: _name!, sharedWith: []);
+          .submit(
+              oldList: widget.list,
+              name: _name!,
+              sharedWith: _sharedWith ?? []);
       if (success && mounted) {
         context.pop();
       }
@@ -150,6 +156,101 @@ class _EditListScreenState extends ConsumerState<EditListScreen> {
         onSaved: (value) => _name = value,
       ),
       const SizedBox(height: 16),
+      _ShareWithEmail(
+        sharedWith: _sharedWith ?? [],
+        onUpdateList: (list) => _sharedWith = list,
+      )
     ];
+  }
+}
+
+class _ShareWithEmail extends StatefulWidget {
+  const _ShareWithEmail({required this.sharedWith, required this.onUpdateList});
+  final List<String> sharedWith;
+  final Function(List<String>) onUpdateList;
+  @override
+  State<_ShareWithEmail> createState() => _ShareWithEmailState();
+}
+
+class _ShareWithEmailState extends State<_ShareWithEmail> {
+  final _formKey = GlobalKey<FormState>();
+  late List<String> _sharedWith;
+
+  @override
+  void initState() {
+    super.initState();
+    _sharedWith = List.from(widget.sharedWith); // Ensure it's a separate list
+  }
+
+  bool _validateAndSaveForm() {
+    final form = _formKey.currentState!;
+    if (form.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
+  }
+
+  void _removeEmail(int index) {
+    setState(() {
+      _sharedWith = List.from(_sharedWith)..removeAt(index);
+      widget.onUpdateList(_sharedWith);
+    });
+  }
+
+  void _addEmail(String value) {
+    setState(() {
+      _sharedWith.add(value);
+      widget.onUpdateList(_sharedWith);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  decoration:
+                      const InputDecoration(labelText: 'Share with email'),
+                  validator: (value) {
+                    if (!EmailValidator.validate(value ?? '')) {
+                      return "Enter a valid email address";
+                    }
+                    if (widget.sharedWith.contains(value)) {
+                      return "Email already in shared list";
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _addEmail(value!);
+                    _formKey.currentState!.reset();
+                  },
+                ),
+              ),
+              OutlinedButton(
+                onPressed: _validateAndSaveForm,
+                child: const Text("Add"),
+              ),
+            ],
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: _sharedWith.length,
+            itemBuilder: (context, index) => ListTile(
+              title: Text(_sharedWith[index]),
+              trailing: IconButton(
+                onPressed: () => _removeEmail(index),
+                icon: const Icon(Icons.remove),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -33,7 +33,7 @@ class ListScreen extends ConsumerWidget {
               itemBuilder: (context, index) => ListTile(
                 title: Text(tenantLists[index].name),
                 subtitle: Text(
-                  "Shared with ${tenantLists[index].sharedWith.length} people",
+                  "Shared with ${tenantLists[index].sharedWith.length} ${tenantLists[index].sharedWith.length == 1 ? "person" : "people"}",
                 ),
                 onTap: () => context.pushNamed(
                   AppRoute.editList.name,
