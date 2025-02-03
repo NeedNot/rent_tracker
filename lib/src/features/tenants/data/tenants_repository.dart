@@ -47,8 +47,19 @@ class TenantsRepository {
     _firestore.doc(tenantPath(id)).update({'payments.$month': amountPaid});
   }
 
-  Future<void> deleteTenant({required String uid, required String id}) async {
+  Future<void> deleteTenant({required String id}) async {
     _firestore.doc(tenantPath(id)).delete();
+  }
+
+  Future<void> deleteTenants(String listId) async {
+    final querySnapshot = await queryTenants(listId: listId).get();
+    final batch = _firestore.batch();
+
+    for (final doc in querySnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
   }
 
   Stream<Tenant> watchTenant({required String uid, required String id}) {

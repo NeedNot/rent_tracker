@@ -1,4 +1,5 @@
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
+import 'package:rent_tracker/src/features/lists/applications/list_service.dart';
 import 'package:rent_tracker/src/features/lists/data/lists_repository.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -40,13 +41,10 @@ class EditListScrenController extends _$EditListScrenController {
   }
 
   Future<bool> delete(String id) async {
-    final currentUser = ref.read(authRepositoryProvider).currentUser!;
-    final repository = ref.read(listsRepositoryProvider);
-
     state = const AsyncLoading().copyWithPrevious(state);
+    final service = ref.read(listServiceProvider);
 
-    state = await AsyncValue.guard(
-        () => repository.deleteList(uid: currentUser.uid, id: id));
+    state = await AsyncValue.guard(() => service.deleteList(id));
     return state.hasError == false;
   }
 }

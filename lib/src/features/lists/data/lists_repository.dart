@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rent_tracker/src/features/authentication/data/firebase_auth_repository.dart';
 import 'package:rent_tracker/src/features/lists/domain/tenant_list.dart';
@@ -23,7 +22,6 @@ class ListsRepository {
           .collection(listsPath())
           .add({'name': name, 'ownerId': uid, 'sharedWith': sharedWith});
 
-// todo delete tenants
   Future<void> deleteList({required String uid, required String id}) async =>
       _firestore.doc(listPath(uid, id)).delete();
 
@@ -31,7 +29,8 @@ class ListsRepository {
           {required String uid, required TenantList list}) async =>
       _firestore.doc(listPath(uid, list.id)).update(list.toMap());
 
-  Stream<List<TenantList>> watchLists({required String uid, required String email, String? id}) {
+  Stream<List<TenantList>> watchLists(
+      {required String uid, required String email, String? id}) {
     final ownedListsQuery = queryLists(uid: uid, id: id)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());

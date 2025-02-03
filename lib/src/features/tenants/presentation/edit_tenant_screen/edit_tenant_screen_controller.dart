@@ -44,13 +44,11 @@ class EditTenantScreenController extends _$EditTenantScreenController {
   }
 
   Future<bool> delete(String id) async {
-    final currentUser = ref.read(authRepositoryProvider).currentUser!;
     final repository = ref.read(tenantsRepositoryProvider);
 
     state = const AsyncLoading().copyWithPrevious(state);
 
-    state = await AsyncValue.guard(
-        () => repository.deleteTenant(uid: currentUser.uid, id: id));
+    state = await AsyncValue.guard(() => repository.deleteTenant(id: id));
     return state.hasError == false;
   }
 

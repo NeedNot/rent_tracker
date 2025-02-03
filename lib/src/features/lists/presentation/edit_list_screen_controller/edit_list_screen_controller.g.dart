@@ -7,7 +7,7 @@ part of 'edit_list_screen_controller.dart';
 // **************************************************************************
 
 String _$editListScrenControllerHash() =>
-    r'916856c11e635c756b8928f5ee1af5af3c4995f6';
+    r'80eaf313ad30486709e3d8fac586521b4d37a90a';
 
 /// See also [EditListScrenController].
 @ProviderFor(EditListScrenController)

@@ -7,7 +7,7 @@ part of 'edit_tenant_screen_controller.dart';
 // **************************************************************************
 
 String _$editTenantScreenControllerHash() =>
-    r'99cb13a78c919322ce802b5988b9050cc9bfd8ee';
+    r'0ac053c378f1e06a96eff5812f39a9a432ffa88f';
 
 /// See also [EditTenantScreenController].
 @ProviderFor(EditTenantScreenController)
