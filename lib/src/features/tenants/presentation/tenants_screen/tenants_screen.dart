@@ -99,14 +99,16 @@ class _TenantListView extends ConsumerWidget {
 
             final oldestDate = tenants.first.createdAt;
             final monthsSince =
-                DateUtils.monthDelta(oldestDate, DateTime.now()) + 1;
+                DateUtils.monthDelta(oldestDate, DateTime.now());
+            debugPrint(monthsSince.toString());
 
             return ListView.builder(
               padding: const EdgeInsets.only(bottom: 64),
-              itemCount: monthsSince,
+              itemCount: monthsSince + 1,
               itemBuilder: (context, index) {
                 final month = DateUtils.addMonthsToMonthDate(
-                    oldestDate, -1 * (index - 1));
+                    oldestDate, -index + monthsSince);
+                debugPrint(month.toString());
                 final filteredTenants = tenants.where((tenant) {
                   final tenantDate = tenant.createdAt;
                   return tenantDate.difference(month).isNegative ||
