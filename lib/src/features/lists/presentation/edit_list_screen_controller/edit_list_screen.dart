@@ -150,7 +150,7 @@ class _EditListScreenState extends ConsumerState<EditListScreen> {
   List<Widget> _buildFormChildren() {
     return [
       TextFormField(
-        decoration: const InputDecoration(labelText: 'Tenant name'),
+        decoration: const InputDecoration(labelText: 'List name'),
         initialValue: _name,
         validator: (value) =>
             (value ?? '').isNotEmpty ? null : 'Name can\'t be empty',
