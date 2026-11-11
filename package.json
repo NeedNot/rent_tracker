@@ -1,0 +1,31 @@
+{
+  "name": "rent-tracker",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "auth-worker",
+    "email-worker",
+    "backup-worker",
+    "tools/architecture-lint",
+    "tools/codegen"
+  ],
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc -p convex && npm run typecheck --workspaces",
+    "test": "vitest run",
+    "lint:architecture": "npm run check --workspace tools/architecture-lint",
+    "codegen": "npm run generate --workspace tools/codegen"
+  },
+  "dependencies": {
+    "convex": "1.49.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@edge-runtime/vm": "5.0.0",
+    "@types/node": "26.6.6",
+    "convex-test": "0.0.70",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

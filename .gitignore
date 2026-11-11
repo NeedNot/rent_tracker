@@ -1,0 +1,34 @@
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata/
+
+# Node / TypeScript
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+.env.*.local
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Convex
+.convex/
+
+# OS
+.DS_Store

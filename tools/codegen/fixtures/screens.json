@@ -1,0 +1,167 @@
+{
+  "url": "http://127.0.0.1:3210",
+  "functions": [
+    {
+      "identifier": "tenants.js:screen",
+      "functionType": "Query",
+      "visibility": { "kind": "public" },
+      "args": {
+        "type": "object",
+        "value": { "tenantId": { "fieldType": { "type": "id", "tableName": "tenants" }, "optional": false } }
+      },
+      "returns": {
+        "type": "object",
+        "value": {
+          "tenants": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "object",
+                "value": {
+                  "_id": { "fieldType": { "type": "id", "tableName": "tenants" }, "optional": false },
+                  "_creationTime": { "fieldType": { "type": "number" }, "optional": false },
+                  "name": { "fieldType": { "type": "string" }, "optional": false },
+                  "status": {
+                    "fieldType": {
+                      "type": "union",
+                      "value": [{ "type": "literal", "value": "active" }, { "type": "literal", "value": "archived" }]
+                    },
+                    "optional": false
+                  },
+                  "moveOut": { "fieldType": { "type": "string" }, "optional": true }
+                }
+              }
+            },
+            "optional": false
+          },
+          "payments": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "object",
+                "value": {
+                  "_id": { "fieldType": { "type": "id", "tableName": "payments" }, "optional": false },
+                  "amountCents": { "fieldType": { "type": "number" }, "optional": false },
+                  "method": {
+                    "fieldType": {
+                      "type": "union",
+                      "value": [{ "type": "literal", "value": "cash" }, { "type": "literal", "value": "bankTransfer" }]
+                    },
+                    "optional": false
+                  },
+                  "note": { "fieldType": { "type": "string" }, "optional": true }
+                }
+              }
+            },
+            "optional": false
+          },
+          "tenantSummaries": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "object",
+                "value": {
+                  "tenantId": { "fieldType": { "type": "id", "tableName": "tenants" }, "optional": false },
+                  "balance": {
+                    "fieldType": {
+                      "type": "object",
+                      "value": {
+                        "rentCents": { "fieldType": { "type": "number" }, "optional": false },
+                        "totalCents": { "fieldType": { "type": "number" }, "optional": false }
+                      }
+                    },
+                    "optional": false
+                  },
+                  "lateFeeSuggestionCents": {
+                    "fieldType": { "type": "union", "value": [{ "type": "number" }, { "type": "null" }] },
+                    "optional": false
+                  }
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      }
+    },
+    {
+      "identifier": "payments.js:list",
+      "functionType": "Query",
+      "visibility": { "kind": "public" },
+      "args": {
+        "type": "object",
+        "value": { "tenantId": { "fieldType": { "type": "id", "tableName": "tenants" }, "optional": false } }
+      },
+      "returns": {
+        "type": "object",
+        "value": {
+          "payments": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "object",
+                "value": {
+                  "_id": { "fieldType": { "type": "id", "tableName": "payments" }, "optional": false },
+                  "amountCents": { "fieldType": { "type": "number" }, "optional": false },
+                  "method": {
+                    "fieldType": {
+                      "type": "union",
+                      "value": [{ "type": "literal", "value": "cash" }, { "type": "literal", "value": "bankTransfer" }]
+                    },
+                    "optional": false
+                  },
+                  "note": { "fieldType": { "type": "string" }, "optional": true }
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      }
+    },
+    {
+      "identifier": "payments.js:log",
+      "functionType": "Mutation",
+      "visibility": { "kind": "public" },
+      "args": {
+        "type": "object",
+        "value": {
+          "tenantId": { "fieldType": { "type": "id", "tableName": "tenants" }, "optional": false },
+          "amountCents": { "fieldType": { "type": "number" }, "optional": false },
+          "method": {
+            "fieldType": {
+              "type": "union",
+              "value": [{ "type": "literal", "value": "cash" }, { "type": "literal", "value": "bankTransfer" }]
+            },
+            "optional": false
+          },
+          "note": { "fieldType": { "type": "string" }, "optional": true },
+          "tags": {
+            "fieldType": {
+              "type": "record",
+              "keys": { "type": "string" },
+              "values": { "fieldType": { "type": "string" }, "optional": false }
+            },
+            "optional": true
+          },
+          "details": { "fieldType": { "type": "any" }, "optional": true }
+        }
+      },
+      "returns": { "type": "id", "tableName": "payments" }
+    },
+    {
+      "identifier": "payments.js:recount",
+      "functionType": "Mutation",
+      "visibility": { "kind": "internal" },
+      "args": { "type": "object", "value": {} },
+      "returns": { "type": "null" }
+    },
+    {
+      "identifier": "app.js:minimumVersion",
+      "functionType": "Query",
+      "visibility": { "kind": "public" },
+      "args": { "type": "object", "value": {} },
+      "returns": { "type": "number" }
+    }
+  ]
+}

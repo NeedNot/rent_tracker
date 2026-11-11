@@ -1,0 +1,10 @@
+{
+  "name": "@rent-tracker/architecture-lint",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node src/cli.ts",
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  }
+}
