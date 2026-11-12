@@ -1,0 +1,13 @@
+# Copy to .dev.vars (git-ignored) for `wrangler dev`. In production, BETTER_AUTH_SECRET is set with `wrangler secret put`; the rest are `vars` in wrangler.jsonc.
+
+# Secret. Signs session cookies and encrypts the JWT signing key; at least 32 random characters (`openssl rand -base64 32`).
+BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters
+
+# Public base URL of this worker; also the JWT issuer that Convex trusts (AUTH_ISSUER there).
+BETTER_AUTH_URL=http://localhost:8787
+
+# The Origin header the app sends on every request.
+APP_ORIGIN=rent-tracker://app
+
+# Comma-separated Google OAuth client IDs accepted as ID-token audiences (Web and Android).
+GOOGLE_CLIENT_IDS=000000000000-web.apps.googleusercontent.com,000000000000-android.apps.googleusercontent.com

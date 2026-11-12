@@ -1,0 +1,5 @@
+export const SIGN_IN_CODE_LENGTH = 6;
+export const SIGN_IN_CODE_LIFETIME_SECONDS = 10 * 60;
+export const SIGN_IN_CODE_ALLOWED_GUESSES = 3;
+export const SIGN_IN_CODE_COOLDOWN_SECONDS = 60;
+export const SIGN_IN_CODES_PER_HOUR = 5;
