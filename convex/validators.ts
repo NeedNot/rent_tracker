@@ -46,3 +46,13 @@ export const softDeleteFields = {
   deletedBy: v.optional(v.id("accounts")),
   deleteReason: v.optional(v.string()),
 };
+
+export const NAME_MAX_LENGTH = 100;
+
+export const accountProfileFields = {
+  accountId: v.id("accounts"),
+  displayName: v.string(),
+  email: v.string(),
+};
+
+export const accountProfile = v.object(accountProfileFields);
