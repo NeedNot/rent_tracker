@@ -27,6 +27,11 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://jitpack.io") {
+            content {
+                includeGroup("com.github.NeedNot.better-auth-android")
+            }
+        }
     }
 }
 
