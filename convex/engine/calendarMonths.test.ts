@@ -13,7 +13,8 @@ describe("calendar month state", () => {
     ["paid when fully covered", "2026-01-20", [payment("2026-01-10", RENT)], "paid", 0],
     ["paid when fully covered inside grace", "2026-01-03", [payment("2026-01-02", RENT)], "paid", 0],
     ["partial when some is covered after grace", "2026-01-20", [payment("2026-01-02", 50000)], "partial", 100000],
-    ["partial when some is covered inside grace", "2026-01-03", [payment("2026-01-02", 50000)], "partial", 100000],
+    ["due, not late when partly covered in grace", "2026-01-03", [payment("2026-01-02", 50000)], "dueNotLate", 100000],
+    ["partial on the day after grace ends", "2026-01-07", [payment("2026-01-02", 50000)], "partial", 100000],
     ["owed when nothing is covered after grace", "2026-01-07", [], "owed", RENT],
     ["due, not late when nothing is covered inside grace", "2026-01-06", [], "dueNotLate", RENT],
   ])("a charged month is %s", (_, today, payments, state, owedCents) => {

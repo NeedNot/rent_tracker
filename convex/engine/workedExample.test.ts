@@ -3,10 +3,12 @@ import { lateFee, ledgerInput, payment } from "./ledgerBuilder.fixture";
 import type { PaymentOrder } from "./ledgerInput";
 import { computeTenantLedger } from "./tenantLedger";
 
-function workedExample(paymentOrder: PaymentOrder) {
+const AFTER_MARCH_GRACE = "2026-03-07";
+
+function workedExample(paymentOrder: PaymentOrder, today = "2026-03-02") {
   return computeTenantLedger(
     ledgerInput({
-      today: "2026-03-02",
+      today,
       group: { paymentOrder, graceDays: 5 },
       debts: [lateFee("2026-02-06", 5000, "2026-02")],
       payments: [payment("2026-01-03", 150000), payment("2026-02-04", 100000), payment("2026-03-02", 150000)],
@@ -31,8 +33,12 @@ describe("product spec worked example", () => {
     expect(firstQuarter(ledger)).toEqual([
       { month: "2026-01", state: "paid", owedCents: 0, hasUnpaidLateFee: false },
       { month: "2026-02", state: "paid", owedCents: 0, hasUnpaidLateFee: true },
-      { month: "2026-03", state: "partial", owedCents: 50000, hasUnpaidLateFee: false },
+      { month: "2026-03", state: "dueNotLate", owedCents: 50000, hasUnpaidLateFee: false },
     ]);
+    expect(firstQuarter(workedExample("rentFirst", AFTER_MARCH_GRACE))[2]).toMatchObject({
+      state: "partial",
+      owedCents: 50000,
+    });
     expect(ledger.summary.balance).toEqual({
       rentOwedCents: 50000,
       lateFeesOwedCents: 5000,
@@ -52,8 +58,12 @@ describe("product spec worked example", () => {
     expect(firstQuarter(ledger)).toEqual([
       { month: "2026-01", state: "paid", owedCents: 0, hasUnpaidLateFee: false },
       { month: "2026-02", state: "paid", owedCents: 0, hasUnpaidLateFee: false },
-      { month: "2026-03", state: "partial", owedCents: 55000, hasUnpaidLateFee: false },
+      { month: "2026-03", state: "dueNotLate", owedCents: 55000, hasUnpaidLateFee: false },
     ]);
+    expect(firstQuarter(workedExample("byDate", AFTER_MARCH_GRACE))[2]).toMatchObject({
+      state: "partial",
+      owedCents: 55000,
+    });
     expect(ledger.summary.balance).toEqual({
       rentOwedCents: 55000,
       lateFeesOwedCents: 0,

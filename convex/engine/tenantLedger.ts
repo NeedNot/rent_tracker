@@ -71,7 +71,7 @@ export function computeTenantLedger(input: TenantLedgerInput): TenantLedger {
     summary: {
       balance,
       state: tenantState(tenant.status, periodStatuses, balance),
-      nextDueDate: first(futurePeriods())?.dueDate,
+      nextDueDate: first(dropWhile(allPeriods(), (period) => period.dueDate < today))?.dueDate,
       lateFeeSuggestion: lateFeeSuggestion(group, tenant, periodStatuses, activeDebts),
       partialMoveOutPeriod: partialMoveOutPeriod(tenant, input.rentTerms),
       mayNotApplyDebtIds: lateFeesThatMayNotApply(periodStatuses, activeDebts, today),
