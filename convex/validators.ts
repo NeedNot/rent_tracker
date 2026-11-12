@@ -35,11 +35,10 @@ export const debtKind = v.union(v.literal("lateFee"), v.literal("custom"));
 
 export const pushPlatform = v.union(v.literal("android"), v.literal("ios"));
 
-export const historyActor = v.union(v.id("accounts"), v.literal("support"));
-
 export const versionFields = {
   version: v.number(),
   lastEditedAt: v.optional(v.number()),
+  lastEditedBy: v.optional(v.id("accounts")),
 };
 
 export const softDeleteFields = {

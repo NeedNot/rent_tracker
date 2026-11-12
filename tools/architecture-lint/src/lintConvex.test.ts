@@ -22,35 +22,31 @@ describe("access-helper rule", () => {
   });
 });
 
-describe("history rules", () => {
-  it("passes when history is inserted only by writeHistory in history.ts", () => {
-    expect(rulesBrokenIn("historyWrites/passing")).toEqual([]);
+describe("no-hard-delete rule", () => {
+  it("passes when ledger rows are cancelled with a patch and other tables are deleted", () => {
+    expect(rulesBrokenIn("noHardDeletes/passing")).toEqual([]);
   });
 
-  it("fails when history is inserted outside writeHistory", () => {
-    expect(rulesBrokenIn("historyWrites/insertOutsideHelper")).toEqual(["history-write-through-helper"]);
+  it("fails when a payment is deleted by id", () => {
+    expect(rulesBrokenIn("noHardDeletes/deleteById")).toEqual(["no-hard-delete"]);
   });
 
-  it("fails when a history row is patched by id", () => {
-    expect(rulesBrokenIn("historyWrites/patchById")).toEqual(["history-immutable"]);
+  it("fails when a debt is deleted by table name", () => {
+    expect(rulesBrokenIn("noHardDeletes/deleteByTableName")).toEqual(["no-hard-delete"]);
   });
 
-  it("fails when a history row is deleted by table name", () => {
-    expect(rulesBrokenIn("historyWrites/deleteByTableName")).toEqual(["history-immutable"]);
+  it("fails when a rent term is deleted through a table-scoped writer", () => {
+    expect(rulesBrokenIn("noHardDeletes/tableScopedWriter")).toEqual(["no-hard-delete"]);
   });
 
-  it("fails when a history row is replaced through a table-scoped writer", () => {
-    expect(rulesBrokenIn("historyWrites/tableScopedWriter")).toEqual(["history-immutable"]);
-  });
-
-  it("fails when the target table could be history", () => {
-    expect(rulesBrokenIn("historyWrites/unknownTable")).toEqual(["history-immutable"]);
+  it("fails when the target table could be a soft-deleted one", () => {
+    expect(rulesBrokenIn("noHardDeletes/unknownTable")).toEqual(["no-hard-delete"]);
   });
 });
 
 describe("violation location", () => {
   it("reports the file and line of the offending call", () => {
-    const [violation] = lintConvexDirectory(path.join(fixtures, "historyWrites/insertOutsideHelper"));
+    const [violation] = lintConvexDirectory(path.join(fixtures, "noHardDeletes/deleteById"));
 
     expect(violation).toMatchObject({ file: "payments.ts", line: 5 });
   });

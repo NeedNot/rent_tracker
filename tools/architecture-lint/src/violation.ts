@@ -1,6 +1,6 @@
 import type ts from "typescript";
 
-export type RuleName = "access-helper" | "history-immutable" | "history-write-through-helper";
+export type RuleName = "access-helper" | "no-hard-delete";
 
 export interface Violation {
   rule: RuleName;

@@ -2,40 +2,34 @@ import ts from "typescript";
 import { type RuleContext, type Violation, violationAt } from "../violation.ts";
 import { forEachDescendant } from "../visit.ts";
 
-const HISTORY_TABLE = "history";
-const HISTORY_FILE = "history.ts";
-const WRITE_HISTORY_FUNCTION = "writeHistory";
+export const SOFT_DELETED_TABLES = ["payments", "debts", "rentTerms"];
 
-const WRITE_METHODS = ["insert", "patch", "replace", "delete"];
 const DATABASE_WRITER_INTERFACES = ["GenericDatabaseWriter", "GenericDatabaseWriterWithTable", "BaseTableWriter"];
 const TABLE_SCOPED_WRITER = "BaseTableWriter";
 
 type TargetTables = string[] | "unknown";
 
-export function checkHistoryWrites(context: RuleContext): Violation[] {
+export function checkNoHardDeletes(context: RuleContext): Violation[] {
   const violations: Violation[] = [];
 
   forEachDescendant(context.sourceFile, (node) => {
     if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) {
       return;
     }
-    const method = node.expression.name.text;
+    if (node.expression.name.text !== "delete") {
+      return;
+    }
     const writerInterface = databaseWriterInterface(node, context.checker);
-    if (!WRITE_METHODS.includes(method) || writerInterface === undefined) {
+    if (writerInterface === undefined) {
       return;
     }
-    if (!mayTargetHistory(targetTables(node, writerInterface, context.checker))) {
-      return;
-    }
-    if (method !== "insert") {
-      violations.push(violationAt(context, node, "history-immutable", `history rows can never be changed (${method})`));
-    } else if (!isInsideWriteHistory(node, context)) {
+    if (maySoftDeletedTable(targetTables(node, writerInterface, context.checker))) {
       violations.push(
         violationAt(
           context,
           node,
-          "history-write-through-helper",
-          `insert history rows only through ${WRITE_HISTORY_FUNCTION} in convex/${HISTORY_FILE}`,
+          "no-hard-delete",
+          `${SOFT_DELETED_TABLES.join(", ")} are cancelled with deletedAt, never deleted`,
         ),
       );
     }
@@ -83,25 +77,6 @@ function tableNames(type: ts.Type): TargetTables {
   return type.isStringLiteral() ? [type.value] : "unknown";
 }
 
-function mayTargetHistory(tables: TargetTables): boolean {
-  return tables === "unknown" || tables.includes(HISTORY_TABLE);
-}
-
-function isInsideWriteHistory(node: ts.Node, context: RuleContext): boolean {
-  if (context.relativePath !== HISTORY_FILE) {
-    return false;
-  }
-  for (let current = node.parent; current !== undefined; current = current.parent) {
-    if (ts.isFunctionDeclaration(current) && current.name?.text === WRITE_HISTORY_FUNCTION) {
-      return true;
-    }
-    if (
-      ts.isVariableDeclaration(current) &&
-      ts.isIdentifier(current.name) &&
-      current.name.text === WRITE_HISTORY_FUNCTION
-    ) {
-      return true;
-    }
-  }
-  return false;
+function maySoftDeletedTable(tables: TargetTables): boolean {
+  return tables === "unknown" || tables.some((table) => SOFT_DELETED_TABLES.includes(table));
 }

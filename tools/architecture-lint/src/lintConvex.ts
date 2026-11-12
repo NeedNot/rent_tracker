@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { checkAccessHelpers } from "./rules/accessHelpers.ts";
-import { checkHistoryWrites } from "./rules/historyWrites.ts";
+import { checkNoHardDeletes } from "./rules/noHardDeletes.ts";
 import type { RuleContext, Violation } from "./violation.ts";
 
 const DEFAULT_COMPILER_OPTIONS: ts.CompilerOptions = {
@@ -25,7 +25,7 @@ export function lintConvexDirectory(convexDir: string): Violation[] {
       return [];
     }
     const context: RuleContext = { sourceFile, checker, relativePath: path.relative(convexDir, file) };
-    return [...checkAccessHelpers(context), ...checkHistoryWrites(context)];
+    return [...checkAccessHelpers(context), ...checkNoHardDeletes(context)];
   });
 }
 

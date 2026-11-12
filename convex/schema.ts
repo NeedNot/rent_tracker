@@ -2,7 +2,6 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
   debtKind,
-  historyActor,
   paymentMethod,
   paymentOrder,
   permissionFields,
@@ -114,28 +113,6 @@ export default defineSchema({
   })
     .index("by_tenant", ["tenantId"])
     .index("by_tenant_for_month", ["tenantId", "forMonth"]),
-
-  lateFeeWaives: defineTable({
-    tenantId: v.id("tenants"),
-    forMonth: v.string(),
-    reason: v.optional(v.string()),
-    waivedBy: v.id("accounts"),
-  }).index("by_tenant_for_month", ["tenantId", "forMonth"]),
-
-  history: defineTable({
-    groupId: v.optional(v.id("groups")),
-    tenantId: v.optional(v.id("tenants")),
-    entity: v.string(),
-    entityId: v.string(),
-    action: v.string(),
-    actorId: historyActor,
-    at: v.number(),
-    before: v.optional(v.any()),
-    after: v.optional(v.any()),
-    reason: v.optional(v.string()),
-  })
-    .index("by_tenant_at", ["tenantId", "at"])
-    .index("by_group_at", ["groupId", "at"]),
 
   pushTokens: defineTable({
     accountId: v.id("accounts"),
