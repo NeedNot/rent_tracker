@@ -1,0 +1,467 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "1f8804b6cb55bbffcd27e1b18864a09c",
+    "entities": [
+      {
+        "tableName": "pending_payments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `tenantId` TEXT NOT NULL, `amountCents` INTEGER NOT NULL, `dateReceived` TEXT NOT NULL, `method` TEXT NOT NULL, `note` TEXT, `status` TEXT NOT NULL, PRIMARY KEY(`clientId`))",
+        "fields": [
+          {
+            "fieldPath": "clientId",
+            "columnName": "clientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tenantId",
+            "columnName": "tenantId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountCents",
+            "columnName": "amountCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateReceived",
+            "columnName": "dateReceived",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "method",
+            "columnName": "method",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "clientId"
+          ]
+        }
+      },
+      {
+        "tableName": "groups",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `creationTime` INTEGER NOT NULL, `name` TEXT NOT NULL, `timeZone` TEXT NOT NULL, `paymentOrder` TEXT NOT NULL, `graceDays` INTEGER NOT NULL, `lateFeeFlatCents` INTEGER, `ownerId` TEXT NOT NULL, `archivedAt` INTEGER, `lastEditedAt` INTEGER, `lastEditedBy` TEXT, `version` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationTime",
+            "columnName": "creationTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeZone",
+            "columnName": "timeZone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentOrder",
+            "columnName": "paymentOrder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "graceDays",
+            "columnName": "graceDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lateFeeFlatCents",
+            "columnName": "lateFeeFlatCents",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ownerId",
+            "columnName": "ownerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archivedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEditedAt",
+            "columnName": "lastEditedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEditedBy",
+            "columnName": "lastEditedBy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "group_summaries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`groupId` TEXT NOT NULL, `activeTenantCount` INTEGER NOT NULL, `lateTenantCount` INTEGER NOT NULL, `totalOwedCents` INTEGER NOT NULL, `archivedTenantCount` INTEGER NOT NULL, `archivedOwedCents` INTEGER NOT NULL, PRIMARY KEY(`groupId`))",
+        "fields": [
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeTenantCount",
+            "columnName": "activeTenantCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lateTenantCount",
+            "columnName": "lateTenantCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalOwedCents",
+            "columnName": "totalOwedCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archivedTenantCount",
+            "columnName": "archivedTenantCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archivedOwedCents",
+            "columnName": "archivedOwedCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "groupId"
+          ]
+        }
+      },
+      {
+        "tableName": "tenants",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `creationTime` INTEGER NOT NULL, `groupId` TEXT NOT NULL, `name` TEXT NOT NULL, `status` TEXT NOT NULL, `moveIn` TEXT NOT NULL, `moveOut` TEXT, `depositCents` INTEGER, `contactName` TEXT, `contactPhone` TEXT, `contactEmail` TEXT, `notes` TEXT, `graceDaysOverride` INTEGER, `lateFeeFlatOverrideCents` INTEGER, `lastPaymentMethod` TEXT, `lastEditedAt` INTEGER, `lastEditedBy` TEXT, `version` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationTime",
+            "columnName": "creationTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "moveIn",
+            "columnName": "moveIn",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "moveOut",
+            "columnName": "moveOut",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "depositCents",
+            "columnName": "depositCents",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "contactName",
+            "columnName": "contactName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contactPhone",
+            "columnName": "contactPhone",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contactEmail",
+            "columnName": "contactEmail",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "graceDaysOverride",
+            "columnName": "graceDaysOverride",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lateFeeFlatOverrideCents",
+            "columnName": "lateFeeFlatOverrideCents",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastPaymentMethod",
+            "columnName": "lastPaymentMethod",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastEditedAt",
+            "columnName": "lastEditedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEditedBy",
+            "columnName": "lastEditedBy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tenants_groupId",
+            "unique": false,
+            "columnNames": [
+              "groupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tenants_groupId` ON `${TABLE_NAME}` (`groupId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "tenant_summaries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tenantId` TEXT NOT NULL, `state` TEXT NOT NULL, `rentOwedCents` INTEGER NOT NULL, `lateFeesOwedCents` INTEGER NOT NULL, `otherOwedCents` INTEGER NOT NULL, `creditCents` INTEGER NOT NULL, `nextDueDate` TEXT, `partialMoveOutStart` TEXT, `partialMoveOutEnd` TEXT, PRIMARY KEY(`tenantId`))",
+        "fields": [
+          {
+            "fieldPath": "tenantId",
+            "columnName": "tenantId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rentOwedCents",
+            "columnName": "rentOwedCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lateFeesOwedCents",
+            "columnName": "lateFeesOwedCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "otherOwedCents",
+            "columnName": "otherOwedCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creditCents",
+            "columnName": "creditCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextDueDate",
+            "columnName": "nextDueDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "partialMoveOutStart",
+            "columnName": "partialMoveOutStart",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "partialMoveOutEnd",
+            "columnName": "partialMoveOutEnd",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tenantId"
+          ]
+        }
+      },
+      {
+        "tableName": "rent_terms",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `creationTime` INTEGER NOT NULL, `tenantId` TEXT NOT NULL, `startMonth` TEXT NOT NULL, `amountCents` INTEGER NOT NULL, `dueDay` INTEGER NOT NULL, `deletedAt` INTEGER, `deletedBy` TEXT, `deleteReason` TEXT, `lastEditedAt` INTEGER, `lastEditedBy` TEXT, `version` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationTime",
+            "columnName": "creationTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tenantId",
+            "columnName": "tenantId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startMonth",
+            "columnName": "startMonth",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountCents",
+            "columnName": "amountCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueDay",
+            "columnName": "dueDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deletedBy",
+            "columnName": "deletedBy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deleteReason",
+            "columnName": "deleteReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastEditedAt",
+            "columnName": "lastEditedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEditedBy",
+            "columnName": "lastEditedBy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_rent_terms_tenantId",
+            "unique": false,
+            "columnNames": [
+              "tenantId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_rent_terms_tenantId` ON `${TABLE_NAME}` (`tenantId`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1f8804b6cb55bbffcd27e1b18864a09c')"
+    ]
+  }
+}

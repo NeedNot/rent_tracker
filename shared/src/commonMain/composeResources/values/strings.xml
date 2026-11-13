@@ -2,5 +2,28 @@
     <string name="app_name">Rent Tracker</string>
     <string name="balance_owes">Owes %1$s</string>
     <string name="balance_credit">Credit %1$s</string>
+    <string name="balance_paid_up">Paid up</string>
+    <string name="home_groups_heading">Groups</string>
+    <string name="home_new_group">New group</string>
+    <plurals name="home_tenant_count">
+        <item quantity="one">%1$d tenant</item>
+        <item quantity="other">%1$d tenants</item>
+    </plurals>
+    <plurals name="home_tenant_count_none_late">
+        <item quantity="one">%1$d tenant · none late</item>
+        <item quantity="other">%1$d tenants · none late</item>
+    </plurals>
+    <string name="home_late_count">%1$d late</string>
+    <string name="home_archived_owed">Archived tenants owe %1$s</string>
+    <string name="home_empty_title">No groups yet</string>
+    <string name="home_empty_body">A group holds the tenants of one property. Create your first group to start tracking rent.</string>
+    <string name="home_loading">Loading your groups</string>
+    <string name="home_error_offline">No connection. Check your internet and try again.</string>
+    <string name="home_error_unexpected">Something went wrong. Please try again.</string>
+    <string name="create_group_title">New group</string>
+    <string name="create_group_name_label">Group name</string>
+    <string name="create_group_save">Save</string>
+    <string name="create_group_close">Close without saving</string>
+    <string name="create_group_error_name_required">Enter a group name.</string>
     <string name="otp_field_label">6-digit sign-in code</string>
 </resources>

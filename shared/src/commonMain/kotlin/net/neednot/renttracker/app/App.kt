@@ -12,7 +12,7 @@ fun App() {
     RentTrackerTheme {
         val navController = rememberNavController()
         NavHost(navController = navController, startDestination = HomeRoute) {
-            homeGraph()
+            homeGraph(navController)
         }
     }
 }
