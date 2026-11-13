@@ -7,6 +7,7 @@ import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.feature.group.presentation.navigation.groupGraph
 import net.neednot.renttracker.feature.home.presentation.navigation.homeGraph
+import net.neednot.renttracker.feature.tenants.presentation.navigation.tenantsGraph
 
 @Composable
 fun App() {
@@ -15,6 +16,7 @@ fun App() {
         NavHost(navController = navController, startDestination = HomeRoute) {
             homeGraph(navController)
             groupGraph(navController)
+            tenantsGraph(navController)
         }
     }
 }
