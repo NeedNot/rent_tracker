@@ -26,4 +26,28 @@
     <string name="create_group_close">Close without saving</string>
     <string name="create_group_error_name_required">Enter a group name.</string>
     <string name="otp_field_label">6-digit sign-in code</string>
+    <string name="tenant_state_late">Late</string>
+    <string name="tenant_state_owes">Owes</string>
+    <plurals name="group_tenant_count_late">
+        <item quantity="one">%1$d tenant · %2$d late</item>
+        <item quantity="other">%1$d tenants · %2$d late</item>
+    </plurals>
+    <plurals name="group_tenant_count_none_late">
+        <item quantity="one">%1$d tenant · none late</item>
+        <item quantity="other">%1$d tenants · none late</item>
+    </plurals>
+    <string name="group_archived">Archived (%1$d)</string>
+    <string name="group_archived_owed">Archived (%1$d) · Owes %2$s</string>
+    <string name="group_tenant_due">Due %1$s</string>
+    <string name="group_tenant_contact_and_due">%1$s · Due %2$s</string>
+    <string name="group_add_tenant">Add tenant</string>
+    <string name="group_back">Back</string>
+    <string name="group_empty_title">No tenants yet</string>
+    <string name="group_empty_body">Add a tenant to start tracking their rent.</string>
+    <string name="group_loading">Loading tenants</string>
+    <string name="group_error_not_found">This group no longer exists.</string>
+    <string name="group_error_offline">No connection. Check your internet and try again.</string>
+    <string name="group_error_unexpected">Something went wrong. Please try again.</string>
+    <string name="archived_tenants_title">Archived tenants</string>
+    <string name="archived_tenants_empty">No archived tenants</string>
 </resources>
