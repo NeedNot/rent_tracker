@@ -62,6 +62,21 @@ class SyncedFlowTest {
         }
 
     @Test
+    fun aRepeatedCacheEmissionWithUnchangedRowsIsNotEmittedAgain() =
+        runTest {
+            val repeatingCache = MutableSharedFlow<List<String>>(replay = 1)
+            repeatingCache.emit(listOf("cached"))
+            syncedFlow(cached = repeatingCache, serverResults = serverResults, store = {}).test {
+                skipItems(1)
+
+                repeatingCache.emit(listOf("cached"))
+                repeatingCache.emit(listOf("edited"))
+
+                assertEquals(Synced(listOf("edited"), SyncStatus.Syncing), awaitItem())
+            }
+        }
+
+    @Test
     fun theServerSubscriptionClosesWhenNobodyCollects() =
         runTest {
             synced.test {

@@ -6,7 +6,6 @@ import com.github.michaelbull.result.onErr
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import net.neednot.renttracker.core.backend.Backend
@@ -55,7 +54,7 @@ class GroupRepositoryImpl(
         ) { group, summary, activeTenants, archivedTenants ->
             if (group == null || summary == null) return@combine null
             group.toGroupDetails(summary, activeTenants, archivedTenants)
-        }.distinctUntilChanged()
+        }
 
     private fun cachedTenants(
         groupId: String,
