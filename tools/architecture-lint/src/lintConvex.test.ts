@@ -9,12 +9,24 @@ function rulesBrokenIn(fixture: string): string[] {
 }
 
 describe("access-helper rule", () => {
-  it("passes when every public handler calls an access helper and internal functions are exempt", () => {
+  it("passes when every public handler calls one of the four access helpers and internal functions are exempt", () => {
     expect(rulesBrokenIn("accessHelpers/passing")).toEqual([]);
   });
 
   it("fails when a public handler calls no access helper", () => {
     expect(rulesBrokenIn("accessHelpers/missingHelper")).toEqual(["access-helper"]);
+  });
+
+  it("fails when a handler calls a helper that is not on the allowed list", () => {
+    expect(rulesBrokenIn("accessHelpers/unlistedHelper")).toEqual(["access-helper"]);
+  });
+
+  it("names every allowed helper in the violation message", () => {
+    const [violation] = lintConvexDirectory(path.join(fixtures, "accessHelpers/missingHelper"));
+
+    expect(violation?.message).toBe(
+      "handler must call one of requireIdentity, requireAccount, requireMember, requirePermission",
+    );
   });
 
   it("fails when the handler is not written inline", () => {

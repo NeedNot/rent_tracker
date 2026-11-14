@@ -8,8 +8,9 @@
  * @module
  */
 
+import type * as access from "../access.js";
+import type * as accounts from "../accounts.js";
 import type * as appError from "../appError.js";
-import type * as authPlaceholder from "../authPlaceholder.js";
 import type * as documentValidators from "../documentValidators.js";
 import type * as editConflict from "../editConflict.js";
 import type * as engine_allocation from "../engine/allocation.js";
@@ -23,6 +24,7 @@ import type * as engine_lateness from "../engine/lateness.js";
 import type * as engine_ledgerInput from "../engine/ledgerInput.js";
 import type * as engine_rentPeriods from "../engine/rentPeriods.js";
 import type * as engine_tenantLedger from "../engine/tenantLedger.js";
+import type * as errors from "../errors.js";
 import type * as groupSummary from "../groupSummary.js";
 import type * as groupTenantSummaries from "../groupTenantSummaries.js";
 import type * as groups from "../groups.js";
@@ -46,8 +48,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  access: typeof access;
+  accounts: typeof accounts;
   appError: typeof appError;
-  authPlaceholder: typeof authPlaceholder;
   documentValidators: typeof documentValidators;
   editConflict: typeof editConflict;
   "engine/allocation": typeof engine_allocation;
@@ -61,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   "engine/ledgerInput": typeof engine_ledgerInput;
   "engine/rentPeriods": typeof engine_rentPeriods;
   "engine/tenantLedger": typeof engine_tenantLedger;
+  errors: typeof errors;
   groupSummary: typeof groupSummary;
   groupTenantSummaries: typeof groupTenantSummaries;
   groups: typeof groups;

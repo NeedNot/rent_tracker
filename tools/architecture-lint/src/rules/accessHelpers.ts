@@ -2,7 +2,7 @@ import ts from "typescript";
 import { type RuleContext, type Violation, violationAt } from "../violation.ts";
 import { forEachDescendant } from "../visit.ts";
 
-export const ACCESS_HELPERS = ["requireMember", "requirePermission"];
+export const ACCESS_HELPERS = ["requireIdentity", "requireAccount", "requireMember", "requirePermission"];
 
 const PUBLIC_FUNCTION_BUILDERS = ["query", "mutation", "action"];
 const GENERATED_SERVER_MODULE = /(^|\/)_generated\/server(\.js)?$/;
@@ -28,7 +28,7 @@ export function checkAccessHelpers(context: RuleContext): Violation[] {
       );
     } else if (!callsAccessHelper(handler)) {
       violations.push(
-        violationAt(context, handler, "access-helper", `handler must call ${ACCESS_HELPERS.join(" or ")}`),
+        violationAt(context, handler, "access-helper", `handler must call one of ${ACCESS_HELPERS.join(", ")}`),
       );
     }
   });
