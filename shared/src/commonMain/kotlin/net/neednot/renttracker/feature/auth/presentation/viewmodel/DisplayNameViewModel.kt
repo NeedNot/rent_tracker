@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.validation.InputLimits
 import net.neednot.renttracker.feature.auth.domain.AuthRepository
 import net.neednot.renttracker.feature.auth.presentation.uistate.DisplayNameUiState
 import net.neednot.renttracker.resources.Res
@@ -29,14 +30,14 @@ class DisplayNameViewModel(
     val events: Flow<DisplayNameEvent> = eventChannel.receiveAsFlow()
 
     fun onDisplayNameChanged(displayName: String) {
-        mutableUiState.update { it.copy(displayName = displayName, error = null) }
+        mutableUiState.update { it.copy(displayName = displayName, error = lengthError(displayName)) }
     }
 
     fun onContinueClicked() {
         if (uiState.value.isSaving) return
         val displayName = uiState.value.displayName.trim()
         when {
-            displayName.length !in 1..MAX_LENGTH -> {
+            displayName.isEmpty() || lengthError(displayName) != null -> {
                 mutableUiState.update { it.copy(error = UiText.Resource(Res.string.auth_error_display_name_length)) }
             }
 
@@ -61,7 +62,10 @@ class DisplayNameViewModel(
         }
     }
 
-    private companion object {
-        const val MAX_LENGTH = 100
-    }
+    private fun lengthError(displayName: String): UiText? =
+        if (displayName.trim().length > InputLimits.MAX_NAME_LENGTH) {
+            UiText.Resource(Res.string.auth_error_display_name_length)
+        } else {
+            null
+        }
 }

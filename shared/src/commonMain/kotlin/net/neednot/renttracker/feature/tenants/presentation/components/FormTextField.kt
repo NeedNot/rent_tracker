@@ -52,7 +52,7 @@ internal fun MoneyField(
     FormTextField(
         label = label,
         text = text,
-        onTextChanged = onTextChanged,
+        onTextChanged = { typed -> onTextChanged(typed.filter { it.isDigit() || it == '.' || it == ',' }) },
         modifier = modifier,
         error = error,
         hint = hint,
@@ -75,7 +75,7 @@ internal fun WholeNumberField(
     FormTextField(
         label = label,
         text = text,
-        onTextChanged = onTextChanged,
+        onTextChanged = { typed -> onTextChanged(typed.filter { it.isDigit() }) },
         modifier = modifier,
         error = error,
         hint = hint,

@@ -3,6 +3,7 @@ package net.neednot.renttracker.feature.tenants.domain
 sealed interface TenantError {
     data class ValidationFailed(
         val message: String,
+        val field: String? = null,
     ) : TenantError
 
     data class EditConflict(

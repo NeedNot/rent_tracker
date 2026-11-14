@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.validation.InputLimits
+import net.neednot.renttracker.core.validation.lengthError
 import net.neednot.renttracker.feature.tenants.domain.RentTermDraft
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
@@ -47,15 +49,14 @@ class RentTermEditorViewModel(
     private var loadedTerm: LoadedRentTerm? = null
     private var previewedDraft: RentTermDraft? = null
     private var previewJob: Job? = null
+    private var hasTriedSaving = false
 
     init {
         viewModelScope.launch { show(tenantRepository.cachedOrFirstSyncedTenant(tenantId)) }
     }
 
     fun onStartMonthChanged(month: YearMonth) {
-        mutableUiState.update {
-            it.copy(startMonth = month, error = null)
-        }
+        mutableUiState.update { it.copy(startMonth = month).withFieldErrors(includesMissing = hasTriedSaving) }
         refreshWarnings()
     }
 
@@ -65,10 +66,11 @@ class RentTermEditorViewModel(
     ) {
         mutableUiState.update {
             when (field) {
-                RentTermEditorField.Amount -> it.copy(amount = text)
-                RentTermEditorField.DueDay -> it.copy(dueDay = text)
-                RentTermEditorField.DeleteReason -> it.copy(deletion = it.deletion?.copy(reason = text, error = null))
-            }.copy(fieldErrors = it.fieldErrors - field, error = null)
+                RentTermEditorField.StartMonth -> it
+                RentTermEditorField.Amount -> it.copy(amount = text).withFieldErrors(includesMissing = hasTriedSaving)
+                RentTermEditorField.DueDay -> it.copy(dueDay = text).withFieldErrors(includesMissing = hasTriedSaving)
+                RentTermEditorField.DeleteReason -> it.withDeleteReason(text)
+            }
         }
         refreshWarnings()
     }
@@ -77,8 +79,9 @@ class RentTermEditorViewModel(
         val state = uiState.value
         val draft = state.draftOrNull()
         if (state.isSaving || state.isLoading) return
+        hasTriedSaving = true
         if (draft == null) {
-            mutableUiState.update { it.copy(fieldErrors = it.formatErrors()) }
+            mutableUiState.update { it.copy(fieldErrors = it.fieldErrors(includesMissing = true)) }
             return
         }
         mutableUiState.update { it.copy(isSaving = true, error = null) }
@@ -105,9 +108,14 @@ class RentTermEditorViewModel(
         val version = loadedTerm?.expectedVersion
         if (deletion == null || rentTermId == null || version == null) return
         val reason = deletion.reason.trim()
-        if (reason.isEmpty()) {
-            val reasonRequired = UiText.Resource(Res.string.rent_term_editor_error_reason_required)
-            mutableUiState.update { it.copy(deletion = deletion.copy(error = reasonRequired)) }
+        val reasonError =
+            if (reason.isEmpty()) {
+                UiText.Resource(Res.string.rent_term_editor_error_reason_required)
+            } else {
+                lengthError(reason, InputLimits.MAX_NAME_LENGTH)
+            }
+        if (reasonError != null) {
+            mutableUiState.update { it.copy(deletion = deletion.copy(error = reasonError)) }
             return
         }
         mutableUiState.update { it.copy(deletion = deletion.copy(isDeleting = true, error = null)) }
@@ -129,11 +137,12 @@ class RentTermEditorViewModel(
 
     private suspend fun onChangeFailed(error: TenantError) {
         val isConflict = error is TenantError.EditConflict
+        val field = (error as? TenantError.ValidationFailed)?.let { rentTermEditorFieldOf(it.field) }
         mutableUiState.update {
-            if (it.deletion != null && !isConflict) {
-                it.copy(deletion = it.deletion.copy(error = error.text()))
-            } else {
-                it.copy(deletion = null, error = error.text())
+            when {
+                it.deletion != null && !isConflict -> it.copy(deletion = it.deletion.copy(error = error.text()))
+                field != null -> it.copy(fieldErrors = it.fieldErrors + (field to error.text()))
+                else -> it.copy(deletion = null, error = error.text())
             }
         }
         if (isConflict) show(tenantRepository.tenantFromServer(tenantId))

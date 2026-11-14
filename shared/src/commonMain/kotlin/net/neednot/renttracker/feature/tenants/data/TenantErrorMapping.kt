@@ -1,5 +1,8 @@
 package net.neednot.renttracker.feature.tenants.data
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 
@@ -17,9 +20,11 @@ internal fun BackendError.toTenantError(): TenantError =
 
 private fun BackendError.Convex.toTenantError(): TenantError =
     when (code) {
-        VALIDATION_FAILED -> TenantError.ValidationFailed(message)
+        VALIDATION_FAILED -> TenantError.ValidationFailed(message, field())
         EDIT_CONFLICT -> TenantError.EditConflict(message)
         NOT_FOUND -> TenantError.NotFound
         TENANT_ARCHIVED -> TenantError.TenantArchived(message)
         else -> TenantError.Unexpected("$code: $message")
     }
+
+private fun BackendError.Convex.field(): String? = (details as? JsonObject)?.get("field")?.jsonPrimitive?.contentOrNull

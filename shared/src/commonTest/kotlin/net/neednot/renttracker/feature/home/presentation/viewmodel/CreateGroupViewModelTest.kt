@@ -14,6 +14,7 @@ import net.neednot.renttracker.feature.home.presentation.uistate.CreateGroupUiSt
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.create_group_error_name_required
 import net.neednot.renttracker.resources.home_error_offline
+import net.neednot.renttracker.resources.input_error_too_long
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -95,5 +96,13 @@ class CreateGroupViewModelTest : MainDispatcherTest() {
             viewModel.onNameChanged("1")
 
             assertEquals(CreateGroupUiState(name = "1"), viewModel.uiState.value)
+        }
+
+    @Test
+    fun aNameOverAHundredCharactersIsFlaggedAsItIsTyped() =
+        runTest {
+            viewModel.onNameChanged("a".repeat(101))
+
+            assertEquals(UiText.Resource(Res.string.input_error_too_long, listOf(100)), viewModel.uiState.value.error)
         }
 }

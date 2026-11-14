@@ -192,6 +192,7 @@ private fun TenantFields(
         label = stringResource(Res.string.tenant_editor_last_day),
         date = form.lastDayInUnit,
         onDateChanged = onLastDayInUnitChanged,
+        error = uiState.fieldErrors[TenantEditorField.LastDayInUnit],
         hint = stringResource(Res.string.tenant_editor_last_day_hint),
         enabled = isEnabled,
         onCleared = { onLastDayInUnitChanged(null) },

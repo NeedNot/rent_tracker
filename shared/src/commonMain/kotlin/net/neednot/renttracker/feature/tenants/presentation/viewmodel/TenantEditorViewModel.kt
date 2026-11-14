@@ -21,6 +21,7 @@ import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.domain.TenantRepository
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditorField
+import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditorForm
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditorUiState
 
 class TenantEditorViewModel(
@@ -36,6 +37,7 @@ class TenantEditorViewModel(
     val events: Flow<TenantEditorEvent> = eventChannel.receiveAsFlow()
 
     private var expectedVersion: Long? = null
+    private var hasTriedSaving = false
 
     init {
         if (tenantId != null) {
@@ -47,32 +49,36 @@ class TenantEditorViewModel(
         field: TenantEditorField,
         text: String,
     ) {
-        mutableUiState.update {
-            it.copy(form = it.form.with(field, text), fieldErrors = it.fieldErrors - field, error = null)
-        }
+        updateForm { it.with(field, text) }
     }
 
     fun onMoveInChanged(date: LocalDate) {
-        mutableUiState.update {
-            it.copy(
-                form = it.form.copy(moveIn = date),
-                fieldErrors = it.fieldErrors - TenantEditorField.MoveIn,
-                error = null,
-            )
-        }
+        updateForm { it.copy(moveIn = date) }
     }
 
     fun onLastDayInUnitChanged(date: LocalDate?) {
-        mutableUiState.update { it.copy(form = it.form.copy(lastDayInUnit = date), error = null) }
+        updateForm { it.copy(lastDayInUnit = date) }
     }
 
     fun onSaveClicked() {
         val state = uiState.value
         if (state.isSaving || state.isLoading) return
+        hasTriedSaving = true
         state.form
             .validate(state.isNewTenant)
             .onOk(::save)
             .onErr { fieldErrors -> mutableUiState.update { it.copy(fieldErrors = fieldErrors) } }
+    }
+
+    private fun updateForm(change: (TenantEditorForm) -> TenantEditorForm) {
+        mutableUiState.update {
+            val form = change(it.form)
+            it.copy(
+                form = form,
+                fieldErrors = form.fieldErrors(it.isNewTenant, includesMissing = hasTriedSaving),
+                error = null,
+            )
+        }
     }
 
     private fun save(form: ValidTenantForm) {
@@ -105,7 +111,14 @@ class TenantEditorViewModel(
     }
 
     private suspend fun onSaveFailed(error: TenantError) {
-        mutableUiState.update { it.copy(error = error.text()) }
+        val field = (error as? TenantError.ValidationFailed)?.let { tenantEditorFieldOf(it.field) }
+        mutableUiState.update {
+            if (field != null) {
+                it.copy(fieldErrors = it.fieldErrors + (field to error.text()))
+            } else {
+                it.copy(error = error.text())
+            }
+        }
         if (error is TenantError.EditConflict && tenantId != null) {
             show(tenantRepository.tenantFromServer(tenantId))
         }

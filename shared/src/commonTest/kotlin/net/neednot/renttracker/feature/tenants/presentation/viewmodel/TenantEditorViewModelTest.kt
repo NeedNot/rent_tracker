@@ -23,10 +23,13 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditor
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditorForm
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditorUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.tenant_editor_error_amount_format
-import net.neednot.renttracker.resources.tenant_editor_error_amount_positive
-import net.neednot.renttracker.resources.tenant_editor_error_due_day_format
+import net.neednot.renttracker.resources.input_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_positive
+import net.neednot.renttracker.resources.input_error_amount_too_large
+import net.neednot.renttracker.resources.input_error_too_long
+import net.neednot.renttracker.resources.tenant_editor_error_due_day
 import net.neednot.renttracker.resources.tenant_editor_error_grace_days
+import net.neednot.renttracker.resources.tenant_editor_error_last_day_before_move_in
 import net.neednot.renttracker.resources.tenant_editor_error_move_in_required
 import net.neednot.renttracker.resources.tenant_editor_error_name_required
 import net.neednot.renttracker.resources.tenant_error_offline
@@ -64,8 +67,8 @@ class TenantEditorViewModelTest : MainDispatcherTest() {
                 mapOf(
                     TenantEditorField.Name to UiText.Resource(Res.string.tenant_editor_error_name_required),
                     TenantEditorField.MoveIn to UiText.Resource(Res.string.tenant_editor_error_move_in_required),
-                    TenantEditorField.MonthlyRent to UiText.Resource(Res.string.tenant_editor_error_amount_format),
-                    TenantEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day_format),
+                    TenantEditorField.MonthlyRent to UiText.Resource(Res.string.input_error_amount_format),
+                    TenantEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day),
                 ),
                 newTenant.uiState.value.fieldErrors,
             )
@@ -73,47 +76,96 @@ class TenantEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun gracePeriodsOutsideZeroToFifteenDaysAreRejected() =
+    fun dueDaysOutsideOneToThirtyOneAreFlaggedAsTheyAreTyped() =
+        runTest {
+            for (day in listOf("0", "32")) {
+                newTenant.onFieldChanged(TenantEditorField.DueDay, day)
+
+                assertEquals(
+                    UiText.Resource(Res.string.tenant_editor_error_due_day),
+                    newTenant.uiState.value.fieldErrors[TenantEditorField.DueDay],
+                )
+            }
+            newTenant.onFieldChanged(TenantEditorField.DueDay, "31")
+
+            assertEquals(emptyMap(), newTenant.uiState.value.fieldErrors)
+        }
+
+    @Test
+    fun gracePeriodsOutsideZeroToFifteenDaysAreFlaggedAndNotSaved() =
         runTest {
             newTenant.fillRequiredFields()
 
             for (days in listOf("-1", "16")) {
                 newTenant.onFieldChanged(TenantEditorField.GraceDays, days)
-                newTenant.onSaveClicked()
-                runCurrent()
 
                 assertEquals(
                     UiText.Resource(Res.string.tenant_editor_error_grace_days),
                     newTenant.uiState.value.fieldErrors[TenantEditorField.GraceDays],
                 )
+                newTenant.onSaveClicked()
+                runCurrent()
             }
             assertTrue(repository.calls.isEmpty())
         }
 
     @Test
-    fun amountsAndNumbersAreCheckedForFormatBeforeSaving() =
+    fun amountsAndNumbersAreFlaggedAsTheyAreTyped() =
         runTest {
-            newTenant.fillRequiredFields()
             newTenant.onFieldChanged(TenantEditorField.MonthlyRent, "0")
             newTenant.onFieldChanged(TenantEditorField.SecurityDeposit, "1.234")
-            newTenant.onFieldChanged(TenantEditorField.LateFee, "fifty")
+            newTenant.onFieldChanged(TenantEditorField.LateFee, "1,000,000.01")
             newTenant.onFieldChanged(TenantEditorField.GraceDays, "2.5")
             newTenant.onFieldChanged(TenantEditorField.DueDay, "first")
 
-            newTenant.onSaveClicked()
-            runCurrent()
-
             assertEquals(
                 mapOf(
-                    TenantEditorField.MonthlyRent to UiText.Resource(Res.string.tenant_editor_error_amount_positive),
-                    TenantEditorField.SecurityDeposit to UiText.Resource(Res.string.tenant_editor_error_amount_format),
-                    TenantEditorField.LateFee to UiText.Resource(Res.string.tenant_editor_error_amount_format),
+                    TenantEditorField.MonthlyRent to UiText.Resource(Res.string.input_error_amount_positive),
+                    TenantEditorField.SecurityDeposit to UiText.Resource(Res.string.input_error_amount_format),
+                    TenantEditorField.LateFee to UiText.Resource(Res.string.input_error_amount_too_large),
                     TenantEditorField.GraceDays to UiText.Resource(Res.string.tenant_editor_error_grace_days),
-                    TenantEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day_format),
+                    TenantEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day),
                 ),
                 newTenant.uiState.value.fieldErrors,
             )
-            assertTrue(repository.calls.isEmpty())
+        }
+
+    @Test
+    fun textLongerThanTheServerAllowsIsFlaggedAsItIsTyped() =
+        runTest {
+            newTenant.onFieldChanged(TenantEditorField.Name, "a".repeat(101))
+            newTenant.onFieldChanged(TenantEditorField.Notes, "a".repeat(2001))
+
+            assertEquals(
+                mapOf(
+                    TenantEditorField.Name to UiText.Resource(Res.string.input_error_too_long, listOf(100)),
+                    TenantEditorField.Notes to UiText.Resource(Res.string.input_error_too_long, listOf(2000)),
+                ),
+                newTenant.uiState.value.fieldErrors,
+            )
+        }
+
+    @Test
+    fun aLastDayBeforeMoveInIsFlaggedWhenEitherDateChanges() =
+        runTest {
+            val beforeMoveIn = UiText.Resource(Res.string.tenant_editor_error_last_day_before_move_in)
+            newTenant.onMoveInChanged(LocalDate(2026, 3, 1))
+            newTenant.onLastDayInUnitChanged(LocalDate(2026, 2, 28))
+
+            assertEquals(beforeMoveIn, newTenant.uiState.value.fieldErrors[TenantEditorField.LastDayInUnit])
+
+            newTenant.onMoveInChanged(LocalDate(2026, 2, 1))
+
+            assertEquals(emptyMap(), newTenant.uiState.value.fieldErrors)
+        }
+
+    @Test
+    fun missingFieldsAreNotFlaggedUntilSaveIsPressed() =
+        runTest {
+            newTenant.onFieldChanged(TenantEditorField.Name, "A")
+            newTenant.onFieldChanged(TenantEditorField.Name, "")
+
+            assertEquals(emptyMap(), newTenant.uiState.value.fieldErrors)
         }
 
     @Test
@@ -131,19 +183,34 @@ class TenantEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun rulesBeyondFormatAreLeftToTheServerAndItsMessageIsShown() =
+    fun aServerErrorAboutOneFieldIsShownUnderThatField() =
         runTest {
-            repository.addTenantResult = Err(TenantError.ValidationFailed("Due day must be between 1 and 31."))
+            repository.addTenantResult = Err(TenantError.ValidationFailed("Phone is not valid.", field = "Phone"))
             newTenant.fillRequiredFields()
-            newTenant.onFieldChanged(TenantEditorField.DueDay, "45")
-            newTenant.onFieldChanged(TenantEditorField.Phone, "not a phone")
 
             newTenant.onSaveClicked()
             runCurrent()
 
             assertEquals(1, repository.calls.size)
-            assertEquals(UiText.Plain("Due day must be between 1 and 31."), newTenant.uiState.value.error)
+            assertEquals(
+                mapOf(TenantEditorField.Phone to UiText.Plain("Phone is not valid.")),
+                newTenant.uiState.value.fieldErrors,
+            )
+            assertEquals(null, newTenant.uiState.value.error)
             assertEquals(false, newTenant.uiState.value.isSaving)
+        }
+
+    @Test
+    fun aServerErrorWithoutAFieldIsShownAtTheTop() =
+        runTest {
+            repository.addTenantResult = Err(TenantError.ValidationFailed("Something about the group."))
+            newTenant.fillRequiredFields()
+
+            newTenant.onSaveClicked()
+            runCurrent()
+
+            assertEquals(UiText.Plain("Something about the group."), newTenant.uiState.value.error)
+            assertEquals(emptyMap(), newTenant.uiState.value.fieldErrors)
         }
 
     @Test
