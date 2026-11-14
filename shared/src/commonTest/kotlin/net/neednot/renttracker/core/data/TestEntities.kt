@@ -184,3 +184,44 @@ fun membershipEntity(
     settings = SettingsAccessLevel.Full,
     editOthers = true,
 )
+
+fun calendarMonthEntity(
+    tenantId: String,
+    month: String,
+    state: CalendarMonthState = CalendarMonthState.Paid,
+    rentCents: Long = 150_000,
+    coveredCents: Long = 150_000,
+    owedCents: Long = 0,
+    hasUnpaidLateFee: Boolean = false,
+) = CalendarMonthEntity(
+    tenantId = tenantId,
+    month = month,
+    state = state,
+    rentCents = rentCents,
+    coveredCents = coveredCents,
+    owedCents = owedCents,
+    hasUnpaidLateFee = hasUnpaidLateFee,
+    dueDate = "$month-01",
+    graceEnd = "$month-06",
+    wasLate = false,
+    paidByGraceEndCents = null,
+    lateFeeCents = null,
+    lateFeeUnpaidCents = null,
+    suggestedLateFeeCents = null,
+)
+
+fun allocationEntity(
+    tenantId: String,
+    key: String,
+    paymentId: String = "p1",
+    month: String? = "2026-03",
+    amountCents: Long = 100_000,
+) = AllocationEntity(
+    tenantId = tenantId,
+    key = key,
+    paymentId = paymentId,
+    chargeKind = AllocationChargeKind.Rent,
+    month = month,
+    debtId = null,
+    amountCents = amountCents,
+)

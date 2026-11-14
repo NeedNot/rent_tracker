@@ -33,7 +33,7 @@ private class LedgerEntryMapper(
 ) {
     private val paymentsById = sources.payments.associateBy { it.id }
     private val debtsById = sources.debts.associateBy { it.id }
-    private val namesById = sources.accountNames.associate { it.accountId to it.displayName }
+    private val people = PersonResolver(sources.accountNames, permissions)
 
     fun entryOf(row: LedgerRowEntity): LedgerEntry? =
         when (row.kind) {
@@ -137,16 +137,10 @@ private class LedgerEntryMapper(
         at: Long?,
     ): EntryEdit? = if (at == null) null else EntryEdit(by = personOf(by), at = Instant.fromEpochMilliseconds(at))
 
-    private fun personOf(accountId: String?): Person =
-        when {
-            accountId != null && permissions?.isYou(accountId) == true -> Person.You
-            else -> Person.Named(namesById[accountId] ?: DELETED_USER)
-        }
+    private fun personOf(accountId: String?): Person = people.personOf(accountId)
 }
 
-private const val DELETED_USER = "Deleted user"
-
-private fun DebtEntity.chargeKind(): ChargeKind? =
+internal fun DebtEntity.chargeKind(): ChargeKind? =
     when (kind) {
         DebtKind.LateFee -> forMonth?.let { ChargeKind.LateFee(YearMonth.parse(it)) }
         DebtKind.Custom -> ChargeKind.Custom(note.orEmpty())

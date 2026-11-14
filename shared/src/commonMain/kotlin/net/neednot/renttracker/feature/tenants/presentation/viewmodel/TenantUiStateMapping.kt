@@ -16,7 +16,9 @@ import net.neednot.renttracker.feature.tenants.domain.TenantBalance
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.presentation.uistate.BalanceLineUiState
+import net.neednot.renttracker.feature.tenants.presentation.uistate.CalendarUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
+import net.neednot.renttracker.feature.tenants.presentation.uistate.MonthDetailUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantBalanceUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantDetailsUiState
@@ -43,11 +45,13 @@ private const val LEDGER_PREVIEW_SIZE = 3
 internal fun Synced<TenantOverview?, TenantError>.toTenantUiState(
     statusChange: TenantStatusChangeUiState,
     timeZone: TimeZone,
+    calendar: CalendarUiState?,
+    monthDetail: MonthDetailUiState?,
 ): TenantUiState {
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
     val overview = value
     return when {
-        overview != null -> overview.toContent(syncError, statusChange, timeZone)
+        overview != null -> overview.toContent(syncError, statusChange, timeZone, calendar, monthDetail)
         syncError != null -> TenantUiState.Error(syncError)
         status == SyncStatus.Syncing -> TenantUiState.Loading
         else -> TenantUiState.Error(UiText.Resource(Res.string.tenant_error_not_found))
@@ -58,6 +62,8 @@ private fun TenantOverview.toContent(
     syncError: UiText?,
     statusChange: TenantStatusChangeUiState,
     timeZone: TimeZone,
+    calendar: CalendarUiState?,
+    monthDetail: MonthDetailUiState?,
 ): TenantUiState.Content =
     TenantUiState.Content(
         name = tenant.details.name,
@@ -71,6 +77,8 @@ private fun TenantOverview.toContent(
         canLogPayment = !tenant.isArchived && permissions?.canLogPayments == true,
         canAddCharge = !tenant.isArchived && permissions?.canAddCharges == true,
         lateFeeSuggestion = lateFeeSuggestion?.toUiState(),
+        calendar = calendar,
+        monthDetail = monthDetail,
         syncError = syncError,
         statusChange = statusChange,
     )

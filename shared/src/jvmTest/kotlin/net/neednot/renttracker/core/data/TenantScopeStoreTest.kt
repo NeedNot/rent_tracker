@@ -210,7 +210,17 @@ class TenantScopeStoreTest {
             groups = listOf(groupEntity("g1")),
             tenants = listOf(tenantEntity(tenantId, groupId = "g1")),
             tenantSummaries = listOf(tenantSummaryEntity(tenantId)),
-            scope = TenantScopeEntities(emptyList(), payments, debts, ledgerRows, accountNames, memberships),
+            scope =
+                TenantScopeEntities(
+                    emptyList(),
+                    payments,
+                    debts,
+                    ledgerRows,
+                    accountNames,
+                    memberships,
+                    emptyList(),
+                    emptyList(),
+                ),
         )
     }
 }

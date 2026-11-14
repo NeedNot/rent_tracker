@@ -46,10 +46,13 @@ import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.components.BalanceCard
+import net.neednot.renttracker.feature.tenants.presentation.components.CalendarActions
+import net.neednot.renttracker.feature.tenants.presentation.components.CalendarCard
 import net.neednot.renttracker.feature.tenants.presentation.components.EntryActionButtons
 import net.neednot.renttracker.feature.tenants.presentation.components.LateFeeSnackbar
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerEntryHost
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerPreviewCard
+import net.neednot.renttracker.feature.tenants.presentation.components.MonthDetailHost
 import net.neednot.renttracker.feature.tenants.presentation.components.RentTermsCard
 import net.neednot.renttracker.feature.tenants.presentation.components.TenantDetailsCard
 import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryEditTarget
@@ -108,6 +111,17 @@ fun TenantScreen(
                 onViewLedgerClicked = onViewLedgerClicked,
                 onLedgerRowClicked = onLedgerRowClicked,
                 onLedgerRestoreClicked = onLedgerRestoreClicked,
+                calendarActions =
+                    CalendarActions(
+                        onPreviousYearClicked = viewModel::onPreviousYearClicked,
+                        onNextYearClicked = viewModel::onNextYearClicked,
+                        onMonthClicked = viewModel::onMonthClicked,
+                        onMonthDetailDismissed = viewModel::onMonthDetailDismissed,
+                        onAddFeeClicked = { addFee ->
+                            viewModel.onMonthDetailDismissed()
+                            onAddChargeClicked(addFee.month, addFee.suggestedCents)
+                        },
+                    ),
                 onLateFeeAddClicked = { suggestion -> onAddChargeClicked(suggestion.month, suggestion.cents) },
                 onLateFeeDismissed = viewModel::onLateFeeDismissed,
                 onArchiveClicked = viewModel::onArchiveClicked,
@@ -133,6 +147,7 @@ private fun TenantContent(
     onViewLedgerClicked: () -> Unit,
     onLedgerRowClicked: (key: String) -> Unit,
     onLedgerRestoreClicked: (key: String) -> Unit,
+    calendarActions: CalendarActions,
     onLateFeeAddClicked: (LateFeeSuggestionUiState) -> Unit,
     onLateFeeDismissed: () -> Unit,
     onArchiveClicked: () -> Unit,
@@ -197,10 +212,14 @@ private fun TenantContent(
                     onViewLedgerClicked = onViewLedgerClicked,
                     onLedgerRowClicked = onLedgerRowClicked,
                     onLedgerRestoreClicked = onLedgerRestoreClicked,
+                    calendarActions = calendarActions,
                     contentPadding = contentPadding,
                 )
             }
         }
+    }
+    content?.monthDetail?.let { detail ->
+        MonthDetailHost(detail = detail, actions = calendarActions)
     }
     content?.statusChange?.confirmation?.let { confirmation ->
         StatusChangeDialog(
@@ -279,6 +298,7 @@ private fun TenantSections(
     onViewLedgerClicked: () -> Unit,
     onLedgerRowClicked: (key: String) -> Unit,
     onLedgerRestoreClicked: (key: String) -> Unit,
+    calendarActions: CalendarActions,
     contentPadding: PaddingValues,
 ) {
     Column(
@@ -305,6 +325,14 @@ private fun TenantSections(
             onLogPaymentClicked = onLogPaymentClicked,
             onAddChargeClicked = onAddChargeClicked,
         )
+        tenant.calendar?.let { calendar ->
+            CalendarCard(
+                calendar = calendar,
+                onPreviousYearClicked = calendarActions.onPreviousYearClicked,
+                onNextYearClicked = calendarActions.onNextYearClicked,
+                onMonthClicked = calendarActions.onMonthClicked,
+            )
+        }
         LedgerPreviewCard(
             rows = tenant.ledgerPreview,
             onRowClicked = onLedgerRowClicked,
@@ -442,6 +470,7 @@ private fun TenantContentPreview() {
             onViewLedgerClicked = {},
             onLedgerRowClicked = {},
             onLedgerRestoreClicked = {},
+            calendarActions = CalendarActions.None,
             onLateFeeAddClicked = {},
             onLateFeeDismissed = {},
             onArchiveClicked = {},

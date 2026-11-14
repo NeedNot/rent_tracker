@@ -40,6 +40,10 @@ class PaymentEditorViewModel(
     private val clientId = Uuid.random().toString()
     private var expectedVersion: Long? = null
     private var callerAccountId: String? = null
+    private val previewer =
+        PaymentChangePreviewer(viewModelScope, paymentRepository, tenantId, paymentId) { changes ->
+            mutableUiState.update { it.copy(monthChanges = changes) }
+        }
 
     init {
         viewModelScope.launch { show(paymentRepository.cachedOrFirstSyncedEntry(tenantId, paymentId)) }
@@ -57,6 +61,7 @@ class PaymentEditorViewModel(
                 PaymentEditorField.Date -> it
             }.copy(fieldErrors = it.fieldErrors - field, error = null)
         }
+        previewer.refresh(uiState.value)
     }
 
     fun onDateChanged(date: LocalDate) {
@@ -75,6 +80,7 @@ class PaymentEditorViewModel(
                     },
             )
         }
+        previewer.refresh(uiState.value)
     }
 
     fun onMethodClicked(method: PaymentMethod) {
@@ -156,5 +162,6 @@ class PaymentEditorViewModel(
                 it.showing(overview)
             }
         }
+        previewer.restart(overview?.payment?.details, uiState.value)
     }
 }

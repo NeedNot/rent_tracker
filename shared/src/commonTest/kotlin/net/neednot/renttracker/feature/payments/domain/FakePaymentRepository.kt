@@ -5,6 +5,7 @@ import com.github.michaelbull.result.Result
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.LocalDate
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 
@@ -13,6 +14,8 @@ class FakePaymentRepository : PaymentRepository {
 
     var logResult: Result<String, PaymentError> = Ok("p9")
     var editResult: Result<Unit, PaymentError> = Ok(Unit)
+    var previewResult: Result<List<MonthStateChange>, PaymentError> = Ok(emptyList())
+    var previewGate: CompletableDeferred<Unit>? = null
     var saveGate: CompletableDeferred<Unit>? = null
 
     val calls = mutableListOf<PaymentRepositoryCall>()
@@ -42,5 +45,16 @@ class FakePaymentRepository : PaymentRepository {
         calls += PaymentRepositoryCall.Edit(paymentId, expectedVersion, draft)
         saveGate?.await()
         return editResult
+    }
+
+    override suspend fun previewPaymentChange(
+        tenantId: String,
+        paymentId: String,
+        amountCents: Long,
+        dateReceived: LocalDate,
+    ): Result<List<MonthStateChange>, PaymentError> {
+        calls += PaymentRepositoryCall.Preview(tenantId, paymentId, amountCents, dateReceived)
+        previewGate?.await()
+        return previewResult
     }
 }

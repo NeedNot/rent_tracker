@@ -7,4 +7,6 @@ data class TenantScopeEntities(
     val ledgerRows: List<LedgerRowEntity>,
     val accountNames: List<AccountNameEntity>,
     val memberships: List<MembershipEntity>,
+    val allocations: List<AllocationEntity>,
+    val calendarMonths: List<CalendarMonthEntity>,
 )

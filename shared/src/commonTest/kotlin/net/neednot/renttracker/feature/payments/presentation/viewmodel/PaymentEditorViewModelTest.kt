@@ -5,6 +5,7 @@ import com.github.michaelbull.result.Err
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -18,6 +19,8 @@ import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.FakePaymentRepository
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
 import net.neednot.renttracker.feature.payments.domain.LateFeeSuggestion
+import net.neednot.renttracker.feature.payments.domain.MonthState
+import net.neednot.renttracker.feature.payments.domain.MonthStateChange
 import net.neednot.renttracker.feature.payments.domain.PaymentDraft
 import net.neednot.renttracker.feature.payments.domain.PaymentError
 import net.neednot.renttracker.feature.payments.domain.PaymentRepositoryCall
@@ -26,9 +29,14 @@ import net.neednot.renttracker.feature.payments.domain.savedPayment
 import net.neednot.renttracker.feature.payments.domain.synced
 import net.neednot.renttracker.feature.payments.presentation.uistate.DuplicateMatchUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.LateFeeOfferUiState
+import net.neednot.renttracker.feature.payments.presentation.uistate.MonthChangeLine
+import net.neednot.renttracker.feature.payments.presentation.uistate.MonthChangesUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorField
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.balance_owes
+import net.neednot.renttracker.resources.calendar_state_owed
+import net.neednot.renttracker.resources.calendar_state_paid
+import net.neednot.renttracker.resources.calendar_state_partial
 import net.neednot.renttracker.resources.common_error_amount_positive
 import net.neednot.renttracker.resources.entry_error_amount_format
 import net.neednot.renttracker.resources.payment_duplicate_intro_both
@@ -43,6 +51,7 @@ import net.neednot.renttracker.resources.payment_duplicate_you
 import net.neednot.renttracker.resources.payment_editor_conflict_named
 import net.neednot.renttracker.resources.payment_editor_error_date_future
 import net.neednot.renttracker.resources.payment_editor_error_offline
+import net.neednot.renttracker.resources.payment_preview_heading
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

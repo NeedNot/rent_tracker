@@ -6,6 +6,7 @@ import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.onErr
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.KSerializer
@@ -31,6 +32,15 @@ internal class PaymentBackendCalls(
         backend
             .subscribe(name, ConvexJson.encodeArgs(argsSerializer, args), resultSerializer)
             .map { result -> result.toPaymentResult() }
+
+    suspend fun <A, T> queryOnce(
+        name: String,
+        args: A,
+        argsSerializer: KSerializer<A>,
+        resultSerializer: KSerializer<T>,
+    ): Result<T, PaymentError> =
+        withTimeoutOrNull(BACKEND_TIMEOUT) { subscribe(name, args, argsSerializer, resultSerializer).first() }
+            ?: Err(PaymentError.Offline)
 
     suspend fun <A, T> mutate(
         name: String,

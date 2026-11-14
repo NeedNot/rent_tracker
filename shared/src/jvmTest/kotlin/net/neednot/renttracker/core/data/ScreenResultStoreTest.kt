@@ -201,6 +201,8 @@ class ScreenResultStoreTest {
                     ledgerRows = emptyList(),
                     accountNames = emptyList(),
                     memberships = emptyList(),
+                    allocations = emptyList(),
+                    calendarMonths = emptyList(),
                 ),
         )
     }

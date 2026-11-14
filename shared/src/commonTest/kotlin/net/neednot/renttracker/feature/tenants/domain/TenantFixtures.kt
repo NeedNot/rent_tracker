@@ -3,7 +3,9 @@ package net.neednot.renttracker.feature.tenants.domain
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.AccessLevel
+import net.neednot.renttracker.core.data.CalendarMonthState
 import net.neednot.renttracker.core.data.PaymentMethod
+import net.neednot.renttracker.core.data.PaymentOrder
 import net.neednot.renttracker.core.data.TenantBalanceState
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
@@ -174,3 +176,55 @@ fun rentEntry(
     balance = balance,
     month = YearMonth.parse(month),
 )
+
+fun calendarMonth(
+    month: String = "2026-03",
+    state: CalendarMonthState = CalendarMonthState.Paid,
+    rentCents: Long = 150_000,
+    coveredCents: Long = 150_000,
+    owedCents: Long = 0,
+    hasUnpaidLateFee: Boolean = false,
+    dueDate: LocalDate? = LocalDate.parse("$month-01"),
+    graceEnd: LocalDate? = LocalDate.parse("$month-06"),
+    wasLate: Boolean = false,
+    paidByGraceEndCents: Long? = null,
+    lateFeeCents: Long? = null,
+    lateFeeUnpaidCents: Long? = null,
+    suggestedLateFeeCents: Long? = null,
+) = CalendarMonth(
+    month = YearMonth.parse(month),
+    state = state,
+    rentCents = rentCents,
+    coveredCents = coveredCents,
+    owedCents = owedCents,
+    hasUnpaidLateFee = hasUnpaidLateFee,
+    dueDate = dueDate,
+    graceEnd = graceEnd,
+    wasLate = wasLate,
+    paidByGraceEndCents = paidByGraceEndCents,
+    lateFeeCents = lateFeeCents,
+    lateFeeUnpaidCents = lateFeeUnpaidCents,
+    suggestedLateFeeCents = suggestedLateFeeCents,
+)
+
+fun monthPayment(
+    paymentId: String = "p1",
+    dateReceived: LocalDate = LocalDate(2026, 3, 2),
+    method: PaymentMethod? = PaymentMethod.Zelle,
+    paymentCents: Long = 150_000,
+    allocatedToMonthCents: Long = 100_000,
+    otherAllocations: List<OtherAllocation> = emptyList(),
+) = MonthPayment(paymentId, dateReceived, method, paymentCents, allocatedToMonthCents, otherAllocations)
+
+fun monthDetail(
+    month: CalendarMonth = calendarMonth(),
+    payments: List<MonthPayment> = emptyList(),
+    lateFee: MonthLateFee? = null,
+    paymentOrder: PaymentOrder = PaymentOrder.RentFirst,
+    canAddCharge: Boolean = true,
+) = MonthDetail(month, payments, lateFee, paymentOrder, canAddCharge)
+
+fun syncedCalendar(
+    year: Int = 2026,
+    vararg months: CalendarMonth,
+): Synced<TenantCalendar, TenantError> = Synced(TenantCalendar(year, months.toList()), SyncStatus.Synced)

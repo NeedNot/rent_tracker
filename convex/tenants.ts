@@ -2,11 +2,14 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { requireMember, requirePermission } from "./access";
+import { allocationRow, allocationRowsOf } from "./allocationEntity";
 import { validationFailed } from "./appError";
+import { calendarMonth, calendarMonthsOf } from "./calendarMonthEntity";
 import { debtDoc, groupDoc, membershipDoc, paymentDoc, rentTermDoc, tenantDoc } from "./documentValidators";
 import { requireExpectedVersion } from "./editConflict";
 import { type CalendarMonth, monthOf } from "./engine/calendarDate";
 import { computeTenantLedger } from "./engine/tenantLedger";
+import { requireCalendarYear } from "./inputValidation";
 import { ledgerRow, ledgerRowsOf } from "./ledgerRow";
 import { localDateAt } from "./localDate";
 import { activeTerms, firstTermOf, rentTermInput, validRentTermInput, withoutTerm } from "./rentTermRules";
@@ -106,6 +109,8 @@ export const screen = query({
     memberships: v.array(membershipDoc),
     tenantSummaries: v.array(tenantSummary),
     ledgerRows: v.array(ledgerRow),
+    calendarMonths: v.array(calendarMonth),
+    allocations: v.array(allocationRow),
   }),
   handler: async (ctx, args) => {
     const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
@@ -124,7 +129,23 @@ export const screen = query({
       memberships: [membership],
       tenantSummaries: [tenantSummaryOf(tenant._id, ledger.summary)],
       ledgerRows: ledgerRowsOf(tenant._id, input, ledger),
+      calendarMonths: calendarMonthsOf(tenant._id, ledger.calendarMonths),
+      allocations: allocationRowsOf(tenant._id, ledger.allocations),
     };
+  },
+});
+
+export const calendar = query({
+  args: { tenantId: v.id("tenants"), year: v.number(), asOf: v.number() },
+  returns: v.object({ calendarMonths: v.array(calendarMonth) }),
+  handler: async (ctx, args) => {
+    const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
+    await requireMember(ctx, group._id);
+    const calendarYear = requireCalendarYear(args.year);
+    const today = localDateAt(args.asOf, group.timeZone);
+    const rows = await loadTenantLedgerRows(ctx, tenant._id);
+    const ledger = computeTenantLedger(tenantLedgerInput({ group, tenant, rows, today, calendarYear }));
+    return { calendarMonths: calendarMonthsOf(tenant._id, ledger.calendarMonths) };
   },
 });
 

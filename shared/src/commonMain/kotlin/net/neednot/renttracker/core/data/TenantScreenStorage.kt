@@ -1,5 +1,6 @@
 package net.neednot.renttracker.core.data
 
+import net.neednot.renttracker.model.tenants.TenantsCalendarResult
 import net.neednot.renttracker.model.tenants.TenantsScreenResult
 
 suspend fun ScreenResultStore.replaceTenant(
@@ -19,6 +20,16 @@ suspend fun ScreenResultStore.replaceTenant(
                 ledgerRows = result.ledgerRows.map { it.toEntity() },
                 accountNames = result.accounts.map { it.toEntity() },
                 memberships = result.memberships.map { it.toEntity() },
+                allocations = result.allocations.map { it.toEntity() },
+                calendarMonths = result.calendarMonths.map { it.toEntity() },
             ),
     )
+}
+
+suspend fun ScreenResultStore.replaceCalendarYear(
+    tenantId: String,
+    year: Int,
+    result: TenantsCalendarResult,
+) {
+    replaceCalendarYear(tenantId, year, result.calendarMonths.map { it.toEntity() })
 }

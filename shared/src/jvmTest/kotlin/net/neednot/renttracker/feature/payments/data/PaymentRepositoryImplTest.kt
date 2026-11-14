@@ -40,6 +40,8 @@ import net.neednot.renttracker.feature.payments.domain.DuplicateMatch
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
 import net.neednot.renttracker.feature.payments.domain.LateFeeSuggestion
+import net.neednot.renttracker.feature.payments.domain.MonthState
+import net.neednot.renttracker.feature.payments.domain.MonthStateChange
 import net.neednot.renttracker.feature.payments.domain.PaymentBalance
 import net.neednot.renttracker.feature.payments.domain.PaymentDraft
 import net.neednot.renttracker.feature.payments.domain.PaymentEntryOverview
@@ -185,6 +187,81 @@ class PaymentRepositoryImplTest {
                     put("paymentId", "p1")
                 }
             assertEquals(listOf(EDIT to expectedArgs), backend.mutations)
+        }
+
+    @Test
+    fun previewingAnEditAsksOnceWithTheProposedAmountAndDateAndMapsTheChangedMonths() =
+        runTest {
+            backend.answerSubscription(
+                PREVIEW,
+                Ok(
+                    buildJsonObject {
+                        put(
+                            "changes",
+                            buildJsonArray {
+                                add(
+                                    buildJsonObject {
+                                        put("month", "2026-02")
+                                        put("before", "paid")
+                                        put("after", "partial")
+                                    },
+                                )
+                                add(
+                                    buildJsonObject {
+                                        put("month", "2026-03")
+                                        put("before", "dueNotLate")
+                                        put("after", "owed")
+                                    },
+                                )
+                            },
+                        )
+                    },
+                ),
+            )
+
+            val result = repository.previewPaymentChange("t1", "p1", 100_000, LocalDate(2026, 3, 5))
+
+            assertEquals(
+                Ok(
+                    listOf(
+                        MonthStateChange(YearMonth(2026, 2), MonthState.Paid, MonthState.Partial),
+                        MonthStateChange(YearMonth(2026, 3), MonthState.DueNotLate, MonthState.Owed),
+                    ),
+                ),
+                result,
+            )
+            val expectedArgs =
+                buildJsonObject {
+                    put("asOf", TEN_O_CLOCK_UTC)
+                    putJsonObject("proposed") {
+                        put("amountCents", 100_000)
+                        put("dateReceived", "2026-03-05")
+                        put("paymentId", "p1")
+                    }
+                    put("tenantId", "t1")
+                }
+            assertEquals(listOf(PREVIEW to expectedArgs), backend.subscriptions)
+            assertEquals(0, backend.openSubscriptionCount)
+        }
+
+    @Test
+    fun aPreviewValidationErrorBecomesAPaymentError() =
+        runTest {
+            backend.answerSubscription(PREVIEW, Err(BackendError.Convex("ValidationFailed", MESSAGE, null)))
+
+            assertEquals(
+                Err(PaymentError.ValidationFailed(MESSAGE)),
+                repository.previewPaymentChange("t1", "p1", 100_000, LocalDate(2026, 3, 5)),
+            )
+        }
+
+    @Test
+    fun aPreviewWithoutAConnectionReportsOffline() =
+        runTest {
+            assertEquals(
+                Err(PaymentError.Offline),
+                repository.previewPaymentChange("t1", "p1", 100_000, LocalDate(2026, 3, 5)),
+            )
         }
 
     @Test
@@ -432,6 +509,7 @@ class PaymentRepositoryImplTest {
     private companion object {
         const val LOG = "payments:log"
         const val EDIT = "payments:edit"
+        const val PREVIEW = "payments:preview"
         const val MESSAGE = "Sam changed this payment while you were editing."
         const val TEN_O_CLOCK_UTC = 1_794_736_800_000L
         val JsonElementTrue: JsonElement = JsonPrimitive(true)

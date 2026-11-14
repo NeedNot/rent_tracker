@@ -27,6 +27,7 @@ import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.PaymentMethod
 import net.neednot.renttracker.core.designsystem.components.DateField
 import net.neednot.renttracker.core.designsystem.components.FormTextField
+import net.neednot.renttracker.core.designsystem.components.InfoNotice
 import net.neednot.renttracker.core.designsystem.components.MoneyField
 import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
@@ -38,6 +39,7 @@ import net.neednot.renttracker.feature.payments.presentation.components.PaymentE
 import net.neednot.renttracker.feature.payments.presentation.components.PaymentHeaderCard
 import net.neednot.renttracker.feature.payments.presentation.components.PaymentMethodChips
 import net.neednot.renttracker.feature.payments.presentation.uistate.LateFeeOfferUiState
+import net.neednot.renttracker.feature.payments.presentation.uistate.MonthChangesUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorField
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentHeaderUiState
@@ -52,6 +54,8 @@ import net.neednot.renttracker.resources.payment_editor_loading
 import net.neednot.renttracker.resources.payment_editor_note
 import net.neednot.renttracker.resources.payment_editor_title_edit
 import net.neednot.renttracker.resources.payment_editor_title_log
+import net.neednot.renttracker.resources.payment_preview_change_line
+import net.neednot.renttracker.resources.payment_preview_check_failed
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -193,12 +197,35 @@ private fun PaymentFields(
             )
         }
     }
+    uiState.monthChanges?.let { changes -> MonthChangesNotice(changes) }
     uiState.error?.let { error ->
         Text(
             text = error.asString(),
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodyMedium,
         )
+    }
+}
+
+@Composable
+private fun MonthChangesNotice(changes: MonthChangesUiState) {
+    when (changes) {
+        is MonthChangesUiState.Changes -> {
+            val lines =
+                changes.lines.map {
+                    stringResource(
+                        Res.string.payment_preview_change_line,
+                        it.month,
+                        it.before.asString(),
+                        it.after.asString(),
+                    )
+                }
+            InfoNotice((listOf(changes.heading.asString()) + lines).joinToString("\n"))
+        }
+
+        MonthChangesUiState.CheckFailed -> {
+            InfoNotice(stringResource(Res.string.payment_preview_check_failed))
+        }
     }
 }
 

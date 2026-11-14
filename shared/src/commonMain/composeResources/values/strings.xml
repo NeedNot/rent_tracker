@@ -183,4 +183,12 @@
     <string name="input_error_amount_positive">Enter an amount greater than $0.00.</string>
     <string name="input_error_amount_too_large">Enter an amount up to $1,000,000.00.</string>
     <string name="input_error_too_long">Use %1$d characters or fewer.</string>
+
+    <string name="calendar_state_paid">Paid</string>
+    <string name="calendar_state_partial">Partial</string>
+    <string name="calendar_state_owed">Owed</string>
+    <string name="calendar_state_due_not_late">Due, not late</string>
+    <string name="calendar_state_upcoming">Upcoming</string>
+    <string name="calendar_state_prepaid">Prepaid</string>
+    <string name="calendar_state_not_a_tenant">Not a tenant</string>
 </resources>

@@ -17,6 +17,8 @@ sealed interface TenantUiState {
         val canLogPayment: Boolean = false,
         val canAddCharge: Boolean = false,
         val lateFeeSuggestion: LateFeeSuggestionUiState? = null,
+        val calendar: CalendarUiState? = null,
+        val monthDetail: MonthDetailUiState? = null,
         val syncError: UiText? = null,
         val statusChange: TenantStatusChangeUiState = TenantStatusChangeUiState(),
     ) : TenantUiState

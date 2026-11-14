@@ -1,16 +1,24 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, type QueryCtx } from "./_generated/server";
-import { requirePermission } from "./access";
+import { mutation, type QueryCtx, query } from "./_generated/server";
+import { requireMember, requirePermission } from "./access";
 import { appError, validationFailed } from "./appError";
+import { calendarState } from "./calendarMonthEntity";
 import { LATE_FEE_CLIENT_ID_SUFFIX, requireRetryOfSameTenant } from "./clientRetry";
 import { validLateFeeInput } from "./debtInput";
 import { requireConfirmedOrUnique } from "./duplicateEntries";
+import type { CalendarDate } from "./engine/calendarDate";
+import { monthStateChanges } from "./engine/monthStateChanges";
+import { computeTenantLedger } from "./engine/tenantLedger";
 import { requireMayChangeEntry } from "./entryAccess";
 import { requireCurrentEntry } from "./entryVersion";
 import { requireName } from "./inputValidation";
 import { localDateAt } from "./localDate";
+import { requireEditable } from "./paymentEditable";
 import { paymentInput, validPaymentInput } from "./paymentInput";
+import { withProposedPayment } from "./paymentPreview";
+import { tenantLedgerInput } from "./tenantLedgerAdapter";
+import { loadTenantLedgerRows } from "./tenantLedgerRows";
 import { loadTenantScope, requireActiveTenant, type TenantScope } from "./tenantScope";
 
 interface PaymentScope extends TenantScope {
@@ -42,9 +50,8 @@ export const log = mutation({
       return { paymentId: earlier._id, lateFeeId: await earlierLateFeeId(ctx, args.clientId) };
     }
     requireActiveTenant(tenant, ARCHIVED_CHANGE);
-    const payment = validPaymentInput(args, group);
-    const lateFee =
-      args.lateFee && validLateFeeInput({ ...args.lateFee, date: localDateAt(Date.now(), group.timeZone) });
+    const payment = validPaymentInput(args, groupToday(group));
+    const lateFee = args.lateFee && validLateFeeInput({ ...args.lateFee, date: groupToday(group) });
     if (!args.confirmed) {
       await requireConfirmedOrUnique(ctx, {
         tenantId: tenant._id,
@@ -86,12 +93,44 @@ export const edit = mutation({
     await requireChangeable(ctx, { payment, tenant }, membership, args.expectedVersion);
     requireEditable(payment);
     await ctx.db.patch(payment._id, {
-      ...validPaymentInput(args, group),
+      ...validPaymentInput(args, groupToday(group)),
       version: payment.version + 1,
       lastEditedAt: Date.now(),
       lastEditedBy: membership.accountId,
     });
     return null;
+  },
+});
+
+export const preview = query({
+  args: {
+    tenantId: v.id("tenants"),
+    asOf: v.number(),
+    proposed: v.object({
+      paymentId: v.optional(v.id("payments")),
+      ...paymentInput.pick("amountCents", "dateReceived").fields,
+    }),
+  },
+  returns: v.object({
+    changes: v.array(v.object({ month: v.string(), before: calendarState, after: calendarState })),
+  }),
+  handler: async (ctx, args) => {
+    const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
+    await requireMember(ctx, group._id);
+    const today = localDateAt(args.asOf, group.timeZone);
+    const proposed = validPaymentInput({ ...args.proposed }, today);
+    const current = tenantLedgerInput({ group, tenant, rows: await loadTenantLedgerRows(ctx, tenant._id), today });
+    const changed = {
+      ...current,
+      payments: withProposedPayment(current.payments, { paymentId: args.proposed.paymentId, ...proposed }),
+    };
+    return {
+      changes: monthStateChanges(
+        computeTenantLedger(current).rentPeriods,
+        computeTenantLedger(changed).rentPeriods,
+        today,
+      ),
+    };
   },
 });
 
@@ -177,15 +216,6 @@ async function requireChangeable(
   await requireCurrentEntry(ctx, payment, expectedVersion, "payment");
 }
 
-function requireEditable(payment: Doc<"payments">): void {
-  if (payment.deletedAt !== undefined) {
-    throw validationFailed("This payment was cancelled. Restore it to change it.");
-  }
-  if (payment.bouncedAt !== undefined) {
-    throw validationFailed("A bounced payment can't be edited.");
-  }
-}
-
 function paymentWithClientId(ctx: QueryCtx, clientId: string): Promise<Doc<"payments"> | null> {
   return ctx.db
     .query("payments")
@@ -199,4 +229,8 @@ async function earlierLateFeeId(ctx: QueryCtx, clientId: string): Promise<Id<"de
     .withIndex("by_client_id", (q) => q.eq("clientId", `${clientId}${LATE_FEE_CLIENT_ID_SUFFIX}`))
     .first();
   return lateFee?._id;
+}
+
+function groupToday(group: Doc<"groups">): CalendarDate {
+  return localDateAt(Date.now(), group.timeZone);
 }

@@ -319,6 +319,8 @@ class TenantLedgerRepositoryTest {
         val result =
             TenantsScreenResult(
                 accounts = listOf(Account("sam", "Sam Rivera"), Account("me", "Me")),
+                allocations = emptyList(),
+                calendarMonths = emptyList(),
                 debts = listOf(debt()),
                 groups = listOf(group()),
                 ledgerRows = ledgerRows(),

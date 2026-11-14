@@ -437,6 +437,8 @@ class TenantRepositoryImplTest {
         val result =
             TenantsScreenResult(
                 accounts = emptyList(),
+                allocations = emptyList(),
+                calendarMonths = emptyList(),
                 debts = emptyList(),
                 groups = listOf(group()),
                 ledgerRows = emptyList(),

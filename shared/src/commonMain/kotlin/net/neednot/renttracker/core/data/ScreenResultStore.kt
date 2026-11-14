@@ -16,6 +16,8 @@ class ScreenResultStore(
     private val accountNameDao = database.accountNameDao()
     private val membershipDao = database.membershipDao()
     private val ledgerRowDao = database.ledgerRowDao()
+    private val allocationDao = database.allocationDao()
+    private val calendarMonthDao = database.calendarMonthDao()
 
     suspend fun replaceHome(
         groups: List<GroupEntity>,
@@ -65,6 +67,21 @@ class ScreenResultStore(
         accountNameDao.upsert(scope.accountNames)
         membershipDao.upsert(scope.memberships)
         membershipDao.deleteInGroupsExcept(groups.map { it.id }, scope.memberships.map { it.id })
+        allocationDao.upsert(scope.allocations)
+        allocationDao.deleteOfTenantExcept(tenantId, scope.allocations.map { it.key })
+        scope.calendarMonths.map { it.month.substringBefore('-').toInt() }.distinct().forEach { year ->
+            calendarMonthDao.deleteYear(tenantId, year)
+        }
+        calendarMonthDao.upsert(scope.calendarMonths)
+    }
+
+    suspend fun replaceCalendarYear(
+        tenantId: String,
+        year: Int,
+        calendarMonths: List<CalendarMonthEntity>,
+    ) = inOneTransaction {
+        calendarMonthDao.deleteYear(tenantId, year)
+        calendarMonthDao.upsert(calendarMonths)
     }
 
     private suspend fun inOneTransaction(write: suspend () -> Unit) {

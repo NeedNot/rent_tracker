@@ -57,7 +57,7 @@ internal fun RentTrackerDatabase.observeTenantOverview(
         }
     }
 
-private fun GroupEntity.localDateAt(epochMillis: Long): LocalDate =
+internal fun GroupEntity.localDateAt(epochMillis: Long): LocalDate =
     Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(TimeZone.of(timeZone)).date
 
 private fun TenantEntity.toTenant(): Tenant =
@@ -108,3 +108,15 @@ private fun RentTermEntity.toRentTerm(): RentTerm =
         dueDay = dueDay.toInt(),
         version = version,
     )
+
+@OptIn(ExperimentalCoroutinesApi::class)
+internal fun RentTrackerDatabase.observeCurrentYear(
+    tenantId: String,
+    asOf: Flow<Long>,
+): Flow<Int?> =
+    tenantDao().observeById(tenantId).flatMapLatest { tenant ->
+        if (tenant == null) return@flatMapLatest flowOf(null)
+        combine(groupDao().observeById(tenant.groupId), asOf) { group, asOfMillis ->
+            group?.localDateAt(asOfMillis)?.year
+        }
+    }

@@ -18,13 +18,17 @@ export function isInsideGrace(period: RentPeriod, graceDays: number, today: Cale
   return today <= graceEnd(period, graceDays);
 }
 
-export function wasLate(period: RentPeriod, context: LatenessContext): boolean {
-  if (isInsideGrace(period, context.graceDays, context.today)) {
-    return false;
-  }
+export function paidByGraceEndCents(period: RentPeriod, context: LatenessContext): number {
   const deadline = graceEnd(period, context.graceDays);
   const charges = context.orderedCharges.filter((charge) => charge.date <= deadline);
   const payments = context.payments.filter((payment) => payment.dateReceived <= deadline);
   const coverage = coverageByCharge(allocate(payments, charges).allocations);
-  return coveredCents(coverage, rentCharge(period).ref) < period.amountCents;
+  return coveredCents(coverage, rentCharge(period).ref);
+}
+
+export function wasLate(period: RentPeriod, context: LatenessContext): boolean {
+  if (isInsideGrace(period, context.graceDays, context.today)) {
+    return false;
+  }
+  return paidByGraceEndCents(period, context) < period.amountCents;
 }

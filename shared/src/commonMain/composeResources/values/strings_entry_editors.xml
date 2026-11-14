@@ -28,6 +28,12 @@
     <string name="payment_editor_error_offline">Couldn\'t save the payment. Nothing was saved. Check your connection and try again.</string>
     <string name="payment_editor_conflict_named">%1$s changed this payment while you were editing. The form now shows %1$s\'s saved values. Make your change again, then save.</string>
     <string name="payment_editor_conflict_unnamed">This payment changed while you were editing. The form now shows the saved values. Make your change again, then save.</string>
+    <plurals name="payment_preview_heading">
+        <item quantity="one">Saving changes %1$d month:</item>
+        <item quantity="other">Saving changes %1$d months:</item>
+    </plurals>
+    <string name="payment_preview_change_line">%1$s: %2$s → %3$s</string>
+    <string name="payment_preview_check_failed">Couldn\'t check which months change.</string>
     <string name="payment_duplicate_title_one">Possible duplicate</string>
     <string name="payment_duplicate_title_many">Possible duplicates</string>
     <string name="payment_duplicate_intro_payment">A similar payment was already saved:</string>

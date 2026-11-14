@@ -17,6 +17,7 @@ data class PaymentEditorUiState(
     val lateFeeOffer: LateFeeOfferUiState? = null,
     val fieldErrors: Map<PaymentEditorField, UiText> = emptyMap(),
     val conflictBanner: UiText? = null,
+    val monthChanges: MonthChangesUiState? = null,
     val error: UiText? = null,
     val duplicate: DuplicateDialogUiState? = null,
     val isSaving: Boolean = false,
