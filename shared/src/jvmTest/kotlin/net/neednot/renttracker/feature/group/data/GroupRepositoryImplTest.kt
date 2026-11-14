@@ -304,7 +304,7 @@ class GroupRepositoryImplTest {
 
     private fun group() =
         Group(
-            creationTime = 1,
+            creationTime = 1.25,
             id = GROUP_ID,
             graceDays = 5,
             name = "1st Street",
@@ -330,7 +330,7 @@ class GroupRepositoryImplTest {
         status: TenantStatus = TenantStatus.Active,
         contactName: String? = null,
     ) = Tenant(
-        creationTime = 1,
+        creationTime = 1.25,
         id = id,
         contactName = contactName,
         groupId = GROUP_ID,

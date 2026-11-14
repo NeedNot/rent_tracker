@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RentTerm(
     @SerialName("_creationTime")
-    val creationTime: Long,
+    val creationTime: Double,
     @SerialName("_id")
     val id: String,
     val amountCents: Long,

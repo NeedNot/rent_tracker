@@ -3,8 +3,11 @@ import { packageSegment, pascalCase, propertyName, singular } from "./naming.ts"
 
 export const SHARED_PACKAGE = "shared";
 
+// Convex sets _creationTime itself, with a fraction of a millisecond, so it is the one number that is not a Long.
+const CREATION_TIME_FIELD = "_creationTime";
+
 export type KotlinType =
-  | { kind: "builtin"; name: "String" | "Long" | "Boolean" | "JsonElement" }
+  | { kind: "builtin"; name: "String" | "Long" | "Double" | "Boolean" | "JsonElement" }
   | { kind: "list"; item: KotlinType }
   | { kind: "map"; value: KotlinType }
   | { kind: "nullable"; inner: KotlinType }
@@ -163,7 +166,10 @@ class FunctionModels {
 
   private property(fieldName: string, field: Field, parentPrefix: string, location: string): Property {
     const childNaming = namingForField(fieldName, field.fieldType, parentPrefix);
-    const type = this.fieldType(field, childNaming, location);
+    const type: KotlinType =
+      fieldName === CREATION_TIME_FIELD
+        ? { kind: "builtin", name: "Double" }
+        : this.fieldType(field, childNaming, location);
     return { name: propertyName(fieldName), serialName: fieldName, type, hasDefaultNull: field.optional };
   }
 

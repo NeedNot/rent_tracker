@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Group(
     @SerialName("_creationTime")
-    val creationTime: Long,
+    val creationTime: Double,
     @SerialName("_id")
     val id: String,
     val archivedAt: Long? = null,

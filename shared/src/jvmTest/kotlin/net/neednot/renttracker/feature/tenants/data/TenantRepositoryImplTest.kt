@@ -461,7 +461,7 @@ class TenantRepositoryImplTest {
 
     private fun group() =
         Group(
-            creationTime = 1,
+            creationTime = 1.25,
             id = "g1",
             graceDays = 5,
             lateFeeFlatCents = 5_000,
@@ -474,7 +474,7 @@ class TenantRepositoryImplTest {
 
     private fun tenant() =
         Tenant(
-            creationTime = 2,
+            creationTime = 2.25,
             id = "t1",
             groupId = "g1",
             moveIn = "2024-01-01",
@@ -488,7 +488,7 @@ class TenantRepositoryImplTest {
         startMonth: String,
         amountCents: Long = 145_000,
     ) = RentTerm(
-        creationTime = 3,
+        creationTime = 3.25,
         id = id,
         amountCents = amountCents,
         dueDay = 1,

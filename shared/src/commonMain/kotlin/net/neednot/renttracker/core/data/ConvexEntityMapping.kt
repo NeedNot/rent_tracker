@@ -13,7 +13,7 @@ import net.neednot.renttracker.model.shared.TenantStatus as ConvexTenantStatus
 fun Group.toEntity(): GroupEntity =
     GroupEntity(
         id = id,
-        creationTime = creationTime,
+        creationTime = creationTime.toLong(),
         name = name,
         timeZone = timeZone,
         paymentOrder = paymentOrder.toEntity(),
@@ -39,7 +39,7 @@ fun GroupSummary.toEntity(): GroupSummaryEntity =
 fun Tenant.toEntity(): TenantEntity =
     TenantEntity(
         id = id,
-        creationTime = creationTime,
+        creationTime = creationTime.toLong(),
         groupId = groupId,
         name = name,
         status = status.toEntity(),
@@ -74,7 +74,7 @@ fun TenantSummary.toEntity(): TenantSummaryEntity =
 fun RentTerm.toEntity(): RentTermEntity =
     RentTermEntity(
         id = id,
-        creationTime = creationTime,
+        creationTime = creationTime.toLong(),
         tenantId = tenantId,
         startMonth = startMonth,
         amountCents = amountCents,
