@@ -91,7 +91,7 @@ describe("tenants.add", () => {
       { moveOut: "2025-12-31" },
       "Last day in unit must be on or after the move-in date.",
     ],
-    ["negative grace days", { graceDaysOverride: -1 }, "Grace period must be a whole number of days, 0 or more."],
+    ["negative grace days", { graceDaysOverride: -1 }, "Grace period must be 0 to 15 whole days."],
     [
       "a $0.00 late fee override",
       { lateFeeFlatOverrideCents: 0 },

@@ -81,18 +81,18 @@ describe("optionalNonNegativeCents", () => {
 });
 
 describe("grace days", () => {
-  it.each([0, 5, 365])("accepts %d days", (days) => {
+  it.each([0, 5, 15])("accepts %d days", (days) => {
     expect(requireGraceDays(days)).toBe(days);
   });
 
-  it.each([-1, 2.5, Number.NaN, Number.POSITIVE_INFINITY])("rejects %d days", (days) => {
-    expectValidationFailed(() => requireGraceDays(days), "Grace period must be a whole number of days, 0 or more.");
+  it.each([-1, 16, 2.5, Number.NaN, Number.POSITIVE_INFINITY])("rejects %d days", (days) => {
+    expectValidationFailed(() => requireGraceDays(days), "Grace period must be 0 to 15 whole days.");
   });
 
   it("passes through a missing override and checks a present one", () => {
     expect(optionalGraceDays(undefined)).toBeUndefined();
     expect(optionalGraceDays(0)).toBe(0);
-    expectValidationFailed(() => optionalGraceDays(-1), "Grace period must be a whole number of days, 0 or more.");
+    expectValidationFailed(() => optionalGraceDays(-1), "Grace period must be 0 to 15 whole days.");
   });
 });
 

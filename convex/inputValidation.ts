@@ -7,6 +7,7 @@ export const MAX_NAME_LENGTH = 100;
 export const MAX_NOTES_LENGTH = 2000;
 const MIN_DUE_DAY = 1;
 const MAX_DUE_DAY = 31;
+const MAX_GRACE_DAYS = 15;
 
 export function requireAmountCents(cents: number, field: string): number {
   if (!Number.isSafeInteger(cents) || cents < MIN_AMOUNT_CENTS || cents > MAX_AMOUNT_CENTS) {
@@ -30,8 +31,8 @@ export function optionalNonNegativeCents(cents: number | undefined, field: strin
 }
 
 export function requireGraceDays(graceDays: number): number {
-  if (!Number.isSafeInteger(graceDays) || graceDays < 0) {
-    throw validationFailed("Grace period must be a whole number of days, 0 or more.", { field: "Grace period" });
+  if (!Number.isSafeInteger(graceDays) || graceDays < 0 || graceDays > MAX_GRACE_DAYS) {
+    throw validationFailed(`Grace period must be 0 to ${MAX_GRACE_DAYS} whole days.`, { field: "Grace period" });
   }
   return graceDays;
 }

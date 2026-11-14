@@ -26,9 +26,9 @@ import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.tenant_editor_error_amount_format
 import net.neednot.renttracker.resources.tenant_editor_error_amount_positive
 import net.neednot.renttracker.resources.tenant_editor_error_due_day_format
+import net.neednot.renttracker.resources.tenant_editor_error_grace_days
 import net.neednot.renttracker.resources.tenant_editor_error_move_in_required
 import net.neednot.renttracker.resources.tenant_editor_error_name_required
-import net.neednot.renttracker.resources.tenant_editor_error_whole_days
 import net.neednot.renttracker.resources.tenant_error_offline
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -73,6 +73,24 @@ class TenantEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
+    fun gracePeriodsOutsideZeroToFifteenDaysAreRejected() =
+        runTest {
+            newTenant.fillRequiredFields()
+
+            for (days in listOf("-1", "16")) {
+                newTenant.onFieldChanged(TenantEditorField.GraceDays, days)
+                newTenant.onSaveClicked()
+                runCurrent()
+
+                assertEquals(
+                    UiText.Resource(Res.string.tenant_editor_error_grace_days),
+                    newTenant.uiState.value.fieldErrors[TenantEditorField.GraceDays],
+                )
+            }
+            assertTrue(repository.calls.isEmpty())
+        }
+
+    @Test
     fun amountsAndNumbersAreCheckedForFormatBeforeSaving() =
         runTest {
             newTenant.fillRequiredFields()
@@ -90,7 +108,7 @@ class TenantEditorViewModelTest : MainDispatcherTest() {
                     TenantEditorField.MonthlyRent to UiText.Resource(Res.string.tenant_editor_error_amount_positive),
                     TenantEditorField.SecurityDeposit to UiText.Resource(Res.string.tenant_editor_error_amount_format),
                     TenantEditorField.LateFee to UiText.Resource(Res.string.tenant_editor_error_amount_format),
-                    TenantEditorField.GraceDays to UiText.Resource(Res.string.tenant_editor_error_whole_days),
+                    TenantEditorField.GraceDays to UiText.Resource(Res.string.tenant_editor_error_grace_days),
                     TenantEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day_format),
                 ),
                 newTenant.uiState.value.fieldErrors,

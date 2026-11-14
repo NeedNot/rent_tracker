@@ -13,9 +13,11 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditor
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantEditorForm
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.tenant_editor_error_due_day_format
+import net.neednot.renttracker.resources.tenant_editor_error_grace_days
 import net.neednot.renttracker.resources.tenant_editor_error_move_in_required
 import net.neednot.renttracker.resources.tenant_editor_error_name_required
-import net.neednot.renttracker.resources.tenant_editor_error_whole_days
+
+private const val MAX_GRACE_DAYS = 15
 
 internal fun TenantDetails.toForm(): TenantEditorForm =
     TenantEditorForm(
@@ -69,8 +71,8 @@ private fun TenantEditorForm.detailErrors(): Map<TenantEditorField, UiText> =
             amountFormatError(securityDeposit)?.let { put(TenantEditorField.SecurityDeposit, it) }
         }
         if (lateFee.isNotBlank()) positiveAmountFormatError(lateFee)?.let { put(TenantEditorField.LateFee, it) }
-        if (graceDays.isNotBlank() && graceDays.trim().toIntOrNull() == null) {
-            put(TenantEditorField.GraceDays, UiText.Resource(Res.string.tenant_editor_error_whole_days))
+        if (graceDays.isNotBlank() && graceDays.trim().toIntOrNull() !in 0..MAX_GRACE_DAYS) {
+            put(TenantEditorField.GraceDays, UiText.Resource(Res.string.tenant_editor_error_grace_days))
         }
     }
 
