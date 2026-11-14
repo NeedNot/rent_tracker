@@ -2,13 +2,13 @@ import type { UserIdentity } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
-import { failure } from "./errors";
+import { appError } from "./appError";
 import type { permissionLevel } from "./validators";
 
 export async function requireIdentity(ctx: QueryCtx): Promise<UserIdentity> {
   const identity = await ctx.auth.getUserIdentity();
   if (identity === null) {
-    throw failure("NotSignedIn", "Sign in to continue.");
+    throw appError("NotSignedIn", "Sign in to continue.");
   }
   return identity;
 }
@@ -17,7 +17,7 @@ export async function requireAccount(ctx: QueryCtx): Promise<Doc<"accounts">> {
   const identity = await requireIdentity(ctx);
   const account = await accountForSubject(ctx, identity.subject);
   if (account === null) {
-    throw failure("NotSignedIn", "Sign in to continue.");
+    throw appError("NotSignedIn", "Sign in to continue.");
   }
   return requireActive(account);
 }
@@ -31,7 +31,7 @@ export function accountForSubject(ctx: QueryCtx, authSubject: string): Promise<D
 
 export function requireActive(account: Doc<"accounts">): Doc<"accounts"> {
   if (account.deletedAt !== undefined) {
-    throw failure("NotSignedIn", "This account was deleted.");
+    throw appError("NotSignedIn", "This account was deleted.");
   }
   return account;
 }
@@ -48,7 +48,7 @@ export async function requireMember(ctx: QueryCtx, groupId: Id<"groups">): Promi
     .withIndex("by_group_account", (q) => q.eq("groupId", groupId).eq("accountId", account._id))
     .unique();
   if (membership === null) {
-    throw failure("PermissionDenied", "You don't have access to this group.");
+    throw appError("PermissionDenied", "You don't have access to this group.");
   }
   return membership;
 }
@@ -61,7 +61,7 @@ export async function requirePermission(
 ): Promise<Doc<"memberships">> {
   const membership = await requireMember(ctx, groupId);
   if (membership.role !== "owner" && LEVEL_RANK[membership[category]] < LEVEL_RANK[level]) {
-    throw failure("PermissionDenied", "You don't have permission to do that.");
+    throw appError("PermissionDenied", "You don't have permission to do that.");
   }
   return membership;
 }

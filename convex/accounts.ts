@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { accountForSubject, requireAccount, requireActive, requireIdentity } from "./access";
-import { failure } from "./errors";
+import { appError } from "./appError";
 import { accountProfile, accountProfileFields, NAME_MAX_LENGTH } from "./validators";
 
 const INITIAL_VERSION = 1;
@@ -19,14 +19,14 @@ export const ensure = mutation({
 
     const email = identity.email?.trim().toLowerCase();
     if (email === undefined || email === "") {
-      throw failure("NotSignedIn", "The sign-in token has no email address.");
+      throw appError("NotSignedIn", "The sign-in token has no email address.");
     }
     const emailOwner = await ctx.db
       .query("accounts")
       .withIndex("by_email", (q) => q.eq("email", email))
       .first();
     if (emailOwner !== null) {
-      throw failure("ValidationFailed", "This email already belongs to another account.", { field: "email" });
+      throw appError("ValidationFailed", "This email already belongs to another account.", { field: "email" });
     }
 
     const displayName = defaultDisplayName(email);
@@ -47,7 +47,7 @@ export const setDisplayName = mutation({
     const account = await requireAccount(ctx);
     const displayName = args.displayName.trim();
     if (displayName === "" || displayName.length > NAME_MAX_LENGTH) {
-      throw failure("ValidationFailed", `Enter a name of 1 to ${NAME_MAX_LENGTH} characters.`, {
+      throw appError("ValidationFailed", `Enter a name of 1 to ${NAME_MAX_LENGTH} characters.`, {
         field: "displayName",
       });
     }
