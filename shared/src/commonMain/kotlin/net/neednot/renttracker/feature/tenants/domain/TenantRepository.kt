@@ -2,6 +2,7 @@ package net.neednot.renttracker.feature.tenants.domain
 
 import com.github.michaelbull.result.Result
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.sync.Synced
 
 interface TenantRepository {
@@ -51,4 +52,9 @@ interface TenantRepository {
         rentTermId: String?,
         draft: RentTermDraft,
     ): Result<RentTermPreview, TenantError>
+
+    suspend fun dismissLateFeeSuggestion(
+        tenantId: String,
+        month: YearMonth,
+    )
 }

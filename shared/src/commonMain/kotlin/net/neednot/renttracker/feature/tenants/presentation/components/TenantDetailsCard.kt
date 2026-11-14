@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.SectionCard
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantDetailsUiState
 import net.neednot.renttracker.resources.Res

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ledger_total_balance">Total balance</string>
+    <string name="ledger_line_rent">Rent</string>
+    <string name="ledger_line_late_fees">Late fees</string>
+    <string name="ledger_line_other">Other</string>
+    <string name="ledger_log_payment">Log payment</string>
+    <string name="ledger_add_charge">Add charge</string>
+    <string name="ledger_heading">Ledger</string>
+    <string name="ledger_view_full">View full ledger</string>
+    <string name="ledger_preview_empty">No entries yet.</string>
+    <string name="ledger_title">Ledger</string>
+    <string name="ledger_subtitle">%1$s · %2$s</string>
+    <string name="ledger_empty_title">No entries yet</string>
+    <string name="ledger_empty_first_rent">The first rent charge appears on %1$s. Payments and charges you add will show here too.</string>
+    <string name="ledger_empty_no_date">Payments and charges you add will show here.</string>
+    <string name="ledger_row_description">%1$s, %2$s. Opens details.</string>
+
+    <string name="ledger_rent_title">Rent · %1$s</string>
+    <string name="ledger_payment_title">Payment</string>
+    <string name="ledger_payment_title_cash">Payment · Cash</string>
+    <string name="ledger_payment_title_check">Payment · Check</string>
+    <string name="ledger_payment_title_zelle">Payment · Zelle</string>
+    <string name="ledger_payment_title_venmo">Payment · Venmo</string>
+    <string name="ledger_payment_title_bank_transfer">Payment · Bank transfer</string>
+    <string name="ledger_payment_title_other">Payment · Other</string>
+    <string name="ledger_late_fee_title">Late fee · for %1$s</string>
+    <string name="ledger_amount_paid">Paid %1$s</string>
+    <string name="ledger_chip_edited">Edited</string>
+    <string name="ledger_chip_bounced">Bounced</string>
+    <string name="ledger_chip_cancelled">Cancelled</string>
+    <string name="ledger_may_not_apply">May not apply — paid within the grace period</string>
+    <string name="ledger_restore">Restore</string>
+
+    <string name="ledger_payment_logged_you">Logged %1$s by you</string>
+    <string name="ledger_payment_logged_named">Logged %1$s by %2$s</string>
+    <string name="ledger_payment_received_you">Received %1$s · logged %2$s by you</string>
+    <string name="ledger_payment_received_named">Received %1$s · logged %2$s by %3$s</string>
+    <string name="ledger_date_by_you">%1$s by you</string>
+    <string name="ledger_date_by_named">%1$s by %2$s</string>
+    <string name="ledger_cancelled_you">%1$s · you</string>
+    <string name="ledger_cancelled_named">%1$s · %2$s</string>
+    <string name="ledger_late_fee_added_you">Added by you</string>
+    <string name="ledger_late_fee_added_named">Added by %1$s</string>
+    <string name="ledger_custom_added_you">Custom debt · added by you</string>
+    <string name="ledger_custom_added_named">Custom debt · added by %1$s</string>
+    <string name="ledger_edited_you">by you · %1$s</string>
+    <string name="ledger_edited_named">by %2$s · %1$s</string>
+
+    <string name="ledger_method_cash">Cash</string>
+    <string name="ledger_method_check">Check</string>
+    <string name="ledger_method_zelle">Zelle</string>
+    <string name="ledger_method_venmo">Venmo</string>
+    <string name="ledger_method_bank_transfer">Bank transfer</string>
+    <string name="ledger_method_other">Other</string>
+
+    <string name="ledger_sheet_payment">Payment</string>
+    <string name="ledger_sheet_late_fee">Late fee</string>
+    <string name="ledger_sheet_not_counted">Doesn\'t count toward the balance</string>
+    <string name="ledger_field_status">Status</string>
+    <string name="ledger_field_date_received">Date received</string>
+    <string name="ledger_field_method">Method</string>
+    <string name="ledger_field_note">Note</string>
+    <string name="ledger_field_logged">Logged</string>
+    <string name="ledger_field_marked_bounced">Marked bounced</string>
+    <string name="ledger_field_cancelled">Cancelled</string>
+    <string name="ledger_field_reason">Reason</string>
+    <string name="ledger_field_edited">Edited</string>
+    <string name="ledger_field_for_month">For month</string>
+    <string name="ledger_field_date">Date</string>
+    <string name="ledger_field_added">Added</string>
+
+    <string name="ledger_action_edit">Edit</string>
+    <string name="ledger_action_mark_bounced">Mark bounced</string>
+    <string name="ledger_action_cancel_payment">Cancel payment</string>
+    <string name="ledger_action_cancel_charge">Cancel charge</string>
+    <string name="ledger_action_restore_clear_bounce">Restore (clear bounce)</string>
+    <string name="ledger_view_only">View only</string>
+
+    <string name="ledger_cancel_payment_title">Cancel this payment?</string>
+    <string name="ledger_cancel_charge_title">Cancel this charge?</string>
+    <string name="ledger_cancel_message">It stays in the ledger crossed out and counts for nothing. You can restore it later.</string>
+    <string name="ledger_cancel_reason_label">Reason · required</string>
+    <string name="ledger_cancel_reason_counter">%1$d/%2$d</string>
+    <string name="ledger_cancel_reason_required">Enter a reason.</string>
+    <string name="ledger_cancel_keep">Keep</string>
+
+    <string name="ledger_bounced_title">Mark as bounced?</string>
+    <string name="ledger_bounced_message">Mark the %1$s payment for %2$s as bounced? It stays in the ledger but no longer counts toward the balance.</string>
+    <string name="ledger_bounced_message_check">Mark the %1$s check for %2$s as bounced? It stays in the ledger but no longer counts toward the balance.</string>
+    <string name="ledger_bounced_back">Back</string>
+    <string name="ledger_fee_title">Add a bounced-check fee?</string>
+    <string name="ledger_fee_message">Optional. It\'s saved as a custom debt named "Bounced-check fee".</string>
+    <string name="ledger_fee_amount_label">Fee amount</string>
+    <string name="ledger_fee_skip">Skip</string>
+    <string name="ledger_fee_add">Add fee</string>
+
+    <string name="ledger_message_payment_cancelled">Payment cancelled.</string>
+    <string name="ledger_message_payment_restored">Payment restored.</string>
+    <string name="ledger_message_late_fee_cancelled">Late fee for %1$s cancelled.</string>
+    <string name="ledger_message_late_fee_restored">Late fee for %1$s restored.</string>
+    <string name="ledger_message_custom_cancelled">%1$s cancelled.</string>
+    <string name="ledger_message_custom_restored">%1$s restored.</string>
+    <string name="ledger_message_fee_added">Bounced-check fee added.</string>
+
+    <string name="ledger_suggestion_message">Rent for %1$s is late. Add a %2$s late fee?</string>
+    <string name="ledger_suggestion_dismiss">Dismiss</string>
+    <string name="ledger_suggestion_add">Add</string>
+</resources>

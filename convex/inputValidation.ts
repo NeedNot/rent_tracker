@@ -8,6 +8,8 @@ export const MAX_NOTES_LENGTH = 2000;
 const MIN_DUE_DAY = 1;
 const MAX_DUE_DAY = 31;
 const MAX_GRACE_DAYS = 15;
+const MIN_CALENDAR_YEAR = 1900;
+const MAX_CALENDAR_YEAR = 9999;
 
 export function requireAmountCents(cents: number, field: string): number {
   if (!Number.isSafeInteger(cents) || cents < MIN_AMOUNT_CENTS || cents > MAX_AMOUNT_CENTS) {
@@ -46,6 +48,13 @@ export function requireDueDay(dueDay: number): number {
     throw validationFailed("Due day must be between 1 and 31.", { field: "Due day" });
   }
   return dueDay;
+}
+
+export function requireCalendarYear(year: number): number {
+  if (!Number.isSafeInteger(year) || year < MIN_CALENDAR_YEAR || year > MAX_CALENDAR_YEAR) {
+    throw validationFailed(`Year must be between ${MIN_CALENDAR_YEAR} and ${MAX_CALENDAR_YEAR}.`, { field: "Year" });
+  }
+  return year;
 }
 
 export function requireCalendarDate(date: string, field: string): CalendarDate {

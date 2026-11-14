@@ -1,12 +1,13 @@
 import { type Allocation, allocate, coverageByCharge, coveredCents, paymentQueue } from "./allocation";
 import { type Balance, balanceOf, totalOwedCents } from "./balance";
-import { type CalendarDate, type CalendarMonth, yearOf } from "./calendarDate";
+import { type CalendarDate, yearOf } from "./calendarDate";
 import { type CalendarMonthStatus, calendarMonths } from "./calendarMonths";
 import { type Charge, chargeKey, debtCharge, orderCharges, rentCharge } from "./charges";
 import { dropWhile, first, take, takeWhile } from "./iterables";
-import { type LateFeeSuggestion, lateFeeSuggestion, lateFeesThatMayNotApply } from "./lateFees";
-import { graceEnd, type LatenessContext, wasLate } from "./lateness";
-import type { DebtRow, TenantLedgerInput, TenantStatus } from "./ledgerInput";
+import { type LateFeeSuggestion, lateFeeSuggestion, lateFeesThatMayNotApply, suggestedLateFeeCents } from "./lateFees";
+import { graceEnd, type LatenessContext, paidByGraceEndCents, wasLate } from "./lateness";
+import type { TenantLedgerInput, TenantStatus } from "./ledgerInput";
+import { lateFeesByMonth } from "./monthLateFees";
 import {
   type DateRange,
   partialMoveOutPeriod,
@@ -82,7 +83,10 @@ export function computeTenantLedger(input: TenantLedgerInput): TenantLedger {
       today,
       graceEnd: (period) => graceEnd(period, graceDays),
       coveredCents: rentCoveredCents,
-      monthsWithUnpaidLateFee: monthsWithUnpaidLateFee(activeDebts, today, coverage),
+      wasLate: (period) => wasLate(period, lateness),
+      paidByGraceEndCents: (period) => paidByGraceEndCents(period, lateness),
+      lateFeesByMonth: lateFeesByMonth(activeDebts, today, coverage),
+      suggestedLateFeeCents: (rentCents) => suggestedLateFeeCents(group, tenant, rentCents),
     }),
   };
 }
@@ -125,16 +129,4 @@ function* rentCharges(periods: Iterable<RentPeriod>): Generator<Charge> {
 
 function distinctCharges(allocations: readonly Allocation[]): number {
   return new Set(allocations.map((allocation) => chargeKey(allocation.charge))).size;
-}
-
-function monthsWithUnpaidLateFee(
-  activeDebts: readonly DebtRow[],
-  today: CalendarDate,
-  coverage: ReadonlyMap<string, number>,
-): Set<CalendarMonth> {
-  const unpaid = activeDebts.filter((debt) => {
-    const charge = debtCharge(debt);
-    return debt.kind === "lateFee" && debt.date <= today && coveredCents(coverage, charge.ref) < debt.amountCents;
-  });
-  return new Set(unpaid.flatMap((debt) => (debt.forMonth === undefined ? [] : [debt.forMonth])));
 }

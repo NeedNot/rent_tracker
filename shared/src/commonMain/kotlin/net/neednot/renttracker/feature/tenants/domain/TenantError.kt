@@ -10,6 +10,10 @@ sealed interface TenantError {
         val message: String,
     ) : TenantError
 
+    data class PermissionDenied(
+        val message: String,
+    ) : TenantError
+
     data object NotFound : TenantError
 
     data class TenantArchived(

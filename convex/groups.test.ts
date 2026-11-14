@@ -120,6 +120,8 @@ describe("groups.screen", () => {
         creditCents: 0,
         state: "late",
         nextDueDate: "2026-04-01",
+        lateFeeSuggestionMonth: "2026-03",
+        lateFeeSuggestionCents: 7500,
       },
       {
         tenantId: seeded.noRentId,

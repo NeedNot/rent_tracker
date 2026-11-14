@@ -24,9 +24,12 @@ import net.neednot.renttracker.core.auth.AuthSessionState
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.core.navigation.SignInGraphRoute
+import net.neednot.renttracker.core.ui.AppSnackbarHost
 import net.neednot.renttracker.feature.auth.presentation.navigation.authGraph
+import net.neednot.renttracker.feature.debts.presentation.navigation.debtsGraph
 import net.neednot.renttracker.feature.group.presentation.navigation.groupGraph
 import net.neednot.renttracker.feature.home.presentation.navigation.homeGraph
+import net.neednot.renttracker.feature.payments.presentation.navigation.paymentsGraph
 import net.neednot.renttracker.feature.tenants.presentation.navigation.tenantsGraph
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.auth_loading
@@ -41,9 +44,11 @@ fun App() {
         var startDestination by remember { mutableStateOf<Any?>(null) }
         if (startDestination == null) startDestination = sessionState.startDestination()
 
-        when (val start = startDestination) {
-            null -> SessionLoading()
-            else -> RootNavHost(startDestination = start, sessionState = sessionState)
+        AppSnackbarHost {
+            when (val start = startDestination) {
+                null -> SessionLoading()
+                else -> RootNavHost(startDestination = start, sessionState = sessionState)
+            }
         }
     }
 }
@@ -59,6 +64,8 @@ private fun RootNavHost(
         homeGraph(navController)
         groupGraph(navController)
         tenantsGraph(navController)
+        paymentsGraph(navController)
+        debtsGraph(navController)
     }
     LaunchedEffect(sessionState) {
         if (sessionState == AuthSessionState.SignedOut && !navController.isSigningIn()) {

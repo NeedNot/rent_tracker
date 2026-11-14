@@ -9,21 +9,32 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import net.neednot.renttracker.core.data.AccessLevel
 import net.neednot.renttracker.core.data.TenantBalanceState
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.feature.tenants.domain.FakeTenantCalendarRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantRepository
+import net.neednot.renttracker.feature.tenants.domain.LateFeeSuggestion
+import net.neednot.renttracker.feature.tenants.domain.OwedBreakdown
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantGroup
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.domain.TenantRepositoryCall
+import net.neednot.renttracker.feature.tenants.domain.callerPermissions
+import net.neednot.renttracker.feature.tenants.domain.paymentEntry
+import net.neednot.renttracker.feature.tenants.domain.rentEntry
 import net.neednot.renttracker.feature.tenants.domain.rentTerm
 import net.neednot.renttracker.feature.tenants.domain.synced
 import net.neednot.renttracker.feature.tenants.domain.tenantBalance
 import net.neednot.renttracker.feature.tenants.domain.tenantDetails
 import net.neednot.renttracker.feature.tenants.domain.tenantOverview
+import net.neednot.renttracker.feature.tenants.presentation.uistate.BalanceLineUiState
+import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantBalanceUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantConfirmationUiState
@@ -34,7 +45,10 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantUiStat
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.balance_credit
 import net.neednot.renttracker.resources.balance_owes
-import net.neednot.renttracker.resources.balance_paid_up
+import net.neednot.renttracker.resources.ledger_line_late_fees
+import net.neednot.renttracker.resources.ledger_line_other
+import net.neednot.renttracker.resources.ledger_line_rent
+import net.neednot.renttracker.resources.ledger_suggestion_message
 import net.neednot.renttracker.resources.tenant_archive_message
 import net.neednot.renttracker.resources.tenant_archive_owes
 import net.neednot.renttracker.resources.tenant_error_not_found
@@ -57,7 +71,14 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class TenantViewModelTest : MainDispatcherTest() {
     private val repository = FakeTenantRepository()
-    private val viewModel by lazy { TenantViewModel(tenantId = "t1", tenantRepository = repository) }
+    private val viewModel by lazy {
+        TenantViewModel(
+            tenantId = "t1",
+            tenantRepository = repository,
+            calendarRepository = FakeTenantCalendarRepository(),
+            timeZone = TimeZone.UTC,
+        )
+    }
 
     @Test
     fun showsLoadingUntilTheTenantArrives() =
@@ -81,6 +102,7 @@ class TenantViewModelTest : MainDispatcherTest() {
                 TenantBalanceUiState(
                     state = TenantBalanceState.Late,
                     total = UiText.Resource(Res.string.balance_owes, listOf("$550.00")),
+                    lines = listOf(BalanceLineUiState(UiText.Resource(Res.string.ledger_line_rent), "$550.00")),
                     nextDue = UiText.Resource(Res.string.tenant_next_due, listOf("Apr 1, 2026")),
                     partialMoveOutWarning = null,
                 ),
@@ -89,13 +111,13 @@ class TenantViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun theBalanceTotalIsAlwaysInWords() =
+    fun theBalanceTotalIsInWordsAndAPaidUpTenantShowsZeroDollars() =
         runTest {
             val credit = contentOf(tenantOverview(balance = tenantBalance(creditCents = 40_000)))
             assertEquals(UiText.Resource(Res.string.balance_credit, listOf("$400.00")), credit.balance?.total)
 
             val paidUp = contentOf(tenantOverview(balance = tenantBalance(nextDueDate = null)))
-            assertEquals(UiText.Resource(Res.string.balance_paid_up), paidUp.balance?.total)
+            assertEquals(UiText.Plain("$0.00"), paidUp.balance?.total)
             assertNull(paidUp.balance?.nextDue)
         }
 
@@ -372,6 +394,144 @@ class TenantViewModelTest : MainDispatcherTest() {
                     (expectMostRecentItem() as TenantUiState.Content).statusChange,
                 )
             }
+        }
+
+    @Test
+    fun theBalanceListsRentLateFeesAndOtherAndHidesZeroLines() =
+        runTest {
+            val everything =
+                contentOf(
+                    tenantOverview(
+                        balance =
+                            tenantBalance(
+                                TenantBalanceState.Late,
+                                owedCents = 67_000,
+                                owedBreakdown =
+                                    OwedBreakdown(
+                                        rentCents = 50_000,
+                                        lateFeesCents = 5_000,
+                                        otherCents = 12_000,
+                                    ),
+                            ),
+                    ),
+                )
+            assertEquals(
+                listOf(
+                    BalanceLineUiState(UiText.Resource(Res.string.ledger_line_rent), "$500.00"),
+                    BalanceLineUiState(UiText.Resource(Res.string.ledger_line_late_fees), "$50.00"),
+                    BalanceLineUiState(UiText.Resource(Res.string.ledger_line_other), "$120.00"),
+                ),
+                everything.balance?.lines,
+            )
+
+            val onlyOther =
+                contentOf(
+                    tenantOverview(
+                        balance =
+                            tenantBalance(
+                                owedCents = 12_000,
+                                owedBreakdown = OwedBreakdown(rentCents = 0, lateFeesCents = 0, otherCents = 12_000),
+                            ),
+                    ),
+                )
+            assertEquals(
+                listOf(BalanceLineUiState(UiText.Resource(Res.string.ledger_line_other), "$120.00")),
+                onlyOther.balance?.lines,
+            )
+            assertEquals(
+                emptyList(),
+                contentOf(tenantOverview(balance = tenantBalance(creditCents = 30_000))).balance?.lines,
+            )
+        }
+
+    @Test
+    fun theLedgerPreviewShowsTheThreeNewestEntries() =
+        runTest {
+            val ledger =
+                listOf(
+                    paymentEntry(key = "payment:p1"),
+                    rentEntry(month = "2026-03"),
+                    rentEntry(month = "2026-02"),
+                    rentEntry(month = "2026-01"),
+                )
+
+            val content = contentOf(tenantOverview(ledger = ledger))
+
+            assertEquals(listOf("payment:p1", "rent:2026-03", "rent:2026-02"), content.ledgerPreview.map { it.key })
+        }
+
+    @Test
+    fun logPaymentAndAddChargeFollowTheCallersPermissions() =
+        runTest {
+            val cases =
+                listOf(
+                    callerPermissions(isOwner = true) to (true to true),
+                    callerPermissions(isOwner = false, payments = AccessLevel.AddEdit, debts = AccessLevel.Read) to
+                        (true to false),
+                    callerPermissions(isOwner = false, payments = AccessLevel.Read, debts = AccessLevel.Full) to
+                        (false to true),
+                    callerPermissions(isOwner = false, payments = AccessLevel.Read, debts = AccessLevel.Read) to
+                        (false to false),
+                    null to (false to false),
+                )
+
+            cases.forEach { (permissions, expected) ->
+                val content = contentOf(tenantOverview(permissions = permissions))
+                assertEquals(expected, content.canLogPayment to content.canAddCharge, "permissions = $permissions")
+            }
+        }
+
+    @Test
+    fun anArchivedTenantHasNoLogPaymentOrAddCharge() =
+        runTest {
+            val content = contentOf(tenantOverview(isArchived = true, permissions = callerPermissions(isOwner = true)))
+
+            assertEquals(false, content.canLogPayment)
+            assertEquals(false, content.canAddCharge)
+        }
+
+    @Test
+    fun aLateFeeSuggestionShowsTheMonthAndAmount() =
+        runTest {
+            val content =
+                contentOf(
+                    tenantOverview(lateFeeSuggestion = LateFeeSuggestion(month = YearMonth(2026, 3), cents = 5_000)),
+                )
+
+            assertEquals(
+                LateFeeSuggestionUiState(
+                    message = UiText.Resource(Res.string.ledger_suggestion_message, listOf("March", "$50.00")),
+                    month = "2026-03",
+                    cents = 5_000,
+                ),
+                content.lateFeeSuggestion,
+            )
+            assertNull(contentOf(tenantOverview(lateFeeSuggestion = null)).lateFeeSuggestion)
+        }
+
+    @Test
+    fun dismissingTheLateFeeSuggestionStoresItsMonthOnThisPhone() =
+        runTest {
+            contentOf(tenantOverview(lateFeeSuggestion = LateFeeSuggestion(month = YearMonth(2026, 3), cents = 5_000)))
+
+            viewModel.onLateFeeDismissed()
+            runCurrent()
+
+            assertEquals(
+                listOf<TenantRepositoryCall>(TenantRepositoryCall.DismissLateFeeSuggestion("t1", YearMonth(2026, 3))),
+                repository.calls,
+            )
+        }
+
+    @Test
+    fun dismissingWithoutASuggestionStoresNothing() =
+        runTest {
+            contentOf(tenantOverview(lateFeeSuggestion = null))
+
+            viewModel.onLateFeeDismissed()
+            runCurrent()
+
+            assertTrue(repository.calls.isEmpty())
         }
 
     private suspend fun TestScope.contentOf(overview: TenantOverview): TenantUiState.Content {

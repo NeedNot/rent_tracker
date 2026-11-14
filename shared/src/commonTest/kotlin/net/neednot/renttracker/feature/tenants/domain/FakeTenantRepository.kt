@@ -3,6 +3,7 @@ package net.neednot.renttracker.feature.tenants.domain
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 
@@ -86,5 +87,12 @@ class FakeTenantRepository : TenantRepository {
     ): Result<RentTermPreview, TenantError> {
         calls += TenantRepositoryCall.PreviewRentTerm(tenantId, rentTermId, draft)
         return previewResult
+    }
+
+    override suspend fun dismissLateFeeSuggestion(
+        tenantId: String,
+        month: YearMonth,
+    ) {
+        calls += TenantRepositoryCall.DismissLateFeeSuggestion(tenantId, month)
     }
 }

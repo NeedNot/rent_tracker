@@ -1,7 +1,9 @@
 import { addMonths, type CalendarDate, type CalendarMonth, formatMonth } from "./calendarDate";
+import { type CalendarState, calendarState } from "./calendarState";
+import type { MonthLateFees } from "./monthLateFees";
 import type { RentPeriod } from "./rentPeriods";
 
-export type CalendarState = "paid" | "partial" | "owed" | "dueNotLate" | "upcoming" | "prepaid" | "notATenant";
+export type { CalendarState } from "./calendarState";
 
 export interface CalendarMonthStatus {
   month: CalendarMonth;
@@ -10,13 +12,23 @@ export interface CalendarMonthStatus {
   coveredCents: number;
   owedCents: number;
   hasUnpaidLateFee: boolean;
+  dueDate?: CalendarDate;
+  graceEnd?: CalendarDate;
+  wasLate: boolean;
+  paidByGraceEndCents?: number;
+  lateFeeCents?: number;
+  lateFeeUnpaidCents?: number;
+  suggestedLateFeeCents?: number;
 }
 
 export interface CalendarContext {
   today: CalendarDate;
   graceEnd: (period: RentPeriod) => CalendarDate;
   coveredCents: (period: RentPeriod) => number;
-  monthsWithUnpaidLateFee: ReadonlySet<CalendarMonth>;
+  wasLate: (period: RentPeriod) => boolean;
+  paidByGraceEndCents: (period: RentPeriod) => number;
+  lateFeesByMonth: ReadonlyMap<CalendarMonth, MonthLateFees>;
+  suggestedLateFeeCents: (rentCents: number) => number;
 }
 
 const MONTHS_PER_YEAR = 12;
@@ -30,34 +42,50 @@ export function calendarMonths(
   const january = formatMonth({ year, month: 1 });
   return Array.from({ length: MONTHS_PER_YEAR }, (_, index) => {
     const month = addMonths(january, index);
-    const hasUnpaidLateFee = context.monthsWithUnpaidLateFee.has(month);
     const period = periodByMonth.get(month);
-    if (period === undefined) {
-      return { month, state: "notATenant", rentCents: 0, coveredCents: 0, owedCents: 0, hasUnpaidLateFee };
-    }
-    const coveredCents = context.coveredCents(period);
-    const charged = period.dueDate <= context.today;
-    return {
-      month,
-      state: stateOf(period, coveredCents, context),
-      rentCents: period.amountCents,
-      coveredCents,
-      owedCents: charged ? period.amountCents - coveredCents : 0,
-      hasUnpaidLateFee,
-    };
+    return period === undefined ? notATenantMonth(month) : tenantMonth(period, context);
   });
 }
 
-function stateOf(period: RentPeriod, coveredCents: number, context: CalendarContext): CalendarState {
-  const fullyCovered = coveredCents >= period.amountCents;
-  if (period.dueDate > context.today) {
-    return fullyCovered ? "prepaid" : "upcoming";
-  }
-  if (fullyCovered) {
-    return "paid";
-  }
-  if (context.today <= context.graceEnd(period)) {
-    return "dueNotLate";
-  }
-  return coveredCents > 0 ? "partial" : "owed";
+function notATenantMonth(month: CalendarMonth): CalendarMonthStatus {
+  return {
+    month,
+    state: "notATenant",
+    rentCents: 0,
+    coveredCents: 0,
+    owedCents: 0,
+    hasUnpaidLateFee: false,
+    wasLate: false,
+  };
+}
+
+function tenantMonth(period: RentPeriod, context: CalendarContext): CalendarMonthStatus {
+  const coveredCents = context.coveredCents(period);
+  const graceEnd = context.graceEnd(period);
+  const charged = period.dueDate <= context.today;
+  const graceOver = charged && context.today > graceEnd;
+  const wasLate = graceOver && context.wasLate(period);
+  const lateFees = context.lateFeesByMonth.get(period.month);
+  return {
+    month: period.month,
+    state: calendarState({
+      today: context.today,
+      dueDate: period.dueDate,
+      graceEnd,
+      amountCents: period.amountCents,
+      coveredCents,
+    }),
+    rentCents: period.amountCents,
+    coveredCents,
+    owedCents: charged ? period.amountCents - coveredCents : 0,
+    hasUnpaidLateFee: lateFees !== undefined && lateFees.unpaidCents > 0,
+    dueDate: period.dueDate,
+    graceEnd,
+    wasLate,
+    paidByGraceEndCents: graceOver ? context.paidByGraceEndCents(period) : undefined,
+    lateFeeCents: lateFees?.cents,
+    lateFeeUnpaidCents: lateFees?.unpaidCents,
+    suggestedLateFeeCents:
+      wasLate && lateFees === undefined ? context.suggestedLateFeeCents(period.amountCents) : undefined,
+  };
 }

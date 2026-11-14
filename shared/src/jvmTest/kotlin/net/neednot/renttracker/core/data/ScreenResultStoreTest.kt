@@ -192,8 +192,18 @@ class ScreenResultStoreTest {
             tenantId = tenantId,
             groups = listOf(groupEntity("g1")),
             tenants = listOf(tenantEntity(tenantId, groupId = "g1")),
-            rentTerms = rentTermIds.map { rentTermEntity(it, tenantId = tenantId) },
             tenantSummaries = listOf(tenantSummaryEntity(tenantId)),
+            scope =
+                TenantScopeEntities(
+                    rentTerms = rentTermIds.map { rentTermEntity(it, tenantId = tenantId) },
+                    payments = emptyList(),
+                    debts = emptyList(),
+                    ledgerRows = emptyList(),
+                    accountNames = emptyList(),
+                    memberships = emptyList(),
+                    allocations = emptyList(),
+                    calendarMonths = emptyList(),
+                ),
         )
     }
 

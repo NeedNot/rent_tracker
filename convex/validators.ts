@@ -56,3 +56,5 @@ export const accountProfileFields = {
 };
 
 export const accountProfile = v.object(accountProfileFields);
+
+export const accountName = accountProfile.pick("accountId", "displayName");

@@ -16,6 +16,12 @@ val coreDataModule =
                 .build()
         }
         single { get<RentTrackerDatabase>().pendingPaymentDao() }
+        single { get<RentTrackerDatabase>().paymentDao() }
+        single { get<RentTrackerDatabase>().debtDao() }
+        single { get<RentTrackerDatabase>().accountNameDao() }
+        single { get<RentTrackerDatabase>().membershipDao() }
+        single { get<RentTrackerDatabase>().ledgerRowDao() }
+        single { get<RentTrackerDatabase>().dismissedLateFeeSuggestionDao() }
         single { ScreenResultStore(database = get()) }
         single<AsOfClock> { HourlyAsOfClock(clock = Clock.System) }
     }

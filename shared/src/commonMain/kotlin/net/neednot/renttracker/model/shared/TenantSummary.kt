@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TenantSummary(
     val creditCents: Long,
+    val lateFeeSuggestionCents: Long? = null,
+    val lateFeeSuggestionMonth: String? = null,
     val lateFeesOwedCents: Long,
     val nextDueDate: String? = null,
     val otherOwedCents: Long,

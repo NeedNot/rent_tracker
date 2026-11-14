@@ -16,7 +16,8 @@ class TenantErrorMappingTest {
                 "EditConflict" to TenantError.EditConflict(MESSAGE),
                 "NotFound" to TenantError.NotFound,
                 "TenantArchived" to TenantError.TenantArchived(MESSAGE),
-                "PermissionDenied" to TenantError.Unexpected("PermissionDenied: $MESSAGE"),
+                "PermissionDenied" to TenantError.PermissionDenied(MESSAGE),
+                "Surprise" to TenantError.Unexpected("Surprise: $MESSAGE"),
             )
         cases.forEach { (code, expected) ->
             val error = BackendError.Convex(code = code, message = MESSAGE, details = null)

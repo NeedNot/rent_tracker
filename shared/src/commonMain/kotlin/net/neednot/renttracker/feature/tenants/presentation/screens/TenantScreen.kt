@@ -46,8 +46,17 @@ import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.components.BalanceCard
+import net.neednot.renttracker.feature.tenants.presentation.components.CalendarActions
+import net.neednot.renttracker.feature.tenants.presentation.components.CalendarCard
+import net.neednot.renttracker.feature.tenants.presentation.components.EntryActionButtons
+import net.neednot.renttracker.feature.tenants.presentation.components.LateFeeSnackbar
+import net.neednot.renttracker.feature.tenants.presentation.components.LedgerEntryHost
+import net.neednot.renttracker.feature.tenants.presentation.components.LedgerPreviewCard
+import net.neednot.renttracker.feature.tenants.presentation.components.MonthDetailHost
 import net.neednot.renttracker.feature.tenants.presentation.components.RentTermsCard
 import net.neednot.renttracker.feature.tenants.presentation.components.TenantDetailsCard
+import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryEditTarget
+import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantBalanceUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantConfirmationUiState
@@ -56,11 +65,11 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantStatus
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantUiState
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.TenantViewModel
 import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.common_cancel
 import net.neednot.renttracker.resources.tenant_archive_confirm
 import net.neednot.renttracker.resources.tenant_archive_title
 import net.neednot.renttracker.resources.tenant_archived_label
 import net.neednot.renttracker.resources.tenant_back
-import net.neednot.renttracker.resources.tenant_dialog_cancel
 import net.neednot.renttracker.resources.tenant_loading
 import net.neednot.renttracker.resources.tenant_menu_archive
 import net.neednot.renttracker.resources.tenant_menu_edit_details
@@ -79,21 +88,49 @@ fun TenantScreen(
     onEditDetailsClicked: (groupId: String) -> Unit,
     onChangeRentClicked: () -> Unit,
     onRentTermClicked: (rentTermId: String) -> Unit,
+    onLogPaymentClicked: () -> Unit,
+    onAddChargeClicked: (suggestedMonth: String?, suggestedCents: Long?) -> Unit,
+    onViewLedgerClicked: () -> Unit,
+    onEditEntryClicked: (EntryEditTarget) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TenantViewModel = koinViewModel { parametersOf(route) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    TenantContent(
-        uiState = uiState,
-        onBackClicked = onBackClicked,
-        onEditDetailsClicked = onEditDetailsClicked,
-        onChangeRentClicked = onChangeRentClicked,
-        onRentTermClicked = onRentTermClicked,
-        onArchiveClicked = viewModel::onArchiveClicked,
-        onRestoreClicked = viewModel::onRestoreClicked,
-        onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
-        onStatusChangeDismissed = viewModel::onStatusChangeDismissed,
-        modifier = modifier,
+    LedgerEntryHost(
+        tenantId = route.tenantId,
+        onEditClicked = onEditEntryClicked,
+        content = { onLedgerRowClicked, onLedgerRestoreClicked ->
+            TenantContent(
+                uiState = uiState,
+                onBackClicked = onBackClicked,
+                onEditDetailsClicked = onEditDetailsClicked,
+                onChangeRentClicked = onChangeRentClicked,
+                onRentTermClicked = onRentTermClicked,
+                onLogPaymentClicked = onLogPaymentClicked,
+                onAddChargeClicked = { onAddChargeClicked(null, null) },
+                onViewLedgerClicked = onViewLedgerClicked,
+                onLedgerRowClicked = onLedgerRowClicked,
+                onLedgerRestoreClicked = onLedgerRestoreClicked,
+                calendarActions =
+                    CalendarActions(
+                        onPreviousYearClicked = viewModel::onPreviousYearClicked,
+                        onNextYearClicked = viewModel::onNextYearClicked,
+                        onMonthClicked = viewModel::onMonthClicked,
+                        onMonthDetailDismissed = viewModel::onMonthDetailDismissed,
+                        onAddFeeClicked = { addFee ->
+                            viewModel.onMonthDetailDismissed()
+                            onAddChargeClicked(addFee.month, addFee.suggestedCents)
+                        },
+                    ),
+                onLateFeeAddClicked = { suggestion -> onAddChargeClicked(suggestion.month, suggestion.cents) },
+                onLateFeeDismissed = viewModel::onLateFeeDismissed,
+                onArchiveClicked = viewModel::onArchiveClicked,
+                onRestoreClicked = viewModel::onRestoreClicked,
+                onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
+                onStatusChangeDismissed = viewModel::onStatusChangeDismissed,
+                modifier = modifier,
+            )
+        },
     )
 }
 
@@ -105,6 +142,14 @@ private fun TenantContent(
     onEditDetailsClicked: (groupId: String) -> Unit,
     onChangeRentClicked: () -> Unit,
     onRentTermClicked: (rentTermId: String) -> Unit,
+    onLogPaymentClicked: () -> Unit,
+    onAddChargeClicked: () -> Unit,
+    onViewLedgerClicked: () -> Unit,
+    onLedgerRowClicked: (key: String) -> Unit,
+    onLedgerRestoreClicked: (key: String) -> Unit,
+    calendarActions: CalendarActions,
+    onLateFeeAddClicked: (LateFeeSuggestionUiState) -> Unit,
+    onLateFeeDismissed: () -> Unit,
     onArchiveClicked: () -> Unit,
     onRestoreClicked: () -> Unit,
     onStatusChangeConfirmed: () -> Unit,
@@ -137,6 +182,15 @@ private fun TenantContent(
                 },
             )
         },
+        bottomBar = {
+            content?.lateFeeSuggestion?.let { suggestion ->
+                LateFeeSnackbar(
+                    suggestion = suggestion,
+                    onDismissClicked = onLateFeeDismissed,
+                    onAddClicked = { onLateFeeAddClicked(suggestion) },
+                )
+            }
+        },
     ) { contentPadding ->
         when (uiState) {
             TenantUiState.Loading -> {
@@ -153,10 +207,19 @@ private fun TenantContent(
                     onEditDetailsClicked = { onEditDetailsClicked(uiState.groupId) },
                     onChangeRentClicked = onChangeRentClicked,
                     onRentTermClicked = onRentTermClicked,
+                    onLogPaymentClicked = onLogPaymentClicked,
+                    onAddChargeClicked = onAddChargeClicked,
+                    onViewLedgerClicked = onViewLedgerClicked,
+                    onLedgerRowClicked = onLedgerRowClicked,
+                    onLedgerRestoreClicked = onLedgerRestoreClicked,
+                    calendarActions = calendarActions,
                     contentPadding = contentPadding,
                 )
             }
         }
+    }
+    content?.monthDetail?.let { detail ->
+        MonthDetailHost(detail = detail, actions = calendarActions)
     }
     content?.statusChange?.confirmation?.let { confirmation ->
         StatusChangeDialog(
@@ -230,6 +293,12 @@ private fun TenantSections(
     onEditDetailsClicked: () -> Unit,
     onChangeRentClicked: () -> Unit,
     onRentTermClicked: (rentTermId: String) -> Unit,
+    onLogPaymentClicked: () -> Unit,
+    onAddChargeClicked: () -> Unit,
+    onViewLedgerClicked: () -> Unit,
+    onLedgerRowClicked: (key: String) -> Unit,
+    onLedgerRestoreClicked: (key: String) -> Unit,
+    calendarActions: CalendarActions,
     contentPadding: PaddingValues,
 ) {
     Column(
@@ -250,6 +319,26 @@ private fun TenantSections(
         }
         if (tenant.isArchived) ArchivedLabel()
         tenant.balance?.let { balance -> BalanceCard(balance) }
+        EntryActionButtons(
+            canLogPayment = tenant.canLogPayment,
+            canAddCharge = tenant.canAddCharge,
+            onLogPaymentClicked = onLogPaymentClicked,
+            onAddChargeClicked = onAddChargeClicked,
+        )
+        tenant.calendar?.let { calendar ->
+            CalendarCard(
+                calendar = calendar,
+                onPreviousYearClicked = calendarActions.onPreviousYearClicked,
+                onNextYearClicked = calendarActions.onNextYearClicked,
+                onMonthClicked = calendarActions.onMonthClicked,
+            )
+        }
+        LedgerPreviewCard(
+            rows = tenant.ledgerPreview,
+            onRowClicked = onLedgerRowClicked,
+            onRestoreClicked = onLedgerRestoreClicked,
+            onViewFullLedgerClicked = onViewLedgerClicked,
+        )
         RentTermsCard(
             rentTerms = tenant.rentTerms,
             isEditable = !tenant.isArchived,
@@ -297,7 +386,7 @@ private fun StatusChangeDialog(
         onDismissRequest = onDismissed,
         confirmButton = { TextButton(onClick = onConfirmed) { Text(stringResource(confirmLabel)) } },
         dismissButton = {
-            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.tenant_dialog_cancel)) }
+            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) }
         },
         title = { Text(stringResource(title)) },
         text = { Text(confirmation.message.asString()) },
@@ -340,6 +429,7 @@ private fun TenantContentPreview() {
                         TenantBalanceUiState(
                             state = TenantBalanceState.Late,
                             total = UiText.Plain("Owes $550.00"),
+                            lines = emptyList(),
                             nextDue = UiText.Plain("Next rent due Apr 1, 2026"),
                             partialMoveOutWarning = null,
                         ),
@@ -375,6 +465,14 @@ private fun TenantContentPreview() {
             onEditDetailsClicked = {},
             onChangeRentClicked = {},
             onRentTermClicked = {},
+            onLogPaymentClicked = {},
+            onAddChargeClicked = {},
+            onViewLedgerClicked = {},
+            onLedgerRowClicked = {},
+            onLedgerRestoreClicked = {},
+            calendarActions = CalendarActions.None,
+            onLateFeeAddClicked = {},
+            onLateFeeDismissed = {},
             onArchiveClicked = {},
             onRestoreClicked = {},
             onStatusChangeConfirmed = {},

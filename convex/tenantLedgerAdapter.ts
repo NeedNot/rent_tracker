@@ -10,12 +10,13 @@ export interface TenantLedgerSource {
   tenant: Doc<"tenants">;
   rows: TenantLedgerRows;
   today: CalendarDate;
+  calendarYear?: number;
 }
 
-export function tenantLedgerInput({ group, tenant, rows, today }: TenantLedgerSource): TenantLedgerInput {
+export function tenantLedgerInput({ group, tenant, rows, today, calendarYear }: TenantLedgerSource): TenantLedgerInput {
   return {
     today,
-    calendarYear: yearOf(monthOf(today)),
+    calendarYear: calendarYear ?? yearOf(monthOf(today)),
     group: {
       paymentOrder: group.paymentOrder,
       graceDays: group.graceDays,

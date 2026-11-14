@@ -57,7 +57,6 @@
     <string name="tenant_menu_restore">Restore tenant</string>
     <string name="tenant_loading">Loading tenant</string>
     <string name="tenant_archived_label">Archived</string>
-    <string name="tenant_balance_heading">Balance</string>
     <string name="tenant_next_due">Next rent due %1$s</string>
     <string name="tenant_partial_move_out_warning">%1$s is a partial month and won't be charged. Add a custom debt if rent is owed.</string>
     <string name="tenant_rent_terms_heading">Rent terms</string>
@@ -97,15 +96,15 @@
     <string name="tenant_restore_title">Restore tenant?</string>
     <string name="tenant_restore_message">%1$s returns to the active tenant list.</string>
     <string name="tenant_restore_confirm">Restore</string>
-    <string name="tenant_dialog_cancel">Cancel</string>
-    <string name="tenant_dialog_ok">OK</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_ok">OK</string>
     <string name="tenant_error_offline">No connection. Check your internet and try again.</string>
     <string name="tenant_error_unexpected">Something went wrong. Please try again.</string>
     <string name="tenant_error_not_found">This tenant or rent term no longer exists.</string>
     <string name="tenant_editor_title_add">New tenant</string>
     <string name="tenant_editor_title_edit">Edit tenant</string>
-    <string name="tenant_editor_save">Save</string>
-    <string name="tenant_editor_close">Close without saving</string>
+    <string name="common_save">Save</string>
+    <string name="common_close_without_saving">Close without saving</string>
     <string name="tenant_editor_loading">Loading</string>
     <string name="tenant_editor_name">Name or unit</string>
     <string name="tenant_editor_contact_name">Contact name</string>
@@ -116,8 +115,8 @@
     <string name="tenant_editor_move_in">Move-in date</string>
     <string name="tenant_editor_last_day">Last day in unit</string>
     <string name="tenant_editor_last_day_hint">Optional. Rent stops being charged after this day.</string>
-    <string name="tenant_editor_choose_date">Choose %1$s</string>
-    <string name="tenant_editor_clear_date">Clear %1$s</string>
+    <string name="common_choose_field">Choose %1$s</string>
+    <string name="common_clear_field">Clear %1$s</string>
     <string name="tenant_editor_grace_days">Grace period in days</string>
     <string name="tenant_editor_grace_days_hint">Leave empty to use the group's grace period.</string>
     <string name="tenant_editor_late_fee">Late fee amount</string>
@@ -132,8 +131,8 @@
     <string name="rent_term_editor_title_add">Change rent</string>
     <string name="rent_term_editor_title_edit">Edit rent term</string>
     <string name="rent_term_editor_start_month">Starts in</string>
-    <string name="rent_term_editor_previous_year">Previous year</string>
-    <string name="rent_term_editor_next_year">Next year</string>
+    <string name="common_previous_year">Previous year</string>
+    <string name="common_next_year">Next year</string>
     <string name="rent_term_editor_past_month_checking">This month is in the past, so the balance will change. Checking by how much.</string>
     <string name="rent_term_editor_past_month_change">This month is in the past. Saving changes the balance from %1$s to %2$s.</string>
     <string name="rent_term_editor_past_month_check_failed">This month is in the past, so the balance will change. %1$s</string>
@@ -182,4 +181,12 @@
     <string name="input_error_amount_positive">Enter an amount greater than $0.00.</string>
     <string name="input_error_amount_too_large">Enter an amount up to $1,000,000.00.</string>
     <string name="input_error_too_long">Use %1$d characters or fewer.</string>
+
+    <string name="calendar_state_paid">Paid</string>
+    <string name="calendar_state_partial">Partial</string>
+    <string name="calendar_state_owed">Owed</string>
+    <string name="calendar_state_due_not_late">Due, not late</string>
+    <string name="calendar_state_upcoming">Upcoming</string>
+    <string name="calendar_state_prepaid">Prepaid</string>
+    <string name="calendar_state_not_a_tenant">Not a tenant</string>
 </resources>

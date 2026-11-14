@@ -11,6 +11,7 @@ internal fun TenantError.text(): UiText =
     when (this) {
         is TenantError.ValidationFailed -> UiText.Plain(message)
         is TenantError.EditConflict -> UiText.Plain(message)
+        is TenantError.PermissionDenied -> UiText.Plain(message)
         is TenantError.TenantArchived -> UiText.Plain(message)
         TenantError.NotFound -> UiText.Resource(Res.string.tenant_error_not_found)
         TenantError.Offline -> UiText.Resource(Res.string.tenant_error_offline)

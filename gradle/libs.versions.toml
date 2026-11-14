@@ -21,6 +21,11 @@ androidx-credentials = "1.6.0"
 googleid = "1.2.1"
 turbine = "1.2.1"
 konsist = "0.18.1"
+roborazzi = "1.79.0"
+robolectric = "4.18"
+junit = "4.13.2"
+androidx-compose-ui-test = "1.12.1"
+androidx-test-core = "1.7.0"
 ktlint-gradle = "14.2.0"
 ktlint-cli = "1.8.0"
 detekt = "1.23.8"
@@ -68,6 +73,14 @@ better-auth = { module = "com.github.NeedNot.better-auth-android:better-auth", v
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+junit = { module = "junit:junit", version.ref = "junit" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
+androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-compose-ui-test" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-compose-ui-test" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test-core" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
