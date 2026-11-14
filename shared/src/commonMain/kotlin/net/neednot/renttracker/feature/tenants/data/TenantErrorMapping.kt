@@ -1,0 +1,25 @@
+package net.neednot.renttracker.feature.tenants.data
+
+import net.neednot.renttracker.core.backend.BackendError
+import net.neednot.renttracker.feature.tenants.domain.TenantError
+
+private const val VALIDATION_FAILED = "ValidationFailed"
+private const val EDIT_CONFLICT = "EditConflict"
+private const val NOT_FOUND = "NotFound"
+private const val TENANT_ARCHIVED = "TenantArchived"
+
+internal fun BackendError.toTenantError(): TenantError =
+    when (this) {
+        is BackendError.Convex -> toTenantError()
+        is BackendError.Server -> TenantError.Unexpected(message)
+        is BackendError.Internal -> TenantError.Unexpected(message)
+    }
+
+private fun BackendError.Convex.toTenantError(): TenantError =
+    when (code) {
+        VALIDATION_FAILED -> TenantError.ValidationFailed(message)
+        EDIT_CONFLICT -> TenantError.EditConflict(message)
+        NOT_FOUND -> TenantError.NotFound
+        TENANT_ARCHIVED -> TenantError.TenantArchived(message)
+        else -> TenantError.Unexpected("$code: $message")
+    }

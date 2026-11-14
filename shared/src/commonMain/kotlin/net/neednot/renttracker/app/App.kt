@@ -25,7 +25,9 @@ import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.core.navigation.SignInGraphRoute
 import net.neednot.renttracker.feature.auth.presentation.navigation.authGraph
+import net.neednot.renttracker.feature.group.presentation.navigation.groupGraph
 import net.neednot.renttracker.feature.home.presentation.navigation.homeGraph
+import net.neednot.renttracker.feature.tenants.presentation.navigation.tenantsGraph
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.auth_loading
 import org.jetbrains.compose.resources.stringResource
@@ -54,7 +56,9 @@ private fun RootNavHost(
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = startDestination) {
         authGraph(navController)
-        homeGraph()
+        homeGraph(navController)
+        groupGraph(navController)
+        tenantsGraph(navController)
     }
     LaunchedEffect(sessionState) {
         if (sessionState == AuthSessionState.SignedOut && !navController.isSigningIn()) {

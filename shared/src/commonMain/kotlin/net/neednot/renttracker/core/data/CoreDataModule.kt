@@ -5,6 +5,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import org.koin.dsl.module
+import kotlin.time.Clock
 
 val coreDataModule =
     module {
@@ -15,4 +16,6 @@ val coreDataModule =
                 .build()
         }
         single { get<RentTrackerDatabase>().pendingPaymentDao() }
+        single { ScreenResultStore(database = get()) }
+        single<AsOfClock> { HourlyAsOfClock(clock = Clock.System) }
     }

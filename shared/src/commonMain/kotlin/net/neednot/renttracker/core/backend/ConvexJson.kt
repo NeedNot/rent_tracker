@@ -11,6 +11,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -27,6 +28,11 @@ object ConvexJson {
         serializer: KSerializer<T>,
         value: JsonElement,
     ): T = json.decodeFromJsonElement(serializer, normalize(value))
+
+    fun <T> encodeArgs(
+        serializer: KSerializer<T>,
+        args: T,
+    ): JsonObject = json.encodeToJsonElement(serializer, args).jsonObject
 
     fun normalize(element: JsonElement): JsonElement =
         when (element) {

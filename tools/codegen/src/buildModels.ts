@@ -42,8 +42,9 @@ interface Registered {
 
 export function buildModels(spec: FunctionSpec): Model[] {
   const registry = new Map<string, Registered>();
+  const entityNames = collectEntityNames(spec);
   for (const fn of publicFunctions(spec)) {
-    new FunctionModels(fn, registry).build();
+    new FunctionModels(fn, registry, entityNames).build();
   }
   return [...registry.values()]
     .map(({ declaration, files }) => ({
@@ -56,12 +57,14 @@ export function buildModels(spec: FunctionSpec): Model[] {
 class FunctionModels {
   private readonly fn: ConvexFunction;
   private readonly registry: Map<string, Registered>;
+  private readonly entityNames: Map<string, string>;
   private readonly file: string;
   private readonly baseName: string;
 
-  constructor(fn: ConvexFunction, registry: Map<string, Registered>) {
+  constructor(fn: ConvexFunction, registry: Map<string, Registered>, entityNames: Map<string, string>) {
     this.fn = fn;
     this.registry = registry;
+    this.entityNames = entityNames;
     const [file = "", verb = ""] = fn.identifier.replace(/\.js:/, ":").split(":");
     this.file = file;
     this.baseName = pascalCase(file) + pascalCase(verb);
@@ -150,10 +153,12 @@ class FunctionModels {
     if (entries.length === 0) {
       throw this.error(location, "is an empty object, which codegen does not support");
     }
+    const entityName = this.entityNames.get(JSON.stringify(validator));
+    const classNaming = entityName === undefined ? naming : { typeName: entityName, childPrefix: entityName };
     const properties = entries.map(([fieldName, field]) =>
-      this.property(fieldName, field, naming.childPrefix, `${location}.${fieldName}`),
+      this.property(fieldName, field, classNaming.childPrefix, `${location}.${fieldName}`),
     );
-    return this.register({ kind: "class", name: naming.typeName, properties }, location);
+    return this.register({ kind: "class", name: classNaming.typeName, properties }, location);
   }
 
   private property(fieldName: string, field: Field, parentPrefix: string, location: string): Property {
@@ -201,6 +206,44 @@ class FunctionModels {
   private error(location: string, problem: string): CodegenError {
     return new CodegenError(`${this.fn.identifier} ${location} ${problem}`);
   }
+}
+
+function collectEntityNames(spec: FunctionSpec): Map<string, string> {
+  const entityNames = new Map<string, string>();
+  const visit = (validator: Validator | undefined): void => {
+    if (validator === undefined) {
+      return;
+    }
+    if (validator.type === "object") {
+      for (const [fieldName, field] of Object.entries(validator.value)) {
+        for (const item of arrayItemObjects(field.fieldType)) {
+          if (!entityNames.has(JSON.stringify(item))) {
+            entityNames.set(JSON.stringify(item), pascalCase(singular(fieldName)));
+          }
+        }
+        visit(field.fieldType);
+      }
+    } else if (validator.type === "array" || validator.type === "record") {
+      visit(validator.type === "array" ? validator.value : validator.values.fieldType);
+    } else if (validator.type === "union") {
+      validator.value.forEach(visit);
+    }
+  };
+  for (const fn of publicFunctions(spec)) {
+    visit(fn.args);
+    visit(fn.returns);
+  }
+  return entityNames;
+}
+
+function arrayItemObjects(validator: Validator): Validator[] {
+  if (validator.type === "array") {
+    return validator.value.type === "object" ? [validator.value] : arrayItemObjects(validator.value);
+  }
+  if (validator.type === "union") {
+    return validator.value.flatMap(arrayItemObjects);
+  }
+  return [];
 }
 
 function namingForField(fieldName: string, validator: Validator, parentPrefix: string): Naming {
