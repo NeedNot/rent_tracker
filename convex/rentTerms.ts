@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
+import { requireMember, requirePermission } from "./access";
 import { appError, validationFailed } from "./appError";
-import { placeholderAccountId, requireMember, requirePermission } from "./authPlaceholder";
 import { requireExpectedVersion } from "./editConflict";
 import { type CalendarMonth, monthOf } from "./engine/calendarDate";
 import type { RentTermRow } from "./engine/ledgerInput";
@@ -51,7 +51,7 @@ export const edit = mutation({
     const { term, tenant, group } = await loadRentTermScope(ctx, args.rentTermId);
     const changed = validRentTermInput(args);
     const level = rentTermLevel([term.startMonth, changed.startMonth], currentMonth(group));
-    await requirePermission(ctx, group._id, "rentTerms", level);
+    const { accountId } = await requirePermission(ctx, group._id, "rentTerms", level);
     requireActiveTenant(tenant);
     await requireCurrentTerm(ctx, term, args.expectedVersion);
     const terms = await tenantTerms(ctx, tenant._id);
@@ -65,7 +65,7 @@ export const edit = mutation({
       ...changed,
       version: term.version + 1,
       lastEditedAt: Date.now(),
-      lastEditedBy: await placeholderAccountId(ctx),
+      lastEditedBy: accountId,
     });
     return null;
   },
@@ -76,7 +76,12 @@ const softDelete = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { term, tenant, group } = await loadRentTermScope(ctx, args.rentTermId);
-    await requirePermission(ctx, group._id, "rentTerms", rentTermLevel([term.startMonth], currentMonth(group)));
+    const { accountId } = await requirePermission(
+      ctx,
+      group._id,
+      "rentTerms",
+      rentTermLevel([term.startMonth], currentMonth(group)),
+    );
     requireActiveTenant(tenant);
     await requireCurrentTerm(ctx, term, args.expectedVersion);
     if (isFirstTerm(term, await tenantTerms(ctx, tenant._id))) {
@@ -84,7 +89,7 @@ const softDelete = mutation({
     }
     await ctx.db.patch(term._id, {
       deletedAt: Date.now(),
-      deletedBy: await placeholderAccountId(ctx),
+      deletedBy: accountId,
       deleteReason: requireName(args.reason, "Reason"),
       version: term.version + 1,
     });

@@ -27,7 +27,7 @@ const everyDetail = {
 
 describe("tenants.add", () => {
   it("creates an active tenant at version 1 with its details", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
 
     const tenantId = await t.mutation(api.tenants.add, { groupId, ...everyDetail, amountCents: RENT, dueDay: 5 });
@@ -36,7 +36,7 @@ describe("tenants.add", () => {
   });
 
   it("creates the first rent term starting in the move-in month", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
 
     const tenantId = await t.mutation(api.tenants.add, { groupId, ...everyDetail, amountCents: RENT, dueDay: 5 });
@@ -47,7 +47,7 @@ describe("tenants.add", () => {
   });
 
   it("trims text and leaves blank optional details unset", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
 
     const tenantId = await t.mutation(api.tenants.add, { groupId, ...newTenant, name: "  Apt 3B ", notes: "   " });
@@ -67,7 +67,7 @@ describe("tenants.add", () => {
     ["rent of $1,000,000.00", { amountCents: 100_000_000 }],
     ["due day 31", { dueDay: 31 }],
   ])("accepts %s", async (_boundary, fields) => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
 
     const tenantId = await t.mutation(api.tenants.add, { groupId, ...newTenant, ...fields });
@@ -103,7 +103,7 @@ describe("tenants.add", () => {
     ["due day 0", { dueDay: 0 }, "Due day must be between 1 and 31."],
     ["due day 32", { dueDay: 32 }, "Due day must be between 1 and 31."],
   ])("rejects %s and saves nothing", async (_rule, fields, message) => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
 
     const failure = await failureOf(t.mutation(api.tenants.add, { groupId, ...newTenant, ...fields }));
@@ -114,7 +114,7 @@ describe("tenants.add", () => {
   });
 
   it("fails with NotFound when the group is missing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
     await t.run((ctx) => ctx.db.delete(groupId));
 
@@ -124,7 +124,7 @@ describe("tenants.add", () => {
   });
 
   it("fails with NotFound when the group is archived", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t, { archivedAt: 1 });
 
     const failure = await failureOf(t.mutation(api.tenants.add, { groupId, ...newTenant }));
@@ -135,7 +135,7 @@ describe("tenants.add", () => {
 
 describe("tenants.edit", () => {
   it("overwrites the details, raises the version and records who edited", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     await t.mutation(api.tenants.edit, { tenantId, expectedVersion: 1, ...everyDetail, name: "Apt 4C" });
@@ -147,7 +147,7 @@ describe("tenants.edit", () => {
   });
 
   it("clears the optional details the form left empty", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const groupId = await seedGroup(t);
     const tenantId = await t.mutation(api.tenants.add, { groupId, ...everyDetail, amountCents: RENT, dueDay: 1 });
 
@@ -160,7 +160,7 @@ describe("tenants.edit", () => {
   });
 
   it("rejects a stale version with EditConflict naming who last edited, and saves nothing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.mutation(api.tenants.edit, { tenantId, expectedVersion: 1, name: "Apt 4C", moveIn: "2026-01-01" });
     const editor = await t.run((ctx) => ctx.db.query("accounts").unique());
@@ -171,14 +171,14 @@ describe("tenants.edit", () => {
 
     expect(failure).toEqual({
       code: "EditConflict",
-      message: "You changed this tenant while you were editing.",
-      details: { currentVersion: 2, lastEditedBy: editor?._id, lastEditedByName: "You" },
+      message: "Dana changed this tenant while you were editing.",
+      details: { currentVersion: 2, lastEditedBy: editor?._id, lastEditedByName: "Dana" },
     });
     expect(await tenantRow(t, tenantId)).toMatchObject({ name: "Apt 4C", version: 2 });
   });
 
   it("reports a conflict without a name when nobody has edited the tenant yet", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     const failure = await failureOf(
@@ -193,7 +193,7 @@ describe("tenants.edit", () => {
   });
 
   it("rejects a last day before the move-in date", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     const failure = await failureOf(
@@ -211,7 +211,7 @@ describe("tenants.edit", () => {
   });
 
   it("moves the first rent term along when move-in moves to another month", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     await t.mutation(api.tenants.edit, { tenantId, expectedVersion: 1, name: "Apt 3B", moveIn: "2025-11-15" });
@@ -223,7 +223,7 @@ describe("tenants.edit", () => {
   });
 
   it("leaves the first rent term alone when move-in stays in the same month", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     await t.mutation(api.tenants.edit, { tenantId, expectedVersion: 1, name: "Apt 3B", moveIn: "2026-01-20" });
@@ -235,7 +235,7 @@ describe("tenants.edit", () => {
     ["onto", "2026-06-01"],
     ["past", "2026-07-01"],
   ])("blocks moving move-in %s the month a later rent term starts", async (_position, moveIn) => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
     await t.mutation(api.rentTerms.add, { tenantId, startMonth: "2026-06", amountCents: 160000, dueDay: 1 });
 
@@ -252,7 +252,7 @@ describe("tenants.edit", () => {
   });
 
   it("ignores a deleted rent term when move-in moves past it", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
     const rentTermId = await t.mutation(api.rentTerms.add, {
       tenantId,
@@ -268,7 +268,7 @@ describe("tenants.edit", () => {
   });
 
   it("fails with NotFound when the tenant is missing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.run((ctx) => ctx.db.delete(tenantId));
 
@@ -282,7 +282,7 @@ describe("tenants.edit", () => {
 
 describe("tenants.archive and tenants.restore", () => {
   it("archives an active tenant and raises the version", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     await t.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
@@ -292,7 +292,7 @@ describe("tenants.archive and tenants.restore", () => {
   });
 
   it("restores an archived tenant and raises the version", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
 
@@ -302,7 +302,7 @@ describe("tenants.archive and tenants.restore", () => {
   });
 
   it("rejects archiving a tenant that is already archived", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
 
@@ -313,7 +313,7 @@ describe("tenants.archive and tenants.restore", () => {
   });
 
   it("rejects restoring a tenant that is not archived", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     const failure = await failureOf(t.mutation(api.tenants.restore, { tenantId, expectedVersion: 1 }));
@@ -323,18 +323,18 @@ describe("tenants.archive and tenants.restore", () => {
   });
 
   it.each(["archive", "restore"] as const)("%s rejects a stale version with EditConflict", async (action) => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
 
     const failure = await failureOf(t.mutation(api.tenants[action], { tenantId, expectedVersion: 1 }));
 
-    expect(failure).toMatchObject({ code: "EditConflict", details: { currentVersion: 2, lastEditedByName: "You" } });
+    expect(failure).toMatchObject({ code: "EditConflict", details: { currentVersion: 2, lastEditedByName: "Dana" } });
     expect(await tenantRow(t, tenantId)).toMatchObject({ status: "archived", version: 2 });
   });
 
   it.each(["archive", "restore"] as const)("%s fails with NotFound when the tenant is missing", async (action) => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.run((ctx) => ctx.db.delete(tenantId));
 
@@ -346,7 +346,7 @@ describe("tenants.archive and tenants.restore", () => {
 
 describe("tenants.screen", () => {
   it("returns the group, the tenant, every rent term and the summary as flat lists", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     const rentTermId = await t.mutation(api.rentTerms.add, {
       tenantId,
@@ -382,7 +382,7 @@ describe("tenants.screen", () => {
     ["rent is late once the grace period has passed", losAngelesTime(2026, 2, 7, 0), RENT, "late"],
     ["a second month's rent adds to the balance", losAngelesTime(2026, 3, 1, 0), 2 * RENT, "late"],
   ] as const)("%s in the group's time zone", async (_rule, asOf, rentOwedCents, state) => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-10" });
 
     const screen = await t.query(api.tenants.screen, { tenantId, asOf });
@@ -391,7 +391,7 @@ describe("tenants.screen", () => {
   });
 
   it("shows an archived tenant's balance without calling it late", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
 
@@ -402,7 +402,7 @@ describe("tenants.screen", () => {
   });
 
   it("fails with NotFound when the tenant is missing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.run((ctx) => ctx.db.delete(tenantId));
 
@@ -412,7 +412,7 @@ describe("tenants.screen", () => {
   });
 
   it("rejects a time the app could not have sent", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     const failure = await failureOf(t.query(api.tenants.screen, { tenantId, asOf: -1 }));

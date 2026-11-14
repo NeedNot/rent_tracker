@@ -1,7 +1,7 @@
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
+import type { PermissionLevel } from "./access";
 import { validationFailed } from "./appError";
-import type { PermissionLevel } from "./authPlaceholder";
 import { rentTermDoc } from "./documentValidators";
 import { type CalendarMonth, compareText, monthOf } from "./engine/calendarDate";
 import { requireAmountCents, requireCalendarMonth, requireDueDay } from "./inputValidation";

@@ -16,7 +16,7 @@ const RAISED_RENT = 160000;
 const raiseFromJune = { startMonth: "2026-06", amountCents: RAISED_RENT, dueDay: 5 };
 
 async function seedTenantWithRaise() {
-  const t = newBackend();
+  const t = await newBackend();
   const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
   const rentTermId = await t.mutation(api.rentTerms.add, { tenantId, ...raiseFromJune });
   const firstTerm = await firstTermRow(t, tenantId);
@@ -33,7 +33,7 @@ afterEach(() => {
 
 describe("rentTerms.add", () => {
   it("adds a rent term at version 1 for the chosen month", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     const rentTermId = await t.mutation(api.rentTerms.add, { tenantId, ...raiseFromJune });
@@ -42,7 +42,7 @@ describe("rentTerms.add", () => {
   });
 
   it("accepts a start month that has already passed", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     const rentTermId = await t.mutation(api.rentTerms.add, { tenantId, ...raiseFromJune, startMonth: "2026-02" });
@@ -51,7 +51,7 @@ describe("rentTerms.add", () => {
   });
 
   it("blocks a start month before the move-in month", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-17" });
 
     const failure = await failureOf(
@@ -67,7 +67,7 @@ describe("rentTerms.add", () => {
   });
 
   it("blocks a second term in the move-in month and points at the first term", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-17" });
     const firstTerm = await firstTermRow(t, tenantId);
 
@@ -110,7 +110,7 @@ describe("rentTerms.add", () => {
     ["due day 0", { dueDay: 0 }, "Due day must be between 1 and 31."],
     ["due day 32", { dueDay: 32 }, "Due day must be between 1 and 31."],
   ])("rejects %s", async (_rule, fields, message) => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     const failure = await failureOf(t.mutation(api.rentTerms.add, { tenantId, ...raiseFromJune, ...fields }));
@@ -120,7 +120,7 @@ describe("rentTerms.add", () => {
   });
 
   it("fails with TenantArchived for an archived tenant", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
 
@@ -131,7 +131,7 @@ describe("rentTerms.add", () => {
   });
 
   it("fails with NotFound when the tenant is missing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.run((ctx) => ctx.db.delete(tenantId));
 
@@ -183,8 +183,8 @@ describe("rentTerms.edit", () => {
 
     expect(failure).toEqual({
       code: "EditConflict",
-      message: "You changed this rent term while you were editing.",
-      details: { currentVersion: 2, lastEditedBy: editor?._id, lastEditedByName: "You" },
+      message: "Dana changed this rent term while you were editing.",
+      details: { currentVersion: 2, lastEditedBy: editor?._id, lastEditedByName: "Dana" },
     });
     expect(await termRow(t, rentTermId)).toMatchObject({ amountCents: 170000, version: 2 });
   });
@@ -335,7 +335,7 @@ describe("rentTerms.delete", () => {
   });
 
   it("stops the deleted term from changing the rent", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
     const rentTermId = await t.mutation(api.rentTerms.add, { tenantId, ...raiseFromJune, startMonth: "2026-02" });
 
@@ -399,7 +399,7 @@ describe("rentTerms.delete", () => {
       t.mutation(api.rentTerms.delete, { rentTermId, expectedVersion: 1, reason: "Wrong amount" }),
     );
 
-    expect(failure).toMatchObject({ code: "EditConflict", details: { currentVersion: 2, lastEditedByName: "You" } });
+    expect(failure).toMatchObject({ code: "EditConflict", details: { currentVersion: 2, lastEditedByName: "Dana" } });
     expect(await termRow(t, rentTermId)).not.toHaveProperty("deletedAt");
   });
 
@@ -445,7 +445,7 @@ describe("rentTerms.delete", () => {
 
 describe("rentTerms.preview", () => {
   it("shows the balance before and after a rent change that starts in the past", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     const preview = await t.query(api.rentTerms.preview, {
@@ -459,7 +459,7 @@ describe("rentTerms.preview", () => {
   });
 
   it("shows the balance before and after editing an existing term", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
     const firstTerm = await firstTermRow(t, tenantId);
 
@@ -474,7 +474,7 @@ describe("rentTerms.preview", () => {
   });
 
   it("leaves the balance unchanged for a rent change that starts in the future", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     const preview = await t.query(api.rentTerms.preview, { tenantId, asOf: MARCH_20, proposed: raiseFromJune });
@@ -483,7 +483,7 @@ describe("rentTerms.preview", () => {
   });
 
   it("shows a later due day pushing the next due date out", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
 
     const preview = await t.query(api.rentTerms.preview, {
@@ -497,7 +497,7 @@ describe("rentTerms.preview", () => {
   });
 
   it("writes nothing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t, { moveIn: "2026-01-01" });
     const firstTerm = await firstTermRow(t, tenantId);
     const termsBefore = await termRows(t, tenantId);
@@ -542,7 +542,7 @@ describe("rentTerms.preview", () => {
     ["rent of $0.00", { amountCents: 0 }],
     ["due day 32", { dueDay: 32 }],
   ])("rejects %s", async (_rule, fields) => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
 
     const failure = await failureOf(
@@ -553,7 +553,7 @@ describe("rentTerms.preview", () => {
   });
 
   it("fails with NotFound when the tenant is missing", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const tenantId = await seedTenant(t);
     await t.run((ctx) => ctx.db.delete(tenantId));
 

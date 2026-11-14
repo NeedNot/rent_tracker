@@ -7,7 +7,7 @@ const LAST_HOUR_OF_GRACE_IN_LOS_ANGELES = losAngelesTime(2026, 3, 6, 21);
 
 describe("home.screen", () => {
   it("returns nothing before the first group is created", async () => {
-    const t = newBackend();
+    const t = await newBackend();
 
     const home = await t.query(api.home.screen, { asOf: MARCH_20_IN_LOS_ANGELES });
 
@@ -15,7 +15,7 @@ describe("home.screen", () => {
   });
 
   it("summarizes each group: active debt, late count and archived debt apart", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const seeded = await t.run(async (ctx) => {
       const streetId = await insertGroup(ctx, { name: "1st Street" });
       await insertTenantOwingRent(ctx, streetId, RENT, { name: "Late" });
@@ -56,7 +56,7 @@ describe("home.screen", () => {
   });
 
   it("counts a tenant inside the grace period as owing but not late", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     await t.run(async (ctx) => {
       await insertTenantOwingRent(ctx, await insertGroup(ctx), RENT);
     });
@@ -67,7 +67,7 @@ describe("home.screen", () => {
   });
 
   it("uses each group's own time zone for today", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const seeded = await t.run(async (ctx) => {
       const losAngelesId = await insertGroup(ctx, { timeZone: "America/Los_Angeles" });
       const londonId = await insertGroup(ctx, { timeZone: "Europe/London" });
@@ -85,7 +85,7 @@ describe("home.screen", () => {
   });
 
   it("leaves out archived groups", async () => {
-    const t = newBackend();
+    const t = await newBackend();
     const openId = await t.run(async (ctx) => {
       const archivedId = await insertGroup(ctx, { name: "Sold", archivedAt: 1_700_000_000_000 });
       await insertTenantOwingRent(ctx, archivedId, RENT);

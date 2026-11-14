@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
+import { requireMember, requirePermission } from "./access";
 import { validationFailed } from "./appError";
-import { placeholderAccountId, requireMember, requirePermission } from "./authPlaceholder";
 import { groupDoc, rentTermDoc, tenantDoc } from "./documentValidators";
 import { requireExpectedVersion } from "./editConflict";
 import { type CalendarMonth, monthOf } from "./engine/calendarDate";
@@ -48,10 +48,10 @@ export const edit = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
-    await requirePermission(ctx, group._id, "tenants", "addEdit");
+    const { accountId } = await requirePermission(ctx, group._id, "tenants", "addEdit");
     await requireCurrentTenant(ctx, tenant, args.expectedVersion);
     const details = validTenantDetails(args);
-    const stamp = await editStamp(ctx);
+    const stamp = editStamp(accountId);
     if (monthOf(details.moveIn) !== monthOf(tenant.moveIn)) {
       await moveFirstTerm(ctx, tenant._id, monthOf(details.moveIn), stamp);
     }
@@ -65,12 +65,12 @@ export const archive = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
-    await requirePermission(ctx, group._id, "tenants", "full");
+    const { accountId } = await requirePermission(ctx, group._id, "tenants", "full");
     await requireCurrentTenant(ctx, tenant, args.expectedVersion);
     if (tenant.status === "archived") {
       throw validationFailed("This tenant is already archived.");
     }
-    await ctx.db.patch(tenant._id, { status: "archived", version: tenant.version + 1, ...(await editStamp(ctx)) });
+    await ctx.db.patch(tenant._id, { status: "archived", version: tenant.version + 1, ...editStamp(accountId) });
     return null;
   },
 });
@@ -80,12 +80,12 @@ export const restore = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
-    await requirePermission(ctx, group._id, "tenants", "full");
+    const { accountId } = await requirePermission(ctx, group._id, "tenants", "full");
     await requireCurrentTenant(ctx, tenant, args.expectedVersion);
     if (tenant.status === "active") {
       throw validationFailed("This tenant is not archived.");
     }
-    await ctx.db.patch(tenant._id, { status: "active", version: tenant.version + 1, ...(await editStamp(ctx)) });
+    await ctx.db.patch(tenant._id, { status: "active", version: tenant.version + 1, ...editStamp(accountId) });
     return null;
   },
 });
@@ -122,8 +122,8 @@ async function requireCurrentTenant(ctx: QueryCtx, tenant: Doc<"tenants">, expec
   );
 }
 
-async function editStamp(ctx: MutationCtx): Promise<EditStamp> {
-  return { lastEditedAt: Date.now(), lastEditedBy: await placeholderAccountId(ctx) };
+function editStamp(accountId: Id<"accounts">): EditStamp {
+  return { lastEditedAt: Date.now(), lastEditedBy: accountId };
 }
 
 async function moveFirstTerm(

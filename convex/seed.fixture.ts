@@ -1,25 +1,28 @@
 import type { WithoutSystemFields } from "convex/server";
 import { ConvexError } from "convex/values";
-import { convexTest, type TestConvex } from "convex-test";
+import { convexTest, type TestConvexForDataModel } from "convex-test";
 import { api } from "./_generated/api";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { DataModel, Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import type { AppErrorData } from "./appError";
-import { placeholderAccountId } from "./authPlaceholder";
 import schema from "./schema";
 import { modules } from "./test.setup";
 
 type GroupFields = WithoutSystemFields<Doc<"groups">>;
 type TenantFields = WithoutSystemFields<Doc<"tenants">>;
 
-export type Backend = TestConvex<typeof schema>;
+export type Backend = TestConvexForDataModel<DataModel>;
+
+export const owner = { subject: "auth|dana", email: "dana@example.com", name: "Dana" };
 
 export const RENT = 150000;
 
 export const newTenant = { name: "Apt 3B", moveIn: "2026-01-01", amountCents: RENT, dueDay: 1 };
 
-export function newBackend(): Backend {
-  return convexTest(schema, modules);
+export async function newBackend(): Promise<Backend> {
+  const t = convexTest(schema, modules);
+  await t.run((ctx) => insertAccount(ctx, owner));
+  return t.withIdentity(owner);
 }
 
 export function losAngelesTime(year: number, month: number, day: number, hour = 12): number {
@@ -27,13 +30,58 @@ export function losAngelesTime(year: number, month: number, day: number, hour = 
   return Date.UTC(year, month - 1, day, hour + HOURS_BEHIND_UTC_IN_WINTER);
 }
 
+export async function insertAccount(
+  ctx: MutationCtx,
+  identity: { subject: string; email: string; name: string },
+): Promise<Id<"accounts">> {
+  const existing = await ctx.db
+    .query("accounts")
+    .withIndex("by_auth_subject", (q) => q.eq("authSubject", identity.subject))
+    .unique();
+  if (existing !== null) {
+    return existing._id;
+  }
+  return await ctx.db.insert("accounts", {
+    authSubject: identity.subject,
+    displayName: identity.name,
+    email: identity.email,
+    version: 1,
+  });
+}
+
 export async function insertGroup(ctx: MutationCtx, fields: Partial<GroupFields> = {}): Promise<Id<"groups">> {
-  return await ctx.db.insert("groups", {
+  const ownerId = await insertAccount(ctx, owner);
+  const groupId = await ctx.db.insert("groups", {
     name: "1st Street",
     timeZone: "America/Los_Angeles",
     paymentOrder: "rentFirst",
     graceDays: 5,
-    ownerId: await placeholderAccountId(ctx),
+    ownerId,
+    version: 1,
+    ...fields,
+  });
+  await insertMembership(ctx, groupId, ownerId, { role: "owner" });
+  return groupId;
+}
+
+export async function insertMembership(
+  ctx: MutationCtx,
+  groupId: Id<"groups">,
+  accountId: Id<"accounts">,
+  fields: Partial<WithoutSystemFields<Doc<"memberships">>> = {},
+): Promise<Id<"memberships">> {
+  return await ctx.db.insert("memberships", {
+    groupId,
+    accountId,
+    role: "member",
+    tenants: "read",
+    rentTerms: "read",
+    payments: "read",
+    debts: "read",
+    members: "read",
+    settings: "read",
+    editOthers: false,
+    notificationsOn: true,
     version: 1,
     ...fields,
   });
@@ -72,7 +120,7 @@ export async function insertPayment(
     ...payment,
     method: "zelle",
     clientId: `${tenantId}-${payment.dateReceived}`,
-    loggedBy: await placeholderAccountId(ctx),
+    loggedBy: await insertAccount(ctx, owner),
     version: 1,
   });
 }

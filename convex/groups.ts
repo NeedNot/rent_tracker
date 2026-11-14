@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireAccount, requireMember } from "./access";
 import { appError } from "./appError";
-import { placeholderAccountId, requireMember } from "./authPlaceholder";
 import { groupDoc, tenantDoc } from "./documentValidators";
 import { groupSummary, groupSummaryOf } from "./groupSummary";
 import { loadGroupTenantSummaries } from "./groupTenantSummaries";
@@ -14,9 +14,9 @@ export const create = mutation({
   args: groupDoc.pick("name", "timeZone"),
   returns: v.id("groups"),
   handler: async (ctx, args) => {
+    const { _id: ownerId } = await requireAccount(ctx);
     const name = requireName(args.name, "Group name");
     const timeZone = requireTimeZone(args.timeZone);
-    const ownerId = await placeholderAccountId(ctx);
     const groupId = await ctx.db.insert("groups", {
       name,
       timeZone,
