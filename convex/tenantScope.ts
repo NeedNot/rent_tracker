@@ -23,8 +23,8 @@ export async function loadTenantScope(ctx: QueryCtx, tenantId: Id<"tenants">): P
   return { tenant, group: await loadActiveGroup(ctx, tenant.groupId) };
 }
 
-export function requireActiveTenant(tenant: Doc<"tenants">): void {
+export function requireActiveTenant(tenant: Doc<"tenants">, change = "change rent"): void {
   if (tenant.status === "archived") {
-    throw appError("TenantArchived", "This tenant is archived. Restore the tenant to change rent.");
+    throw appError("TenantArchived", `This tenant is archived. Restore the tenant to ${change}.`);
   }
 }

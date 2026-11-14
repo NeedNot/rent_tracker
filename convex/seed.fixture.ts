@@ -15,6 +15,8 @@ export type Backend = TestConvexForDataModel<DataModel>;
 
 export const owner = { subject: "auth|dana", email: "dana@example.com", name: "Dana" };
 
+export const sam = { subject: "auth|sam", email: "sam@example.com", name: "Sam" };
+
 export const RENT = 150000;
 
 export const newTenant = { name: "Apt 3B", moveIn: "2026-01-01", amountCents: RENT, dueDay: 1 };
@@ -114,6 +116,7 @@ export async function insertPayment(
   ctx: MutationCtx,
   tenantId: Id<"tenants">,
   payment: { amountCents: number; dateReceived: string },
+  fields: Partial<WithoutSystemFields<Doc<"payments">>> = {},
 ): Promise<Id<"payments">> {
   return await ctx.db.insert("payments", {
     tenantId,
@@ -122,6 +125,24 @@ export async function insertPayment(
     clientId: `${tenantId}-${payment.dateReceived}`,
     loggedBy: await insertAccount(ctx, owner),
     version: 1,
+    ...fields,
+  });
+}
+
+export async function insertDebt(
+  ctx: MutationCtx,
+  tenantId: Id<"tenants">,
+  debt: { kind: Doc<"debts">["kind"]; amountCents: number; date: string },
+  fields: Partial<WithoutSystemFields<Doc<"debts">>> = {},
+): Promise<Id<"debts">> {
+  return await ctx.db.insert("debts", {
+    tenantId,
+    ...debt,
+    ...(debt.kind === "lateFee" && { forMonth: debt.date.slice(0, 7) }),
+    ...(debt.kind === "custom" && { note: "Parking" }),
+    createdBy: await insertAccount(ctx, owner),
+    version: 1,
+    ...fields,
   });
 }
 
@@ -189,4 +210,53 @@ export async function failureOf(call: Promise<unknown>): Promise<AppErrorData> {
     throw error;
   }
   throw new Error("Expected the call to fail");
+}
+
+export async function paymentRow(t: Backend, paymentId: Id<"payments">): Promise<Doc<"payments">> {
+  const payment = await t.run((ctx) => ctx.db.get(paymentId));
+  if (payment === null) {
+    throw new Error("The payment row is missing");
+  }
+  return payment;
+}
+
+export async function debtRow(t: Backend, debtId: Id<"debts">): Promise<Doc<"debts">> {
+  const debt = await t.run((ctx) => ctx.db.get(debtId));
+  if (debt === null) {
+    throw new Error("The debt row is missing");
+  }
+  return debt;
+}
+
+export async function paymentRows(t: Backend, tenantId: Id<"tenants">): Promise<Doc<"payments">[]> {
+  return await t.run((ctx) =>
+    ctx.db
+      .query("payments")
+      .withIndex("by_tenant", (q) => q.eq("tenantId", tenantId))
+      .collect(),
+  );
+}
+
+export async function debtRows(t: Backend, tenantId: Id<"tenants">): Promise<Doc<"debts">[]> {
+  return await t.run((ctx) =>
+    ctx.db
+      .query("debts")
+      .withIndex("by_tenant", (q) => q.eq("tenantId", tenantId))
+      .collect(),
+  );
+}
+
+export async function signInAsMember(
+  t: Backend,
+  tenantId: Id<"tenants">,
+  fields: Partial<WithoutSystemFields<Doc<"memberships">>> = {},
+): Promise<Backend> {
+  await t.run(async (ctx) => {
+    const tenant = await ctx.db.get(tenantId);
+    if (tenant === null) {
+      throw new Error("The tenant row is missing");
+    }
+    await insertMembership(ctx, tenant.groupId, await insertAccount(ctx, sam), fields);
+  });
+  return t.withIdentity(sam);
 }

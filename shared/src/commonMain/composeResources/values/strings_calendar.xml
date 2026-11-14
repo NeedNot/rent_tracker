@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_heading">Calendar</string>
+    <string name="calendar_previous_year">Previous year</string>
+    <string name="calendar_next_year">Next year</string>
+    <string name="calendar_caption">Tap a month to see which payments covered it.</string>
+
+    <string name="calendar_square_owed">%1$s owed</string>
+    <string name="calendar_fee_marker">Fee %1$s</string>
+    <string name="calendar_description_fee_unpaid">%1$s late fee unpaid</string>
+
+    <string name="calendar_rent">Rent</string>
+    <string name="calendar_rent_due">Rent, due %1$s</string>
+    <string name="calendar_covered_by">Covered by</string>
+    <string name="calendar_total_covered">Covered</string>
+    <string name="calendar_total_owed">Still owed</string>
+    <string name="calendar_total_owed_on_rent">Still owed on rent</string>
+    <string name="calendar_prepaid_note">%1$s prepaid</string>
+    <string name="calendar_paid_note">%1$s paid</string>
+
+    <string name="calendar_payment_cash">%1$s payment · Cash</string>
+    <string name="calendar_payment_check">%1$s payment · Check</string>
+    <string name="calendar_payment_zelle">%1$s payment · Zelle</string>
+    <string name="calendar_payment_venmo">%1$s payment · Venmo</string>
+    <string name="calendar_payment_bank_transfer">%1$s payment · Bank transfer</string>
+    <string name="calendar_payment_other">%1$s payment · Other</string>
+    <string name="calendar_payment_no_method">%1$s payment</string>
+
+    <string name="calendar_other_finished">The other %1$s of this %2$s payment finished %3$s.</string>
+    <string name="calendar_other_single_to">The other %1$s of this %2$s payment went to %3$s.</string>
+    <string name="calendar_other_single_late_fee">The other %1$s of this %2$s payment went to the late fee for %3$s.</string>
+    <string name="calendar_other_many">%1$s went to %2$s.</string>
+    <string name="calendar_other_many_late_fee">%1$s went to the late fee for %2$s.</string>
+    <string name="calendar_paid_after_grace">Paid after the grace period ended %1$s, so %2$s was late.</string>
+
+    <string name="calendar_late_title">Late · no late fee added</string>
+    <string name="calendar_late_paid_some">Only %1$s was paid by %2$s, the end of the grace period.</string>
+    <string name="calendar_late_paid_none">Nothing was paid by %1$s, the end of the grace period.</string>
+    <string name="calendar_late_generic">Rent was not fully paid before the grace period ended.</string>
+    <string name="calendar_add_fee">Add fee</string>
+
+    <string name="calendar_fee_title_unpaid">Late fee for %1$s · unpaid</string>
+    <string name="calendar_fee_title_paid">Late fee for %1$s · paid</string>
+    <string name="calendar_fee_added_you">Added %1$s by you.</string>
+    <string name="calendar_fee_added_named">Added %1$s by %2$s.</string>
+    <string name="calendar_fee_rent_first">Rent is paid before fees, so payments went to rent first.</string>
+</resources>

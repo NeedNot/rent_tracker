@@ -6,6 +6,7 @@ import net.neednot.renttracker.core.ui.UiText
 data class TenantBalanceUiState(
     val state: TenantBalanceState,
     val total: UiText,
+    val lines: List<BalanceLineUiState>,
     val nextDue: UiText?,
     val partialMoveOutWarning: UiText?,
 )

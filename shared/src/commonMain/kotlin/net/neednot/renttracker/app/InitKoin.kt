@@ -3,8 +3,10 @@ package net.neednot.renttracker.app
 import net.neednot.renttracker.core.data.coreDataModule
 import net.neednot.renttracker.core.ui.coreUiModule
 import net.neednot.renttracker.feature.auth.di.authModule
+import net.neednot.renttracker.feature.debts.di.debtsModule
 import net.neednot.renttracker.feature.group.di.groupModule
 import net.neednot.renttracker.feature.home.di.homeModule
+import net.neednot.renttracker.feature.payments.di.paymentsModule
 import net.neednot.renttracker.feature.tenants.di.tenantsModule
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -19,6 +21,8 @@ private val sharedModules =
         homeModule,
         groupModule,
         tenantsModule,
+        paymentsModule,
+        debtsModule,
     )
 
 fun initKoin(

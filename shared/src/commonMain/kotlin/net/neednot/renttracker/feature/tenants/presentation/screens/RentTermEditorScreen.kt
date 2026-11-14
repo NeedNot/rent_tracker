@@ -27,17 +27,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.YearMonth
+import net.neednot.renttracker.core.designsystem.components.EditorTopBar
+import net.neednot.renttracker.core.designsystem.components.FormTextField
+import net.neednot.renttracker.core.designsystem.components.InfoNotice
+import net.neednot.renttracker.core.designsystem.components.MoneyField
+import net.neednot.renttracker.core.designsystem.components.MonthField
+import net.neednot.renttracker.core.designsystem.components.WarningNotice
+import net.neednot.renttracker.core.designsystem.components.WholeNumberField
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.RentTermEditorRoute
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
-import net.neednot.renttracker.feature.tenants.presentation.components.EditorTopBar
-import net.neednot.renttracker.feature.tenants.presentation.components.FormTextField
-import net.neednot.renttracker.feature.tenants.presentation.components.InfoNotice
-import net.neednot.renttracker.feature.tenants.presentation.components.MoneyField
-import net.neednot.renttracker.feature.tenants.presentation.components.MonthField
-import net.neednot.renttracker.feature.tenants.presentation.components.WarningNotice
-import net.neednot.renttracker.feature.tenants.presentation.components.WholeNumberField
 import net.neednot.renttracker.feature.tenants.presentation.uistate.PastMonthWarningUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermDeletionUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermEditorField
@@ -45,6 +45,7 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermEdit
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.RentTermEditorEvent
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.RentTermEditorViewModel
 import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.common_cancel
 import net.neednot.renttracker.resources.rent_term_editor_delete
 import net.neednot.renttracker.resources.rent_term_editor_delete_confirm
 import net.neednot.renttracker.resources.rent_term_editor_delete_message
@@ -57,7 +58,6 @@ import net.neednot.renttracker.resources.rent_term_editor_past_month_checking
 import net.neednot.renttracker.resources.rent_term_editor_start_month
 import net.neednot.renttracker.resources.rent_term_editor_title_add
 import net.neednot.renttracker.resources.rent_term_editor_title_edit
-import net.neednot.renttracker.resources.tenant_dialog_cancel
 import net.neednot.renttracker.resources.tenant_editor_due_day
 import net.neednot.renttracker.resources.tenant_editor_loading
 import net.neednot.renttracker.resources.tenant_editor_monthly_rent
@@ -236,7 +236,7 @@ private fun DeleteRentTermDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.tenant_dialog_cancel)) }
+            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) }
         },
         title = { Text(stringResource(Res.string.rent_term_editor_delete_title)) },
         text = {

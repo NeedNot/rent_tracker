@@ -25,7 +25,7 @@ kotlin {
                 .get()
                 .toInt()
         androidResources { enable = true }
-        withHostTest {}
+        withHostTest { isIncludeAndroidResources = true }
     }
 
     // Host-only target: runs the JVM tests (architecture, Room). No app ships on it.
@@ -73,6 +73,16 @@ kotlin {
         jvmTest.dependencies {
             implementation(libs.konsist)
         }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.junit)
+            implementation(libs.robolectric)
+            implementation(libs.roborazzi)
+            implementation(libs.roborazzi.compose)
+            implementation(libs.roborazzi.junit.rule)
+            implementation(libs.androidx.compose.ui.test.junit4)
+            implementation(libs.androidx.compose.ui.test.manifest)
+            implementation(libs.androidx.test.core)
+        }
     }
 }
 
@@ -87,5 +97,15 @@ room {
 dependencies {
     listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64").forEach { configuration ->
         add(configuration, libs.androidx.room.compiler)
+    }
+}
+
+val recordScreenshots = providers.gradleProperty("recordScreenshots").isPresent
+
+tasks.withType<Test>().configureEach {
+    if (name == "testAndroidHostTest") {
+        systemProperty("roborazzi.test.record", recordScreenshots)
+        systemProperty("roborazzi.test.verify", !recordScreenshots)
+        inputs.dir("src/androidHostTest/screenshots").withPropertyName("goldenScreenshots")
     }
 }

@@ -69,6 +69,8 @@ fun TenantSummary.toEntity(): TenantSummaryEntity =
         nextDueDate = nextDueDate,
         partialMoveOutStart = partialMoveOutPeriod?.start,
         partialMoveOutEnd = partialMoveOutPeriod?.end,
+        lateFeeSuggestionMonth = lateFeeSuggestionMonth,
+        lateFeeSuggestionCents = lateFeeSuggestionCents,
     )
 
 fun RentTerm.toEntity(): RentTermEntity =

@@ -89,11 +89,12 @@ export default defineSchema({
     tenantId: v.id("tenants"),
     amountCents: v.number(),
     dateReceived: v.string(),
-    method: paymentMethod,
+    method: v.optional(paymentMethod),
     note: v.optional(v.string()),
     clientId: v.string(),
     loggedBy: v.id("accounts"),
     bouncedAt: v.optional(v.number()),
+    bouncedBy: v.optional(v.id("accounts")),
     ...versionFields,
     ...softDeleteFields,
   })
@@ -107,12 +108,14 @@ export default defineSchema({
     date: v.string(),
     forMonth: v.optional(v.string()),
     note: v.optional(v.string()),
+    clientId: v.optional(v.string()),
     createdBy: v.id("accounts"),
     ...versionFields,
     ...softDeleteFields,
   })
     .index("by_tenant", ["tenantId"])
-    .index("by_tenant_for_month", ["tenantId", "forMonth"]),
+    .index("by_tenant_for_month", ["tenantId", "forMonth"])
+    .index("by_client_id", ["clientId"]),
 
   pushTokens: defineTable({
     accountId: v.id("accounts"),
