@@ -24,7 +24,6 @@ import type * as engine_lateness from "../engine/lateness.js";
 import type * as engine_ledgerInput from "../engine/ledgerInput.js";
 import type * as engine_rentPeriods from "../engine/rentPeriods.js";
 import type * as engine_tenantLedger from "../engine/tenantLedger.js";
-import type * as errors from "../errors.js";
 import type * as groupSummary from "../groupSummary.js";
 import type * as groupTenantSummaries from "../groupTenantSummaries.js";
 import type * as groups from "../groups.js";
@@ -64,7 +63,6 @@ declare const fullApi: ApiFromModules<{
   "engine/ledgerInput": typeof engine_ledgerInput;
   "engine/rentPeriods": typeof engine_rentPeriods;
   "engine/tenantLedger": typeof engine_tenantLedger;
-  errors: typeof errors;
   groupSummary: typeof groupSummary;
   groupTenantSummaries: typeof groupTenantSummaries;
   groups: typeof groups;
