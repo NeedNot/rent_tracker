@@ -10,7 +10,7 @@ data class Tenant(
     @SerialName("_id")
     val id: String,
     @SerialName("_creationTime")
-    val creationTime: Long,
+    val creationTime: Double,
     val name: String,
     val status: TenantStatus,
     val moveOut: String? = null,

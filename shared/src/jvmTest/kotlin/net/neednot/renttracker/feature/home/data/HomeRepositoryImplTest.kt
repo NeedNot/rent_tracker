@@ -52,8 +52,8 @@ class HomeRepositoryImplTest {
             telemetry = NoOpTelemetry(),
         )
 
-    private val firstStreet = group(id = "g1", name = "1st Street", creationTime = 1)
-    private val mapleCourt = group(id = "g2", name = "Maple Court", creationTime = 2)
+    private val firstStreet = group(id = "g1", name = "1st Street", creationTime = 1_794_634_333_900.8584)
+    private val mapleCourt = group(id = "g2", name = "Maple Court", creationTime = 1_794_634_333_901.25)
 
     @AfterTest
     fun closeDatabase() {
@@ -227,7 +227,7 @@ class HomeRepositoryImplTest {
     private fun group(
         id: String,
         name: String,
-        creationTime: Long,
+        creationTime: Double,
     ) = Group(
         creationTime = creationTime,
         id = id,
