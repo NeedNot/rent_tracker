@@ -16,6 +16,9 @@ kotlinx-serialization = "1.13.0"
 kotlinx-datetime = "0.7.1"
 kotlin-result = "2.3.1"
 convex-android = "0.8.0"
+better-auth = "0.2.0"
+androidx-credentials = "1.6.0"
+googleid = "1.2.1"
 turbine = "1.2.1"
 konsist = "0.18.1"
 ktlint-gradle = "14.2.0"
@@ -57,6 +60,10 @@ kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result", versi
 kotlin-result-coroutines = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "kotlin-result" }
 
 convex-android = { module = "dev.convex:android-convexmobile", version.ref = "convex-android" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+better-auth = { module = "com.github.NeedNot.better-auth-android:better-auth", version.ref = "better-auth" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

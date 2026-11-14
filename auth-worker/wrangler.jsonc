@@ -5,5 +5,25 @@
   "compatibility_date": "2026-10-01",
   "observability": {
     "enabled": true
+  },
+  "routes": [{ "pattern": "auth.rent-tracker.hornor.com", "custom_domain": true }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rent-tracker-auth",
+      "database_id": "048d64af-7eb7-4de7-bdd5-42b187e6421d",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "services": [
+    {
+      "binding": "EMAIL",
+      "service": "rent-tracker-email-worker"
+    }
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "https://auth.rent-tracker.hornor.com",
+    "APP_ORIGIN": "rent-tracker://app",
+    "GOOGLE_CLIENT_IDS": "000000000000-placeholder.apps.googleusercontent.com"
   }
 }

@@ -47,8 +47,9 @@ describe("tenant summary", () => {
     expect(computeTenantLedger(ledgerInput({ today, payments, debts })).summary.state).toBe(state);
   });
 
-  it("gives the first due date after today as the next due date", () => {
-    expect(computeTenantLedger(ledgerInput({ today: "2026-03-01" })).summary.nextDueDate).toBe("2026-04-01");
+  it("gives the first due date on or after today as the next due date", () => {
+    expect(computeTenantLedger(ledgerInput({ today: "2026-03-01" })).summary.nextDueDate).toBe("2026-03-01");
+    expect(computeTenantLedger(ledgerInput({ today: "2026-03-02" })).summary.nextDueDate).toBe("2026-04-01");
     expect(computeTenantLedger(ledgerInput({ today: "2026-02-28" })).summary.nextDueDate).toBe("2026-03-01");
   });
 

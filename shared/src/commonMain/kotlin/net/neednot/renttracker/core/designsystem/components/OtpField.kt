@@ -27,10 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,14 +54,20 @@ fun OtpField(
     state: TextFieldState,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
+    onDone: () -> Unit = {},
 ) {
     val label = stringResource(Res.string.otp_field_label)
     BasicTextField(
         state = state,
-        modifier = modifier.semantics { contentDescription = label },
+        modifier =
+            modifier.semantics {
+                contentDescription = label
+                contentType = ContentType.SmsOtpCode
+            },
         inputTransformation = InputTransformation.maxLength(CODE_LENGTH).then(DigitsOnly),
         lineLimits = TextFieldLineLimits.SingleLine,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
+        onKeyboardAction = { onDone() },
         decorator = {
             val code = state.text.toString()
             Row(

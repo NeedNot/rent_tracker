@@ -56,8 +56,8 @@ function stateOf(period: RentPeriod, coveredCents: number, context: CalendarCont
   if (fullyCovered) {
     return "paid";
   }
-  if (coveredCents > 0) {
-    return "partial";
+  if (context.today <= context.graceEnd(period)) {
+    return "dueNotLate";
   }
-  return context.today <= context.graceEnd(period) ? "dueNotLate" : "owed";
+  return coveredCents > 0 ? "partial" : "owed";
 }

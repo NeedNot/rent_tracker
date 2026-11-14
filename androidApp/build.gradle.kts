@@ -32,6 +32,12 @@ android {
         versionName = "0.1.0"
 
         buildConfigField("String", "CONVEX_URL", "\"${localProperties.getProperty("convex.url", "")}\"")
+        buildConfigField("String", "AUTH_URL", "\"${localProperties.getProperty("auth.url", "")}\"")
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            "\"${localProperties.getProperty("google.webClientId", "")}\"",
+        )
     }
 
     buildFeatures {
@@ -56,4 +62,7 @@ dependencies {
     implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.android)
     implementation(libs.convex.android)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 }

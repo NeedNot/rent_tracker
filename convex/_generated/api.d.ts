@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as access from "../access.js";
+import type * as accounts from "../accounts.js";
 import type * as engine_allocation from "../engine/allocation.js";
 import type * as engine_balance from "../engine/balance.js";
 import type * as engine_calendarDate from "../engine/calendarDate.js";
@@ -19,6 +21,7 @@ import type * as engine_lateness from "../engine/lateness.js";
 import type * as engine_ledgerInput from "../engine/ledgerInput.js";
 import type * as engine_rentPeriods from "../engine/rentPeriods.js";
 import type * as engine_tenantLedger from "../engine/tenantLedger.js";
+import type * as errors from "../errors.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -28,6 +31,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  access: typeof access;
+  accounts: typeof accounts;
   "engine/allocation": typeof engine_allocation;
   "engine/balance": typeof engine_balance;
   "engine/calendarDate": typeof engine_calendarDate;
@@ -39,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   "engine/ledgerInput": typeof engine_ledgerInput;
   "engine/rentPeriods": typeof engine_rentPeriods;
   "engine/tenantLedger": typeof engine_tenantLedger;
+  errors: typeof errors;
   validators: typeof validators;
 }>;
 
