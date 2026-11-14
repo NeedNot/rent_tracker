@@ -13,6 +13,8 @@ export const tenantSummary = v.object({
   state: tenantState,
   nextDueDate: v.optional(v.string()),
   partialMoveOutPeriod: v.optional(v.object({ start: v.string(), end: v.string() })),
+  lateFeeSuggestionMonth: v.optional(v.string()),
+  lateFeeSuggestionCents: v.optional(v.number()),
 });
 
 export function tenantSummaryOf(tenantId: Id<"tenants">, summary: TenantSummary): Infer<typeof tenantSummary> {
@@ -22,5 +24,7 @@ export function tenantSummaryOf(tenantId: Id<"tenants">, summary: TenantSummary)
     state: summary.state,
     nextDueDate: summary.nextDueDate,
     partialMoveOutPeriod: summary.partialMoveOutPeriod,
+    lateFeeSuggestionMonth: summary.lateFeeSuggestion?.forMonth,
+    lateFeeSuggestionCents: summary.lateFeeSuggestion?.amountCents,
   };
 }

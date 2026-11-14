@@ -1,22 +1,18 @@
 package net.neednot.renttracker.core.ui
 
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 class DefaultMessageDispatcher : MessageDispatcher {
-    // Buffered so show() never suspends and a message sent while the host is briefly detached is not lost.
     private val pendingMessages =
-        MutableSharedFlow<UiMessage>(
-            extraBufferCapacity = BUFFER_CAPACITY,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST,
-        )
+        Channel<UiMessage>(capacity = BUFFER_CAPACITY, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    override val messages: SharedFlow<UiMessage> = pendingMessages.asSharedFlow()
+    override val messages: Flow<UiMessage> = pendingMessages.receiveAsFlow()
 
     override fun show(message: UiMessage) {
-        pendingMessages.tryEmit(message)
+        pendingMessages.trySend(message)
     }
 
     private companion object {

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
@@ -28,6 +29,7 @@ import net.neednot.renttracker.resources.tenant_restore_message
 class TenantViewModel(
     private val tenantId: String,
     private val tenantRepository: TenantRepository,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : ViewModel() {
     private val statusChange = MutableStateFlow(TenantStatusChangeUiState())
     private var shownTenant: TenantOverview? = null
@@ -36,7 +38,7 @@ class TenantViewModel(
         tenantRepository
             .observeTenant(tenantId)
             .onEach { shownTenant = it.value }
-            .combine(statusChange) { synced, change -> synced.toTenantUiState(change) }
+            .combine(statusChange) { synced, change -> synced.toTenantUiState(change, timeZone) }
             .stateIn(viewModelScope, WhileScreenIsVisible, TenantUiState.Loading)
 
     fun onArchiveClicked() {
@@ -49,6 +51,11 @@ class TenantViewModel(
         val name = shownTenant?.tenant?.details?.name ?: return
         val message = UiText.Resource(Res.string.tenant_restore_message, listOf(name))
         statusChange.value = TenantStatusChangeUiState(TenantConfirmationUiState(TenantStatusAction.Restore, message))
+    }
+
+    fun onLateFeeDismissed() {
+        val suggestion = shownTenant?.lateFeeSuggestion ?: return
+        viewModelScope.launch { tenantRepository.dismissLateFeeSuggestion(tenantId, suggestion.month) }
     }
 
     fun onStatusChangeDismissed() {

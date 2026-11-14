@@ -16,6 +16,7 @@ import net.neednot.renttracker.core.data.TenantEntity
 import net.neednot.renttracker.core.data.TenantStatus
 import net.neednot.renttracker.core.data.TenantSummaryEntity
 import net.neednot.renttracker.feature.tenants.domain.BalanceTotal
+import net.neednot.renttracker.feature.tenants.domain.OwedBreakdown
 import net.neednot.renttracker.feature.tenants.domain.RentTerm
 import net.neednot.renttracker.feature.tenants.domain.Tenant
 import net.neednot.renttracker.feature.tenants.domain.TenantBalance
@@ -36,14 +37,21 @@ internal fun RentTrackerDatabase.observeTenantOverview(
             tenantSummaryDao().observeByTenantId(tenantId),
             rentTermDao().observeByTenantId(tenantId),
             asOf,
-        ) { group, summary, rentTerms, asOfMillis ->
+            observeLedgerSources(tenantId, tenant.groupId),
+        ) { group, summary, rentTerms, asOfMillis, ledgerSources ->
             group?.let {
+                val permissions = ledgerSources.membership?.toCallerPermissions()
+                val isArchived = tenant.status == TenantStatus.Archived
                 TenantOverview(
                     tenant = tenant.toTenant(),
                     group = group.toTenantGroup(),
                     balance = summary?.toTenantBalance(),
                     activeRentTerms = rentTerms.filter { it.deletedAt == null }.map { it.toRentTerm() },
                     today = group.localDateAt(asOfMillis),
+                    ledger = ledgerSources.toLedgerEntries(permissions, isArchived),
+                    permissions = permissions,
+                    lateFeeSuggestion =
+                        summary?.toLateFeeSuggestion(isArchived, permissions, ledgerSources.dismissedMonths),
                 )
             }
         }
@@ -80,6 +88,8 @@ private fun TenantSummaryEntity.toTenantBalance(): TenantBalance =
     TenantBalance(
         state = state,
         total = BalanceTotal(owedCents = rentOwedCents + lateFeesOwedCents + otherOwedCents, creditCents = creditCents),
+        owedBreakdown =
+            OwedBreakdown(rentCents = rentOwedCents, lateFeesCents = lateFeesOwedCents, otherCents = otherOwedCents),
         nextDueDate = nextDueDate?.let(LocalDate::parse),
         partialMoveOutPeriod = partialMoveOutPeriod(),
     )

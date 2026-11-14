@@ -3,16 +3,20 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { requireMember, requirePermission } from "./access";
 import { validationFailed } from "./appError";
-import { groupDoc, rentTermDoc, tenantDoc } from "./documentValidators";
+import { debtDoc, groupDoc, membershipDoc, paymentDoc, rentTermDoc, tenantDoc } from "./documentValidators";
 import { requireExpectedVersion } from "./editConflict";
 import { type CalendarMonth, monthOf } from "./engine/calendarDate";
+import { computeTenantLedger } from "./engine/tenantLedger";
+import { ledgerRow, ledgerRowsOf } from "./ledgerRow";
 import { localDateAt } from "./localDate";
 import { activeTerms, firstTermOf, rentTermInput, validRentTermInput, withoutTerm } from "./rentTermRules";
+import { loadAccountNames } from "./screenAccounts";
 import { tenantDetails, validTenantDetails } from "./tenantDetails";
-import { tenantLedgerOf } from "./tenantLedgerAdapter";
+import { tenantLedgerInput } from "./tenantLedgerAdapter";
 import { loadTenantLedgerRows } from "./tenantLedgerRows";
 import { loadActiveGroup, loadTenantScope } from "./tenantScope";
 import { tenantSummary, tenantSummaryOf } from "./tenantSummary";
+import { accountName } from "./validators";
 
 interface EditStamp {
   lastEditedAt: number;
@@ -96,19 +100,30 @@ export const screen = query({
     groups: v.array(groupDoc),
     tenants: v.array(tenantDoc),
     rentTerms: v.array(rentTermDoc),
+    payments: v.array(paymentDoc),
+    debts: v.array(debtDoc),
+    accounts: v.array(accountName),
+    memberships: v.array(membershipDoc),
     tenantSummaries: v.array(tenantSummary),
+    ledgerRows: v.array(ledgerRow),
   }),
   handler: async (ctx, args) => {
     const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
-    await requireMember(ctx, group._id);
+    const membership = await requireMember(ctx, group._id);
     const today = localDateAt(args.asOf, group.timeZone);
     const rows = await loadTenantLedgerRows(ctx, tenant._id);
-    const ledger = tenantLedgerOf({ group, tenant, rows, today });
+    const input = tenantLedgerInput({ group, tenant, rows, today });
+    const ledger = computeTenantLedger(input);
     return {
       groups: [group],
       tenants: [tenant],
       rentTerms: rows.rentTerms,
+      payments: rows.payments,
+      debts: rows.debts,
+      accounts: await loadAccountNames(ctx, rows),
+      memberships: [membership],
       tenantSummaries: [tenantSummaryOf(tenant._id, ledger.summary)],
+      ledgerRows: ledgerRowsOf(tenant._id, input, ledger),
     };
   },
 });

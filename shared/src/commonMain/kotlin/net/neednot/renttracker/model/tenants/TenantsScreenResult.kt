@@ -9,7 +9,12 @@ import net.neednot.renttracker.model.shared.TenantSummary
 
 @Serializable
 data class TenantsScreenResult(
+    val accounts: List<Account>,
+    val debts: List<Debt>,
     val groups: List<Group>,
+    val ledgerRows: List<LedgerRow>,
+    val memberships: List<Membership>,
+    val payments: List<Payment>,
     val rentTerms: List<RentTerm>,
     val tenantSummaries: List<TenantSummary>,
     val tenants: List<Tenant>,

@@ -6,12 +6,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.datetime.YearMonth
 import kotlinx.serialization.builtins.serializer
 import net.neednot.renttracker.core.backend.Backend
 import net.neednot.renttracker.core.data.AsOfClock
+import net.neednot.renttracker.core.data.DismissedLateFeeSuggestionEntity
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
-import net.neednot.renttracker.core.data.toEntity
+import net.neednot.renttracker.core.data.replaceTenant
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.sync.syncedFlow
 import net.neednot.renttracker.core.telemetry.Telemetry
@@ -56,15 +58,7 @@ class TenantRepositoryImpl(
                         resultSerializer = TenantsScreenResult.serializer(),
                     )
                 },
-            store = { result ->
-                screenResultStore.replaceTenant(
-                    tenantId = tenantId,
-                    groups = result.groups.map { it.toEntity() },
-                    tenants = result.tenants.map { it.toEntity() },
-                    rentTerms = result.rentTerms.map { it.toEntity() },
-                    tenantSummaries = result.tenantSummaries.map { it.toEntity() },
-                )
-            },
+            store = { result -> screenResultStore.replaceTenant(tenantId, result) },
         )
 
     override suspend fun addTenant(
@@ -160,6 +154,15 @@ class TenantRepositoryImpl(
                 argsSerializer = RentTermsPreviewArgs.serializer(),
                 resultSerializer = RentTermsPreviewResult.serializer(),
             ).map { it.toRentTermPreview() }
+
+    override suspend fun dismissLateFeeSuggestion(
+        tenantId: String,
+        month: YearMonth,
+    ) {
+        database
+            .dismissedLateFeeSuggestionDao()
+            .insert(DismissedLateFeeSuggestionEntity(tenantId = tenantId, forMonth = month.toString()))
+    }
 
     private companion object {
         const val TENANT_SCREEN = "tenants:screen"

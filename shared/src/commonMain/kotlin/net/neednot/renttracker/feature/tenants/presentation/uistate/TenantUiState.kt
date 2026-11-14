@@ -13,6 +13,10 @@ sealed interface TenantUiState {
         val balance: TenantBalanceUiState?,
         val rentTerms: List<RentTermRowUiState>,
         val details: TenantDetailsUiState,
+        val ledgerPreview: List<LedgerRowUiState> = emptyList(),
+        val canLogPayment: Boolean = false,
+        val canAddCharge: Boolean = false,
+        val lateFeeSuggestion: LateFeeSuggestionUiState? = null,
         val syncError: UiText? = null,
         val statusChange: TenantStatusChangeUiState = TenantStatusChangeUiState(),
     ) : TenantUiState

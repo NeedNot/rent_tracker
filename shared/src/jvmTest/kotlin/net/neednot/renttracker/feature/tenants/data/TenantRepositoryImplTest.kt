@@ -30,6 +30,7 @@ import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.telemetry.NoOpTelemetry
 import net.neednot.renttracker.feature.tenants.domain.BalanceTotal
 import net.neednot.renttracker.feature.tenants.domain.FirstRentTerm
+import net.neednot.renttracker.feature.tenants.domain.OwedBreakdown
 import net.neednot.renttracker.feature.tenants.domain.RentTermDraft
 import net.neednot.renttracker.feature.tenants.domain.RentTermPreview
 import net.neednot.renttracker.feature.tenants.domain.TenantBalance
@@ -134,6 +135,7 @@ class TenantRepositoryImplTest {
                     TenantBalance(
                         state = TenantBalanceState.Late,
                         total = BalanceTotal(owedCents = 56_000, creditCents = 0),
+                        owedBreakdown = OwedBreakdown(rentCents = 50_000, lateFeesCents = 5_000, otherCents = 1_000),
                         nextDueDate = LocalDate(2026, 12, 1),
                         partialMoveOutPeriod = LocalDate(2026, 3, 1)..LocalDate(2026, 3, 31),
                     ),
@@ -434,7 +436,12 @@ class TenantRepositoryImplTest {
     ) {
         val result =
             TenantsScreenResult(
+                accounts = emptyList(),
+                debts = emptyList(),
                 groups = listOf(group()),
+                ledgerRows = emptyList(),
+                memberships = emptyList(),
+                payments = emptyList(),
                 rentTerms = rentTerms,
                 tenantSummaries = listOf(summary),
                 tenants = listOf(tenant()),

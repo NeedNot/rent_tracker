@@ -8,6 +8,7 @@ import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.yearMonth
 import net.neednot.renttracker.core.designsystem.format.creditText
+import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.designsystem.format.owesText
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.tenants.domain.BalanceTotal
@@ -20,13 +21,6 @@ private val TeenDays = 11..13
 private const val FIRST = 1
 private const val SECOND = 2
 private const val THIRD = 3
-
-private val MonthAndYear =
-    YearMonth.Format {
-        monthName(MonthNames.ENGLISH_ABBREVIATED)
-        char(' ')
-        year()
-    }
 
 private val MonthAndDay =
     LocalDate.Format {
@@ -42,7 +36,12 @@ internal fun BalanceTotal.inWords(): UiText =
         else -> UiText.Resource(Res.string.balance_paid_up)
     }
 
-internal fun formatMonth(month: YearMonth): String = month.format(MonthAndYear)
+internal fun BalanceTotal.cardText(): UiText =
+    when {
+        owedCents > 0 -> owesText(owedCents)
+        creditCents > 0 -> creditText(creditCents)
+        else -> UiText.Plain(formatMoney(0))
+    }
 
 internal fun formatDayRange(days: ClosedRange<LocalDate>): String {
     val start = days.start.format(MonthAndDay)

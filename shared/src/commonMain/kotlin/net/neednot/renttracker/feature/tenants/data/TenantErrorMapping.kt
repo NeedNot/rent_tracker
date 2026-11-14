@@ -8,6 +8,7 @@ import net.neednot.renttracker.feature.tenants.domain.TenantError
 
 private const val VALIDATION_FAILED = "ValidationFailed"
 private const val EDIT_CONFLICT = "EditConflict"
+private const val PERMISSION_DENIED = "PermissionDenied"
 private const val NOT_FOUND = "NotFound"
 private const val TENANT_ARCHIVED = "TenantArchived"
 
@@ -22,6 +23,7 @@ private fun BackendError.Convex.toTenantError(): TenantError =
     when (code) {
         VALIDATION_FAILED -> TenantError.ValidationFailed(message, field())
         EDIT_CONFLICT -> TenantError.EditConflict(message)
+        PERMISSION_DENIED -> TenantError.PermissionDenied(message)
         NOT_FOUND -> TenantError.NotFound
         TENANT_ARCHIVED -> TenantError.TenantArchived(message)
         else -> TenantError.Unexpected("$code: $message")

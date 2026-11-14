@@ -14,4 +14,6 @@ data class TenantSummaryEntity(
     val nextDueDate: String?,
     val partialMoveOutStart: String?,
     val partialMoveOutEnd: String?,
+    val lateFeeSuggestionMonth: String?,
+    val lateFeeSuggestionCents: Long?,
 )

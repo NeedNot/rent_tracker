@@ -49,6 +49,8 @@ describe("tenantSummaryOf", () => {
       state: "late",
       nextDueDate: "2026-04-01",
       partialMoveOutPeriod: { start: "2026-12-01", end: "2026-12-31" },
+      lateFeeSuggestionMonth: "2026-03",
+      lateFeeSuggestionCents: 7500,
     });
   });
 

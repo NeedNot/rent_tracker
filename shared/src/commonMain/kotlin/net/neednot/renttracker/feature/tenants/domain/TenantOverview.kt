@@ -8,4 +8,7 @@ data class TenantOverview(
     val balance: TenantBalance?,
     val activeRentTerms: List<RentTerm>,
     val today: LocalDate,
+    val ledger: List<LedgerEntry>,
+    val permissions: CallerPermissions?,
+    val lateFeeSuggestion: LateFeeSuggestion?,
 )

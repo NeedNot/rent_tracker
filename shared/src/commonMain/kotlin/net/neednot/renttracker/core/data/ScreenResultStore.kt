@@ -11,6 +11,11 @@ class ScreenResultStore(
     private val tenantDao = database.tenantDao()
     private val tenantSummaryDao = database.tenantSummaryDao()
     private val rentTermDao = database.rentTermDao()
+    private val paymentDao = database.paymentDao()
+    private val debtDao = database.debtDao()
+    private val accountNameDao = database.accountNameDao()
+    private val membershipDao = database.membershipDao()
+    private val ledgerRowDao = database.ledgerRowDao()
 
     suspend fun replaceHome(
         groups: List<GroupEntity>,
@@ -43,14 +48,23 @@ class ScreenResultStore(
         tenantId: String,
         groups: List<GroupEntity>,
         tenants: List<TenantEntity>,
-        rentTerms: List<RentTermEntity>,
         tenantSummaries: List<TenantSummaryEntity>,
+        scope: TenantScopeEntities,
     ) = inOneTransaction {
         groupDao.upsert(groups)
         tenantDao.upsert(tenants)
         tenantSummaryDao.upsert(tenantSummaries)
-        rentTermDao.upsert(rentTerms)
-        rentTermDao.deleteOfTenantExcept(tenantId, rentTerms.map { it.id })
+        rentTermDao.upsert(scope.rentTerms)
+        rentTermDao.deleteOfTenantExcept(tenantId, scope.rentTerms.map { it.id })
+        paymentDao.upsert(scope.payments)
+        paymentDao.deleteOfTenantExcept(tenantId, scope.payments.map { it.id })
+        debtDao.upsert(scope.debts)
+        debtDao.deleteOfTenantExcept(tenantId, scope.debts.map { it.id })
+        ledgerRowDao.upsert(scope.ledgerRows)
+        ledgerRowDao.deleteOfTenantExcept(tenantId, scope.ledgerRows.map { it.key })
+        accountNameDao.upsert(scope.accountNames)
+        membershipDao.upsert(scope.memberships)
+        membershipDao.deleteInGroupsExcept(groups.map { it.id }, scope.memberships.map { it.id })
     }
 
     private suspend fun inOneTransaction(write: suspend () -> Unit) {

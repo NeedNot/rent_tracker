@@ -1,10 +1,15 @@
 package net.neednot.renttracker.feature.tenants.di
 
+import net.neednot.renttracker.core.navigation.LedgerRoute
 import net.neednot.renttracker.core.navigation.RentTermEditorRoute
 import net.neednot.renttracker.core.navigation.TenantEditorRoute
 import net.neednot.renttracker.core.navigation.TenantRoute
+import net.neednot.renttracker.feature.tenants.data.LedgerEntryRepositoryImpl
 import net.neednot.renttracker.feature.tenants.data.TenantRepositoryImpl
+import net.neednot.renttracker.feature.tenants.domain.LedgerEntryRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantRepository
+import net.neednot.renttracker.feature.tenants.presentation.viewmodel.LedgerEntryViewModel
+import net.neednot.renttracker.feature.tenants.presentation.viewmodel.LedgerViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.RentTermEditorViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.TenantEditorViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.TenantViewModel
@@ -22,11 +27,21 @@ val tenantsModule =
                 telemetry = get(),
             )
         }
+        single<LedgerEntryRepository> { LedgerEntryRepositoryImpl(backend = get(), telemetry = get()) }
         viewModel { (route: TenantRoute) -> TenantViewModel(tenantId = route.tenantId, tenantRepository = get()) }
         viewModel { (route: TenantEditorRoute) ->
             TenantEditorViewModel(groupId = route.groupId, tenantId = route.tenantId, tenantRepository = get())
         }
         viewModel { (route: RentTermEditorRoute) ->
             RentTermEditorViewModel(tenantId = route.tenantId, rentTermId = route.rentTermId, tenantRepository = get())
+        }
+        viewModel { (route: LedgerRoute) -> LedgerViewModel(tenantId = route.tenantId, tenantRepository = get()) }
+        viewModel { (tenantId: String) ->
+            LedgerEntryViewModel(
+                tenantId = tenantId,
+                tenantRepository = get(),
+                ledgerEntryRepository = get(),
+                messageDispatcher = get(),
+            )
         }
     }
