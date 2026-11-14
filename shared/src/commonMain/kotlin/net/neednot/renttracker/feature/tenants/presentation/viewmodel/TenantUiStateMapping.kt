@@ -13,10 +13,10 @@ import net.neednot.renttracker.feature.tenants.domain.LateFeeSuggestion
 import net.neednot.renttracker.feature.tenants.domain.OwedBreakdown
 import net.neednot.renttracker.feature.tenants.domain.RentTerm
 import net.neednot.renttracker.feature.tenants.domain.TenantBalance
+import net.neednot.renttracker.feature.tenants.domain.TenantCalendar
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.presentation.uistate.BalanceLineUiState
-import net.neednot.renttracker.feature.tenants.presentation.uistate.CalendarUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.MonthDetailUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
@@ -45,7 +45,7 @@ private const val LEDGER_PREVIEW_SIZE = 3
 internal fun Synced<TenantOverview?, TenantError>.toTenantUiState(
     statusChange: TenantStatusChangeUiState,
     timeZone: TimeZone,
-    calendar: CalendarUiState?,
+    calendar: Synced<TenantCalendar, TenantError>?,
     monthDetail: MonthDetailUiState?,
 ): TenantUiState {
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
@@ -62,7 +62,7 @@ private fun TenantOverview.toContent(
     syncError: UiText?,
     statusChange: TenantStatusChangeUiState,
     timeZone: TimeZone,
-    calendar: CalendarUiState?,
+    calendar: Synced<TenantCalendar, TenantError>?,
     monthDetail: MonthDetailUiState?,
 ): TenantUiState.Content =
     TenantUiState.Content(
@@ -77,7 +77,7 @@ private fun TenantOverview.toContent(
         canLogPayment = !tenant.isArchived && permissions?.canLogPayments == true,
         canAddCharge = !tenant.isArchived && permissions?.canAddCharges == true,
         lateFeeSuggestion = lateFeeSuggestion?.toUiState(),
-        calendar = calendar,
+        calendar = calendar?.toCalendarUiState(firstYear = tenant.details.moveIn.year),
         monthDetail = monthDetail,
         syncError = syncError,
         statusChange = statusChange,

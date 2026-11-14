@@ -48,7 +48,7 @@ internal fun CalendarCard(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            YearHeader(calendar.year, onPreviousYearClicked, onNextYearClicked)
+            YearHeader(calendar.year, calendar.hasPreviousYear, onPreviousYearClicked, onNextYearClicked)
             calendar.error?.let { error ->
                 Text(
                     text = error.asString(),
@@ -69,11 +69,12 @@ internal fun CalendarCard(
 @Composable
 private fun YearHeader(
     year: String,
+    hasPreviousYear: Boolean,
     onPreviousYearClicked: () -> Unit,
     onNextYearClicked: () -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onPreviousYearClicked) {
+        IconButton(onClick = onPreviousYearClicked, enabled = hasPreviousYear) {
             Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(Res.string.calendar_previous_year))
         }
         Text(

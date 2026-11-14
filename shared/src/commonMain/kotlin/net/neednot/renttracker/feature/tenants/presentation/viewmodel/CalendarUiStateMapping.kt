@@ -18,11 +18,12 @@ import net.neednot.renttracker.resources.calendar_square_owed
 
 private const val MONTHS_IN_YEAR = 12
 
-internal fun Synced<TenantCalendar, TenantError>.toCalendarUiState(): CalendarUiState {
+internal fun Synced<TenantCalendar, TenantError>.toCalendarUiState(firstYear: Int): CalendarUiState {
     val monthsByName = value.months.associateBy { it.month }
     val failure = status as? SyncStatus.Failed
     return CalendarUiState(
         year = value.year.toString(),
+        hasPreviousYear = value.year > firstYear,
         squares =
             (1..MONTHS_IN_YEAR).map { number ->
                 val month = YearMonth(value.year, number)

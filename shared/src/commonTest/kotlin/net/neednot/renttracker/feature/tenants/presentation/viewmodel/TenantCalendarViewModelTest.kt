@@ -95,7 +95,28 @@ class TenantCalendarViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun monthsMissingFromTheYearAreBlankAndNotTappable() =
+    fun theCalendarStopsAtTheMoveInYear() =
+        runTest {
+            repository.calendar.value = syncedCalendar(2024, calendarMonth("2024-01"))
+
+            val calendar = assertNotNull(contentOf().calendar)
+            viewModel.onPreviousYearClicked()
+            runCurrent()
+
+            assertEquals(false, calendar.hasPreviousYear)
+            assertEquals(listOf(0), repository.requestedYearOffsets)
+        }
+
+    @Test
+    fun aYearAfterTheMoveInYearCanGoBack() =
+        runTest {
+            val calendar = assertNotNull(contentOf().calendar)
+
+            assertEquals(true, calendar.hasPreviousYear)
+        }
+
+    @Test
+    fun monthsOutsideTheTenancyAreNotTappable() =
         runTest {
             repository.calendar.value = syncedCalendar(2026, calendarMonth("2026-02"))
 

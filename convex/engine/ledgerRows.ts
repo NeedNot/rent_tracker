@@ -25,21 +25,16 @@ export interface LedgerRowsInput {
   mayNotApplyDebtIds: readonly string[];
 }
 
-type EntryRank = "rent" | "custom" | "lateFee" | "payment";
-
 interface Entry extends Omit<LedgerRow, "position" | "balanceOwedCents" | "balanceCreditCents"> {
-  rank: EntryRank;
   creationTime: number;
   balanceEffectCents?: number;
 }
-
-const RANK_ORDER: Record<EntryRank, number> = { rent: 0, custom: 1, lateFee: 2, payment: 3 };
 
 export function ledgerRows(input: LedgerRowsInput): LedgerRow[] {
   const rows: LedgerRow[] = [];
   let runningCents = 0;
   for (const [position, entry] of orderedEntries(input).entries()) {
-    const { rank: _rank, creationTime: _creationTime, balanceEffectCents, ...row } = entry;
+    const { creationTime: _creationTime, balanceEffectCents, ...row } = entry;
     if (balanceEffectCents === undefined) {
       rows.push({ ...row, position });
       continue;
@@ -67,7 +62,6 @@ function rentEntry(period: RentPeriodStatus): Entry {
     date: period.dueDate,
     amountCents: period.amountCents,
     mayNotApply: false,
-    rank: "rent",
     creationTime: 0,
     balanceEffectCents: period.amountCents,
   };
@@ -82,7 +76,6 @@ function debtEntry(debt: DebtRow, today: CalendarDate, mayNotApply: ReadonlySet<
     date: debt.date,
     amountCents: debt.amountCents,
     mayNotApply: debt.kind === "lateFee" && mayNotApply.has(debt.id),
-    rank: debt.kind,
     creationTime: debt.creationTime,
     ...(countsAsCharge && { balanceEffectCents: debt.amountCents }),
   };
@@ -97,7 +90,6 @@ function paymentEntry(payment: PaymentRow): Entry {
     date: payment.dateReceived,
     amountCents: payment.amountCents,
     mayNotApply: false,
-    rank: "payment",
     creationTime: payment.creationTime,
     ...(countsAsPayment && { balanceEffectCents: -payment.amountCents }),
   };
@@ -106,7 +98,7 @@ function paymentEntry(payment: PaymentRow): Entry {
 function compareEntries(a: Entry, b: Entry): number {
   return (
     compareText(a.date, b.date) ||
-    RANK_ORDER[a.rank] - RANK_ORDER[b.rank] ||
+    Number(b.kind === "rent") - Number(a.kind === "rent") ||
     a.creationTime - b.creationTime ||
     compareText(a.key, b.key)
   );

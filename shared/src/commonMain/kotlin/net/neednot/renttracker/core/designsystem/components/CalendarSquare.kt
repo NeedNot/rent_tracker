@@ -2,7 +2,6 @@ package net.neednot.renttracker.core.designsystem.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -40,7 +39,7 @@ fun CalendarSquare(
             if (onClick != null) role = Role.Button
         }
     val shape = MaterialTheme.shapes.small
-    val border = colors.border?.let { BorderStroke(2.dp, it) }
+    val border = colors.border?.let { BorderStroke(if (state == CalendarState.NotATenant) 1.dp else 2.dp, it) }
     if (onClick == null) {
         Surface(
             modifier = modifier.then(semantics),
@@ -73,10 +72,6 @@ private fun SquareContent(
     owed: String?,
     feeMarker: String?,
 ) {
-    if (state == CalendarState.NotATenant) {
-        Box(modifier = Modifier.defaultMinSize(minHeight = SquareMinHeight))
-        return
-    }
     Column(
         modifier =
             Modifier
@@ -89,6 +84,7 @@ private fun SquareContent(
             Text(text = monthName, style = MaterialTheme.typography.labelLarge)
             feeMarker?.let { FeeMarker(it) }
         }
+        if (state == CalendarState.NotATenant) return@Column
         Column {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 state.icon()?.let { Icon(imageVector = it, contentDescription = null, modifier = Modifier.size(13.dp)) }

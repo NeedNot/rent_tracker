@@ -114,23 +114,23 @@ describe("ledgerRows", () => {
     );
   });
 
-  it("orders entries on one date as rent, custom debt, late fee, payment, then creation time", () => {
+  it("orders entries on one date as rent, then in the order they were entered", () => {
     const input = ledgerInput({
       today: "2026-01-10",
       debts: [
-        lateFee("2026-01-01", 1000, "2025-12", { id: "fee" }),
-        customDebt("2026-01-01", 2000, { id: "late-created", creationTime: 20 }),
+        lateFee("2026-01-01", 1000, "2025-12", { id: "fee", creationTime: 30 }),
+        customDebt("2026-01-01", 2000, { id: "late-created", creationTime: 40 }),
         customDebt("2026-01-01", 3000, { id: "early-created", creationTime: 10 }),
       ],
-      payments: [payment("2026-01-01", 500, { id: "pay" })],
+      payments: [payment("2026-01-01", 500, { id: "pay", creationTime: 20 })],
     });
 
     expect(rowsFor(input).map((row) => row.key)).toEqual([
       "rent:2026-01",
       "debt:early-created",
-      "debt:late-created",
-      "debt:fee",
       "payment:pay",
+      "debt:fee",
+      "debt:late-created",
     ]);
   });
 

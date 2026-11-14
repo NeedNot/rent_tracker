@@ -20,12 +20,14 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.designsystem.format.formatMoney
+import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
+import net.neednot.renttracker.feature.tenants.domain.TenantCalendar
 import net.neednot.renttracker.feature.tenants.domain.TenantCalendarRepository
+import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.domain.TenantRepository
-import net.neednot.renttracker.feature.tenants.presentation.uistate.CalendarUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.MonthDetailUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantConfirmationUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantStatusAction
@@ -48,11 +50,10 @@ class TenantViewModel(
     private val openedMonth = MutableStateFlow<YearMonth?>(null)
     private var shownTenant: TenantOverview? = null
 
-    private val calendar: Flow<CalendarUiState?> =
+    private val calendar: Flow<Synced<TenantCalendar, TenantError>?> =
         yearOffset
             .flatMapLatest { offset -> calendarRepository.observeCalendar(tenantId, offset) }
-            .map { it.toCalendarUiState() }
-            .onStart<CalendarUiState?> { emit(null) }
+            .onStart<Synced<TenantCalendar, TenantError>?> { emit(null) }
 
     private val monthDetail: Flow<MonthDetailUiState?> =
         openedMonth.flatMapLatest { month ->
@@ -76,6 +77,8 @@ class TenantViewModel(
         }.stateIn(viewModelScope, WhileScreenIsVisible, TenantUiState.Loading)
 
     fun onPreviousYearClicked() {
+        val content = uiState.value as? TenantUiState.Content
+        if (content?.calendar?.hasPreviousYear != true) return
         yearOffset.update { it - 1 }
     }
 

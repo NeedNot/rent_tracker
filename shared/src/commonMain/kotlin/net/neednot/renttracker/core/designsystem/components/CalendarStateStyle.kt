@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,7 +25,7 @@ internal fun CalendarState.icon(): ImageVector? =
         CalendarState.NotATenant -> null
     }
 
-private val BlankColor = CalendarStateColor(container = Color.Transparent, content = Color.Unspecified)
+private const val DISABLED_ALPHA = 0.38f
 
 @Composable
 internal fun CalendarState.colors(): CalendarStateColor {
@@ -36,6 +37,14 @@ internal fun CalendarState.colors(): CalendarStateColor {
         CalendarState.DueNotLate -> colors.dueNotLate
         CalendarState.Upcoming -> colors.upcoming
         CalendarState.Prepaid -> colors.prepaid
-        CalendarState.NotATenant -> BlankColor
+        CalendarState.NotATenant -> notATenantColors()
     }
 }
+
+@Composable
+private fun notATenantColors(): CalendarStateColor =
+    CalendarStateColor(
+        container = Color.Transparent,
+        content = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA),
+        border = MaterialTheme.colorScheme.outlineVariant.copy(alpha = DISABLED_ALPHA),
+    )
