@@ -126,10 +126,9 @@
     <string name="tenant_editor_due_day">Due day of the month</string>
     <string name="tenant_editor_error_name_required">Enter a name or unit.</string>
     <string name="tenant_editor_error_move_in_required">Choose a move-in date.</string>
-    <string name="tenant_editor_error_amount_format">Enter an amount like 1,500.00.</string>
-    <string name="tenant_editor_error_amount_positive">Enter an amount greater than $0.00.</string>
+    <string name="tenant_editor_error_last_day_before_move_in">Choose a day on or after the move-in date.</string>
     <string name="tenant_editor_error_grace_days">Enter a whole number of days from 0 to 15.</string>
-    <string name="tenant_editor_error_due_day_format">Enter the day of the month as a number.</string>
+    <string name="tenant_editor_error_due_day">Enter a day from 1 to 31.</string>
     <string name="rent_term_editor_title_add">Change rent</string>
     <string name="rent_term_editor_title_edit">Edit rent term</string>
     <string name="rent_term_editor_start_month">Starts in</string>
@@ -179,4 +178,8 @@
     <string name="auth_error_google_failed">Could not sign in with Google. Try again or use an email code.</string>
     <string name="auth_error_display_name_length">Enter a name between 1 and 100 characters.</string>
     <string name="auth_error_unexpected">Something went wrong. Please try again.</string>
+    <string name="input_error_amount_format">Enter an amount like 1,500.00.</string>
+    <string name="input_error_amount_positive">Enter an amount greater than $0.00.</string>
+    <string name="input_error_amount_too_large">Enter an amount up to $1,000,000.00.</string>
+    <string name="input_error_too_long">Use %1$d characters or fewer.</string>
 </resources>

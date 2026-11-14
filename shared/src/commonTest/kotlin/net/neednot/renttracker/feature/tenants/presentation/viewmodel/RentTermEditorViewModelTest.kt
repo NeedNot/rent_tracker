@@ -28,9 +28,9 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermEdit
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.balance_owes
 import net.neednot.renttracker.resources.balance_paid_up
+import net.neednot.renttracker.resources.input_error_amount_format
 import net.neednot.renttracker.resources.rent_term_editor_error_reason_required
-import net.neednot.renttracker.resources.tenant_editor_error_amount_format
-import net.neednot.renttracker.resources.tenant_editor_error_due_day_format
+import net.neednot.renttracker.resources.tenant_editor_error_due_day
 import net.neednot.renttracker.resources.tenant_error_not_found
 import net.neednot.renttracker.resources.tenant_error_offline
 import kotlin.test.Test
@@ -231,8 +231,8 @@ class RentTermEditorViewModelTest : MainDispatcherTest() {
 
             assertEquals(
                 mapOf(
-                    RentTermEditorField.Amount to UiText.Resource(Res.string.tenant_editor_error_amount_format),
-                    RentTermEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day_format),
+                    RentTermEditorField.Amount to UiText.Resource(Res.string.input_error_amount_format),
+                    RentTermEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day),
                 ),
                 newTerm.uiState.value.fieldErrors,
             )
@@ -259,19 +259,56 @@ class RentTermEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun aServerRejectionShowsTheServersMessage() =
+    fun aDueDayOutsideOneToThirtyOneIsFlaggedAsItIsTyped() =
+        runTest {
+            showTenant()
+            val newTerm = openEditor(rentTermId = null)
+            runCurrent()
+
+            newTerm.onFieldChanged(RentTermEditorField.DueDay, "32")
+
+            assertEquals(
+                mapOf(RentTermEditorField.DueDay to UiText.Resource(Res.string.tenant_editor_error_due_day)),
+                newTerm.uiState.value.fieldErrors,
+            )
+        }
+
+    @Test
+    fun aServerRejectionOfTheStartMonthIsShownUnderTheStartMonth() =
         runTest {
             showTenant()
             val newTerm = openEditor(rentTermId = null)
             repository.addRentTermResult =
-                Err(TenantError.ValidationFailed("A rent term already starts in this month."))
+                Err(TenantError.ValidationFailed("A rent term already starts in this month.", field = "Start month"))
             newTerm.onFieldChanged(RentTermEditorField.Amount, "1600")
 
             newTerm.onSaveClicked()
             runCurrent()
 
-            assertEquals(UiText.Plain("A rent term already starts in this month."), newTerm.uiState.value.error)
+            assertEquals(
+                mapOf(RentTermEditorField.StartMonth to UiText.Plain("A rent term already starts in this month.")),
+                newTerm.uiState.value.fieldErrors,
+            )
+            assertEquals(null, newTerm.uiState.value.error)
             assertEquals(false, newTerm.uiState.value.isSaving)
+
+            newTerm.onStartMonthChanged(YearMonth(2026, 5))
+
+            assertEquals(emptyMap(), newTerm.uiState.value.fieldErrors)
+        }
+
+    @Test
+    fun aServerRejectionWithoutAFieldIsShownAtTheTop() =
+        runTest {
+            showTenant()
+            val newTerm = openEditor(rentTermId = null)
+            repository.addRentTermResult = Err(TenantError.ValidationFailed("This tenant is archived."))
+            newTerm.onFieldChanged(RentTermEditorField.Amount, "1600")
+
+            newTerm.onSaveClicked()
+            runCurrent()
+
+            assertEquals(UiText.Plain("This tenant is archived."), newTerm.uiState.value.error)
         }
 
     @Test

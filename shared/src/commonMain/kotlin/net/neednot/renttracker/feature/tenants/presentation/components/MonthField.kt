@@ -32,6 +32,7 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.number
+import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.formatMonth
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.rent_term_editor_next_year
@@ -47,6 +48,7 @@ internal fun MonthField(
     month: YearMonth,
     onMonthChanged: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
+    error: UiText? = null,
     enabled: Boolean = true,
 ) {
     var isPickerOpen by rememberSaveable { mutableStateOf(false) }
@@ -55,6 +57,7 @@ internal fun MonthField(
         value = formatMonth(month),
         onOpenClicked = { isPickerOpen = true },
         modifier = modifier,
+        error = error,
         enabled = enabled,
     )
     if (isPickerOpen) {

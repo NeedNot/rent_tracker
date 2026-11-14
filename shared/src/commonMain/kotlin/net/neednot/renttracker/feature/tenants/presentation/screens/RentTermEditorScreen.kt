@@ -173,6 +173,7 @@ private fun RentTermFields(
             label = stringResource(Res.string.rent_term_editor_start_month),
             month = startMonth,
             onMonthChanged = onStartMonthChanged,
+            error = uiState.fieldErrors[RentTermEditorField.StartMonth],
             enabled = isEnabled,
         )
     }

@@ -101,4 +101,12 @@ class DisplayNameViewModelTest : MainDispatcherTest() {
 
             assertNull(viewModel.uiState.value.error)
         }
+
+    @Test
+    fun aNameOverAHundredCharactersIsFlaggedAsItIsTyped() =
+        runTest {
+            viewModel.onDisplayNameChanged("a".repeat(101))
+
+            assertEquals(UiText.Resource(Res.string.auth_error_display_name_length), viewModel.uiState.value.error)
+        }
 }

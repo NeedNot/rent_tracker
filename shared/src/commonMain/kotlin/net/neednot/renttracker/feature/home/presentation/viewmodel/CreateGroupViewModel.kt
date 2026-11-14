@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.validation.InputLimits
+import net.neednot.renttracker.core.validation.lengthError
 import net.neednot.renttracker.feature.home.domain.HomeRepository
 import net.neednot.renttracker.feature.home.presentation.uistate.CreateGroupUiState
 import net.neednot.renttracker.resources.Res
@@ -28,14 +30,20 @@ class CreateGroupViewModel(
     val events: Flow<CreateGroupEvent> = eventChannel.receiveAsFlow()
 
     fun onNameChanged(name: String) {
-        mutableUiState.update { it.copy(name = name, error = null) }
+        mutableUiState.update { it.copy(name = name, error = lengthError(name, InputLimits.MAX_NAME_LENGTH)) }
     }
 
     fun onSaveClicked() {
         if (uiState.value.isSaving) return
         val name = uiState.value.name.trim()
-        if (name.isEmpty()) {
-            mutableUiState.update { it.copy(error = UiText.Resource(Res.string.create_group_error_name_required)) }
+        val nameError =
+            if (name.isEmpty()) {
+                UiText.Resource(Res.string.create_group_error_name_required)
+            } else {
+                lengthError(name, InputLimits.MAX_NAME_LENGTH)
+            }
+        if (nameError != null) {
+            mutableUiState.update { it.copy(error = nameError) }
             return
         }
         save(name)

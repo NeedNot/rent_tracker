@@ -1,5 +1,7 @@
 package net.neednot.renttracker.feature.tenants.data
 
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import kotlin.test.Test
@@ -20,6 +22,14 @@ class TenantErrorMappingTest {
             val error = BackendError.Convex(code = code, message = MESSAGE, details = null)
             assertEquals(expected, error.toTenantError(), "code = $code")
         }
+    }
+
+    @Test
+    fun aValidationFailureKeepsTheFieldItNames() {
+        val details = buildJsonObject { put("field", "Due day") }
+        val error = BackendError.Convex(code = "ValidationFailed", message = MESSAGE, details = details)
+
+        assertEquals(TenantError.ValidationFailed(MESSAGE, field = "Due day"), error.toTenantError())
     }
 
     @Test

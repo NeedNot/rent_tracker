@@ -8,6 +8,7 @@ enum class TenantEditorField {
     Notes,
     SecurityDeposit,
     MoveIn,
+    LastDayInUnit,
     GraceDays,
     LateFee,
     MonthlyRent,
