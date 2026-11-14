@@ -27,8 +27,6 @@ import net.neednot.renttracker.feature.debts.presentation.uistate.ChargeEditorUi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-private const val MAX_NOTE_LENGTH = 100
-
 @OptIn(ExperimentalUuidApi::class)
 class ChargeEditorViewModel(
     private val target: ChargeEditorTarget,
@@ -43,6 +41,7 @@ class ChargeEditorViewModel(
     private val clientId = Uuid.random().toString()
     private var expectedVersion: Long? = null
     private var callerAccountId: String? = null
+    private var hasTriedSaving = false
 
     init {
         viewModelScope.launch { show(debtRepository.cachedOrFirstSyncedEntry(target.tenantId, target.debtId)) }
@@ -50,13 +49,7 @@ class ChargeEditorViewModel(
 
     fun onKindSelected(kind: DebtKind) {
         if (!uiState.value.isNewCharge) return
-        mutableUiState.update {
-            it.copy(
-                kind = kind,
-                fieldErrors = it.fieldErrors - ChargeEditorField.Note,
-                error = null,
-            )
-        }
+        mutableUiState.update { it.copy(kind = kind).revalidated(hasTriedSaving) }
     }
 
     fun onFieldChanged(
@@ -66,8 +59,8 @@ class ChargeEditorViewModel(
         mutableUiState.update {
             when (field) {
                 ChargeEditorField.Amount -> it.copy(amount = text)
-                ChargeEditorField.Note -> it.copy(note = text.take(MAX_NOTE_LENGTH))
-            }.copy(fieldErrors = it.fieldErrors - field, error = null)
+                ChargeEditorField.Note -> it.copy(note = text)
+            }.revalidated(hasTriedSaving)
         }
     }
 
@@ -94,6 +87,7 @@ class ChargeEditorViewModel(
     private fun save(duplicatePolicy: DuplicatePolicy) {
         val state = uiState.value
         if (state.isSaving || state.isLoading) return
+        hasTriedSaving = true
         state.validate().fold(
             success = { draft ->
                 mutableUiState.update {
@@ -141,7 +135,14 @@ class ChargeEditorViewModel(
             }
 
             else -> {
-                mutableUiState.update { it.copy(error = error.text()) }
+                val field = (error as? DebtError.ValidationFailed)?.let { chargeEditorFieldOf(it.field) }
+                mutableUiState.update {
+                    if (field != null) {
+                        it.copy(fieldErrors = it.fieldErrors + (field to error.text()))
+                    } else {
+                        it.copy(error = error.text())
+                    }
+                }
             }
         }
     }

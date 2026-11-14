@@ -12,6 +12,7 @@ sealed interface DebtError {
 
     data class ValidationFailed(
         val message: String,
+        val field: String? = null,
     ) : DebtError
 
     data class PermissionDenied(

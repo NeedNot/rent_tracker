@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="entry_saving">Saving</string>
-    <string name="entry_error_amount_format">Enter dollars and cents, like 1,500.00.</string>
     <string name="entry_error_not_found">This entry no longer exists.</string>
     <string name="entry_error_unexpected">Something went wrong. Try again.</string>
     <string name="entry_method_cash">Cash</string>

@@ -40,6 +40,7 @@ class PaymentEditorViewModel(
     private val clientId = Uuid.random().toString()
     private var expectedVersion: Long? = null
     private var callerAccountId: String? = null
+    private var hasTriedSaving = false
     private val previewer =
         PaymentChangePreviewer(viewModelScope, paymentRepository, tenantId, paymentId) { changes ->
             mutableUiState.update { it.copy(monthChanges = changes) }
@@ -59,27 +60,13 @@ class PaymentEditorViewModel(
                 PaymentEditorField.Note -> it.copy(note = text)
                 PaymentEditorField.LateFeeAmount -> it.copy(lateFeeOffer = it.lateFeeOffer?.copy(amount = text))
                 PaymentEditorField.Date -> it
-            }.copy(fieldErrors = it.fieldErrors - field, error = null)
+            }.revalidated(hasTriedSaving)
         }
         previewer.refresh(uiState.value)
     }
 
     fun onDateChanged(date: LocalDate) {
-        mutableUiState.update {
-            val changed = it.copy(date = date, error = null)
-            val dateError = changed.dateError()
-            changed.copy(
-                fieldErrors =
-                    if (dateError ==
-                        null
-                    ) {
-                        it.fieldErrors - PaymentEditorField.Date
-                    } else {
-                        it.fieldErrors +
-                            (PaymentEditorField.Date to dateError)
-                    },
-            )
-        }
+        mutableUiState.update { it.copy(date = date).revalidated(hasTriedSaving) }
         previewer.refresh(uiState.value)
     }
 
@@ -89,10 +76,7 @@ class PaymentEditorViewModel(
 
     fun onLateFeeToggled(isChecked: Boolean) {
         mutableUiState.update {
-            it.copy(
-                lateFeeOffer = it.lateFeeOffer?.copy(isChecked = isChecked),
-                fieldErrors = it.fieldErrors - PaymentEditorField.LateFeeAmount,
-            )
+            it.copy(lateFeeOffer = it.lateFeeOffer?.copy(isChecked = isChecked)).revalidated(hasTriedSaving)
         }
     }
 
@@ -111,6 +95,7 @@ class PaymentEditorViewModel(
     private fun save(duplicatePolicy: DuplicatePolicy) {
         val state = uiState.value
         if (state.isSaving || state.isLoading) return
+        hasTriedSaving = true
         state.validate().fold(
             success = { form ->
                 mutableUiState.update {
@@ -146,7 +131,14 @@ class PaymentEditorViewModel(
             }
 
             else -> {
-                mutableUiState.update { it.copy(error = error.text()) }
+                val field = (error as? PaymentError.ValidationFailed)?.let { paymentEditorFieldOf(it.field) }
+                mutableUiState.update {
+                    if (field != null) {
+                        it.copy(fieldErrors = it.fieldErrors + (field to error.text()))
+                    } else {
+                        it.copy(error = error.text())
+                    }
+                }
             }
         }
     }

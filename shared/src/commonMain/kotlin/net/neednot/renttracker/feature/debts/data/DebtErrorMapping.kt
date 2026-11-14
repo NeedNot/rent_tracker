@@ -6,6 +6,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.ConvexJson
+import net.neednot.renttracker.core.backend.validationField
 import net.neednot.renttracker.feature.debts.domain.DebtError
 import net.neednot.renttracker.feature.debts.domain.DuplicateLateFee
 
@@ -25,7 +26,7 @@ internal fun BackendError.toDebtError(): DebtError =
 
 private fun BackendError.Convex.toDebtError(): DebtError =
     when (code) {
-        VALIDATION_FAILED -> DebtError.ValidationFailed(message)
+        VALIDATION_FAILED -> DebtError.ValidationFailed(message, validationField())
         NEEDS_CONFIRMATION -> possibleDuplicate()
         EDIT_CONFLICT -> DebtError.EditConflict(message, editorName())
         PERMISSION_DENIED -> DebtError.PermissionDenied(message)

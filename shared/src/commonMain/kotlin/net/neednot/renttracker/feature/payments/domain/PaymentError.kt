@@ -12,6 +12,7 @@ sealed interface PaymentError {
 
     data class ValidationFailed(
         val message: String,
+        val field: String? = null,
     ) : PaymentError
 
     data class PermissionDenied(

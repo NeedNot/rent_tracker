@@ -37,8 +37,10 @@ import net.neednot.renttracker.resources.balance_owes
 import net.neednot.renttracker.resources.calendar_state_owed
 import net.neednot.renttracker.resources.calendar_state_paid
 import net.neednot.renttracker.resources.calendar_state_partial
-import net.neednot.renttracker.resources.common_error_amount_positive
-import net.neednot.renttracker.resources.entry_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_positive
+import net.neednot.renttracker.resources.input_error_amount_too_large
+import net.neednot.renttracker.resources.input_error_too_long
 import net.neednot.renttracker.resources.payment_duplicate_intro_both
 import net.neednot.renttracker.resources.payment_duplicate_intro_payment
 import net.neednot.renttracker.resources.payment_duplicate_kind_late_fee
@@ -173,7 +175,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
             runCurrent()
 
             assertEquals(
-                mapOf(PaymentEditorField.Amount to UiText.Resource(Res.string.entry_error_amount_format)),
+                mapOf(PaymentEditorField.Amount to UiText.Resource(Res.string.input_error_amount_format)),
                 editor.uiState.value.fieldErrors,
             )
             assertTrue(repository.calls.isEmpty())
@@ -189,7 +191,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
             editor.onSaveClicked()
 
             assertEquals(
-                UiText.Resource(Res.string.common_error_amount_positive),
+                UiText.Resource(Res.string.input_error_amount_positive),
                 editor.uiState.value.fieldErrors[PaymentEditorField.Amount],
             )
             assertTrue(repository.calls.isEmpty())
@@ -208,6 +210,98 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
                 editor.uiState.value.fieldErrors
                     .isEmpty(),
             )
+        }
+
+    @Test
+    fun anAmountErrorAppearsAsSoonAsItIsTyped() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+
+            editor.onFieldChanged(PaymentEditorField.Amount, "12.345")
+
+            assertEquals(
+                mapOf(PaymentEditorField.Amount to UiText.Resource(Res.string.input_error_amount_format)),
+                editor.uiState.value.fieldErrors,
+            )
+        }
+
+    @Test
+    fun anAmountOverOneMillionDollarsIsFlaggedAsTyped() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+
+            editor.onFieldChanged(PaymentEditorField.Amount, "1,000,000.01")
+
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_too_large),
+                editor.uiState.value.fieldErrors[PaymentEditorField.Amount],
+            )
+            editor.onFieldChanged(PaymentEditorField.Amount, "1,000,000.00")
+            assertNull(editor.uiState.value.fieldErrors[PaymentEditorField.Amount])
+        }
+
+    @Test
+    fun aNoteOverTheLimitIsFlaggedAsTypedAndBlocksSaving() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+            enterAmount(editor, "1,500.00")
+
+            editor.onFieldChanged(PaymentEditorField.Note, "x".repeat(2001))
+            editor.onSaveClicked()
+            runCurrent()
+
+            assertEquals(
+                UiText.Resource(Res.string.input_error_too_long, listOf(2000)),
+                editor.uiState.value.fieldErrors[PaymentEditorField.Note],
+            )
+            assertTrue(repository.calls.isEmpty())
+        }
+
+    @Test
+    fun aMissingAmountIsFlaggedOnlyAfterSaveIsPressed() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+            editor.onFieldChanged(PaymentEditorField.Amount, "5")
+            editor.onFieldChanged(PaymentEditorField.Amount, "")
+            assertTrue(
+                editor.uiState.value.fieldErrors
+                    .isEmpty(),
+            )
+
+            editor.onSaveClicked()
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_format),
+                editor.uiState.value.fieldErrors[PaymentEditorField.Amount],
+            )
+
+            editor.onFieldChanged(PaymentEditorField.Amount, "")
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_format),
+                editor.uiState.value.fieldErrors[PaymentEditorField.Amount],
+            )
+        }
+
+    @Test
+    fun aServerValidationFailureNamingAFieldShowsUnderThatField() =
+        runTest {
+            showOverview()
+            repository.logResult =
+                Err(PaymentError.ValidationFailed("Notes must be 2,000 characters or fewer.", "Notes"))
+            val editor = openEditor()
+            enterAmount(editor, "1,500.00")
+
+            editor.onSaveClicked()
+            runCurrent()
+
+            assertEquals(
+                mapOf(PaymentEditorField.Note to UiText.Plain("Notes must be 2,000 characters or fewer.")),
+                editor.uiState.value.fieldErrors,
+            )
+            assertNull(editor.uiState.value.error)
         }
 
     @Test
@@ -335,7 +429,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
             editor.onSaveClicked()
 
             assertEquals(
-                UiText.Resource(Res.string.entry_error_amount_format),
+                UiText.Resource(Res.string.input_error_amount_format),
                 editor.uiState.value.fieldErrors[PaymentEditorField.LateFeeAmount],
             )
             assertTrue(repository.calls.isEmpty())

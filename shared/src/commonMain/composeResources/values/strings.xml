@@ -126,8 +126,6 @@
     <string name="tenant_editor_error_name_required">Enter a name or unit.</string>
     <string name="tenant_editor_error_move_in_required">Choose a move-in date.</string>
     <string name="tenant_editor_error_last_day_before_move_in">Choose a day on or after the move-in date.</string>
-    <string name="common_error_amount_format">Enter an amount like 1,500.00.</string>
-    <string name="common_error_amount_positive">Enter an amount greater than $0.00.</string>
     <string name="tenant_editor_error_grace_days">Enter a whole number of days from 0 to 15.</string>
     <string name="tenant_editor_error_due_day">Enter a day from 1 to 31.</string>
     <string name="rent_term_editor_title_add">Change rent</string>

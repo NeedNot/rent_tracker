@@ -4,7 +4,6 @@ import kotlinx.datetime.plusMonth
 import kotlinx.datetime.yearMonth
 import net.neednot.renttracker.core.designsystem.format.formatDollarsInput
 import net.neednot.renttracker.core.designsystem.format.parseDollarsToCents
-import net.neednot.renttracker.core.designsystem.format.positiveAmountFormatError
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.validation.InputLimits
 import net.neednot.renttracker.core.validation.amountError

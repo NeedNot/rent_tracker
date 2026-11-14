@@ -32,7 +32,9 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerDialog
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerEntryUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerSheetAction
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.common_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_positive
+import net.neednot.renttracker.resources.input_error_amount_too_large
 import net.neednot.renttracker.resources.ledger_bounced_message
 import net.neednot.renttracker.resources.ledger_bounced_message_check
 import net.neednot.renttracker.resources.ledger_cancel_reason_required
@@ -454,8 +456,32 @@ class LedgerEntryViewModelTest : MainDispatcherTest() {
             runCurrent()
 
             val dialog = assertIs<LedgerDialogUiState.BouncedFee>(state().dialog)
-            assertEquals(UiText.Resource(Res.string.common_error_amount_format), dialog.error)
+            assertEquals(UiText.Resource(Res.string.input_error_amount_format), dialog.error)
             assertEquals(callsBefore, ledgerEntries.calls.size)
+        }
+
+    @Test
+    fun aFeeAmountErrorAppearsAsItIsTyped() =
+        runTest {
+            val state = showLedger()
+            viewModel.onEntryClicked("payment:p1")
+            viewModel.onMarkBouncedClicked()
+            viewModel.onDialogConfirmed()
+            runCurrent()
+
+            viewModel.onDialogTextChanged("0.00")
+            runCurrent()
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_positive),
+                assertIs<LedgerDialogUiState.BouncedFee>(state().dialog).error,
+            )
+
+            viewModel.onDialogTextChanged("1,000,000.01")
+            runCurrent()
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_too_large),
+                assertIs<LedgerDialogUiState.BouncedFee>(state().dialog).error,
+            )
         }
 
     @Test
@@ -471,7 +497,7 @@ class LedgerEntryViewModelTest : MainDispatcherTest() {
             runCurrent()
 
             assertEquals(
-                UiText.Resource(Res.string.common_error_amount_format),
+                UiText.Resource(Res.string.input_error_amount_format),
                 assertIs<LedgerDialogUiState.BouncedFee>(state().dialog).error,
             )
         }

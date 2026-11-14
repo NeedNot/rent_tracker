@@ -38,8 +38,6 @@ import net.neednot.renttracker.resources.balance_owes
 import net.neednot.renttracker.resources.calendar_state_owed
 import net.neednot.renttracker.resources.calendar_state_paid
 import net.neednot.renttracker.resources.calendar_state_partial
-import net.neednot.renttracker.resources.common_error_amount_positive
-import net.neednot.renttracker.resources.entry_error_amount_format
 import net.neednot.renttracker.resources.payment_duplicate_intro_both
 import net.neednot.renttracker.resources.payment_duplicate_intro_payment
 import net.neednot.renttracker.resources.payment_duplicate_kind_late_fee

@@ -32,7 +32,9 @@ import net.neednot.renttracker.resources.charge_duplicate_you
 import net.neednot.renttracker.resources.charge_editor_conflict_named
 import net.neednot.renttracker.resources.charge_editor_error_note_required
 import net.neednot.renttracker.resources.charge_editor_error_offline
-import net.neednot.renttracker.resources.entry_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_format
+import net.neednot.renttracker.resources.input_error_amount_too_large
+import net.neednot.renttracker.resources.input_error_too_long
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -178,14 +180,114 @@ class ChargeEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun theNoteIsLimitedToOneHundredCharacters() =
+    fun aCustomNoteOverOneHundredCharactersIsFlaggedAsTyped() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+            editor.onKindSelected(DebtKind.Custom)
+
+            editor.onFieldChanged(ChargeEditorField.Note, "x".repeat(101))
+
+            assertEquals(
+                UiText.Resource(Res.string.input_error_too_long, listOf(100)),
+                editor.uiState.value.fieldErrors[ChargeEditorField.Note],
+            )
+        }
+
+    @Test
+    fun aLateFeeNoteMayRunToTheNotesLimit() =
         runTest {
             showOverview()
             val editor = openEditor()
 
-            editor.onFieldChanged(ChargeEditorField.Note, "x".repeat(120))
+            editor.onFieldChanged(ChargeEditorField.Note, "x".repeat(2000))
+            assertNull(editor.uiState.value.fieldErrors[ChargeEditorField.Note])
 
-            assertEquals(100, editor.uiState.value.note.length)
+            editor.onFieldChanged(ChargeEditorField.Note, "x".repeat(2001))
+            assertEquals(
+                UiText.Resource(Res.string.input_error_too_long, listOf(2000)),
+                editor.uiState.value.fieldErrors[ChargeEditorField.Note],
+            )
+        }
+
+    @Test
+    fun anAmountErrorAppearsAsSoonAsItIsTyped() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+
+            editor.onFieldChanged(ChargeEditorField.Amount, "5.123")
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_format),
+                editor.uiState.value.fieldErrors[ChargeEditorField.Amount],
+            )
+
+            editor.onFieldChanged(ChargeEditorField.Amount, "1,000,000.01")
+            assertEquals(
+                UiText.Resource(Res.string.input_error_amount_too_large),
+                editor.uiState.value.fieldErrors[ChargeEditorField.Amount],
+            )
+        }
+
+    @Test
+    fun missingRequiredFieldsAreFlaggedOnlyAfterSaveIsPressed() =
+        runTest {
+            showOverview()
+            val editor = openEditor()
+            editor.onKindSelected(DebtKind.Custom)
+            editor.onFieldChanged(ChargeEditorField.Note, "x")
+            editor.onFieldChanged(ChargeEditorField.Note, "")
+            assertTrue(
+                editor.uiState.value.fieldErrors
+                    .isEmpty(),
+            )
+
+            editor.onSaveClicked()
+
+            assertEquals(
+                mapOf(
+                    ChargeEditorField.Amount to UiText.Resource(Res.string.input_error_amount_format),
+                    ChargeEditorField.Note to UiText.Resource(Res.string.charge_editor_error_note_required),
+                ),
+                editor.uiState.value.fieldErrors,
+            )
+            assertTrue(repository.calls.isEmpty())
+        }
+
+    @Test
+    fun aServerValidationFailureNamingAFieldShowsUnderThatField() =
+        runTest {
+            showOverview()
+            repository.addResult = Err(DebtError.ValidationFailed("Note is required.", "Note"))
+            val editor = openEditor()
+            enterAmount(editor, "50")
+
+            editor.onSaveClicked()
+            runCurrent()
+
+            assertEquals(
+                mapOf(ChargeEditorField.Note to UiText.Plain("Note is required.")),
+                editor.uiState.value.fieldErrors,
+            )
+            assertNull(editor.uiState.value.error)
+        }
+
+    @Test
+    fun aServerValidationFailureWithoutAFieldShowsAtTheTopOfTheForm() =
+        runTest {
+            showOverview()
+            repository.addResult = Err(DebtError.ValidationFailed("Date must be a real date.", "Date"))
+            val editor = openEditor()
+            enterAmount(editor, "50")
+
+            editor.onSaveClicked()
+            runCurrent()
+
+            assertEquals(UiText.Plain("Date must be a real date."), editor.uiState.value.error)
+            assertTrue(
+                editor.uiState.value.fieldErrors
+                    .isEmpty(),
+            )
         }
 
     @Test
@@ -198,7 +300,7 @@ class ChargeEditorViewModelTest : MainDispatcherTest() {
             editor.onSaveClicked()
 
             assertEquals(
-                mapOf(ChargeEditorField.Amount to UiText.Resource(Res.string.entry_error_amount_format)),
+                mapOf(ChargeEditorField.Amount to UiText.Resource(Res.string.input_error_amount_format)),
                 editor.uiState.value.fieldErrors,
             )
             assertTrue(repository.calls.isEmpty())

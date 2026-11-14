@@ -34,6 +34,7 @@ import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
+import net.neednot.renttracker.core.validation.InputLimits
 import net.neednot.renttracker.feature.debts.presentation.components.ChargeEditorTopBar
 import net.neednot.renttracker.feature.debts.presentation.components.ChargeHeaderCard
 import net.neednot.renttracker.feature.debts.presentation.components.ChargeKindToggle
@@ -63,8 +64,6 @@ import net.neednot.renttracker.resources.charge_editor_title_edit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-
-private const val MAX_NOTE_LENGTH = 100
 
 @Composable
 fun ChargeEditorScreen(
@@ -226,7 +225,11 @@ private fun NoteField(
         error = uiState.fieldErrors[ChargeEditorField.Note],
         hint =
             if (isCustom) {
-                stringResource(Res.string.charge_editor_note_custom_hint, uiState.note.length, MAX_NOTE_LENGTH)
+                stringResource(
+                    Res.string.charge_editor_note_custom_hint,
+                    uiState.note.length,
+                    InputLimits.MAX_NAME_LENGTH,
+                )
             } else {
                 null
             },
