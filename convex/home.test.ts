@@ -1,16 +1,13 @@
-import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { insertGroup, insertPayment, insertTenantOwingRent } from "./groupSeed.fixture";
-import schema from "./schema";
-import { modules } from "./test.setup";
+import { insertGroup, insertPayment, insertTenantOwingRent, losAngelesTime, newBackend, RENT } from "./seed.fixture";
 
-const MARCH_20_IN_LOS_ANGELES = Date.UTC(2026, 2, 20, 20);
-const LAST_HOUR_OF_GRACE_IN_LOS_ANGELES = Date.UTC(2026, 2, 7, 5);
+const MARCH_20_IN_LOS_ANGELES = losAngelesTime(2026, 3, 20);
+const LAST_HOUR_OF_GRACE_IN_LOS_ANGELES = losAngelesTime(2026, 3, 6, 21);
 
 describe("home.screen", () => {
   it("returns nothing before the first group is created", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
 
     const home = await t.query(api.home.screen, { asOf: MARCH_20_IN_LOS_ANGELES });
 
@@ -18,10 +15,10 @@ describe("home.screen", () => {
   });
 
   it("summarizes each group: active debt, late count and archived debt apart", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const seeded = await t.run(async (ctx) => {
       const streetId = await insertGroup(ctx, { name: "1st Street" });
-      await insertTenantOwingRent(ctx, streetId, 150000, { name: "Late" });
+      await insertTenantOwingRent(ctx, streetId, RENT, { name: "Late" });
       await insertTenantOwingRent(ctx, streetId, 80000, { name: "Second late" });
       const overpaidId = await insertTenantOwingRent(ctx, streetId, 100000, { name: "In credit" });
       await insertPayment(ctx, overpaidId, { amountCents: 130000, dateReceived: "2026-03-01" });
@@ -59,23 +56,23 @@ describe("home.screen", () => {
   });
 
   it("counts a tenant inside the grace period as owing but not late", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     await t.run(async (ctx) => {
-      await insertTenantOwingRent(ctx, await insertGroup(ctx), 150000);
+      await insertTenantOwingRent(ctx, await insertGroup(ctx), RENT);
     });
 
     const home = await t.query(api.home.screen, { asOf: LAST_HOUR_OF_GRACE_IN_LOS_ANGELES });
 
-    expect(home.groupSummaries[0]).toMatchObject({ activeTenantCount: 1, lateTenantCount: 0, totalOwedCents: 150000 });
+    expect(home.groupSummaries[0]).toMatchObject({ activeTenantCount: 1, lateTenantCount: 0, totalOwedCents: RENT });
   });
 
   it("uses each group's own time zone for today", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const seeded = await t.run(async (ctx) => {
       const losAngelesId = await insertGroup(ctx, { timeZone: "America/Los_Angeles" });
       const londonId = await insertGroup(ctx, { timeZone: "Europe/London" });
-      await insertTenantOwingRent(ctx, losAngelesId, 150000);
-      await insertTenantOwingRent(ctx, londonId, 150000);
+      await insertTenantOwingRent(ctx, losAngelesId, RENT);
+      await insertTenantOwingRent(ctx, londonId, RENT);
       return { losAngelesId, londonId };
     });
 
@@ -88,10 +85,10 @@ describe("home.screen", () => {
   });
 
   it("leaves out archived groups", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const openId = await t.run(async (ctx) => {
       const archivedId = await insertGroup(ctx, { name: "Sold", archivedAt: 1_700_000_000_000 });
-      await insertTenantOwingRent(ctx, archivedId, 150000);
+      await insertTenantOwingRent(ctx, archivedId, RENT);
       return await insertGroup(ctx, { name: "1st Street" });
     });
 

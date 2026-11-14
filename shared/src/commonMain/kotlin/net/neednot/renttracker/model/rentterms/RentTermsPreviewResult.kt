@@ -3,9 +3,10 @@
 package net.neednot.renttracker.model.rentterms
 
 import kotlinx.serialization.Serializable
+import net.neednot.renttracker.model.shared.TenantSummary
 
 @Serializable
 data class RentTermsPreviewResult(
-    val after: RentTermsPreviewAfter,
-    val before: RentTermsPreviewBefore,
+    val after: TenantSummary,
+    val before: TenantSummary,
 )

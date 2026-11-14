@@ -97,6 +97,22 @@ describe("generateModelFiles", () => {
     expect(files.get("groups/GroupsScreenSettings.kt")).toContain("val graceDays: Long,");
   });
 
+  it("reuses an entity's name for a nested object with the same shape, whichever function comes first", () => {
+    const summary = object({ tenantId: required(string), state: required(literals("late", "paidUp")) });
+    const files = generate(
+      query("groups.js:screen", {}, object({ tenantSummaries: required({ type: "array", value: summary }) })),
+      query("aPreview.js:run", {}, object({ before: required(summary), after: required(summary) })),
+    );
+
+    expect([...files.keys()].sort()).toEqual([
+      "apreview/APreviewRunResult.kt",
+      "groups/GroupsScreenResult.kt",
+      "shared/TenantSummary.kt",
+      "shared/TenantSummaryState.kt",
+    ]);
+    expect(files.get("apreview/APreviewRunResult.kt")).toContain("val before: TenantSummary,");
+  });
+
   it("defaults optional fields to null but keeps required nullable fields without a default", () => {
     const files = generate(
       query(

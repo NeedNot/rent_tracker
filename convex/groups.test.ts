@@ -1,17 +1,21 @@
-import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { insertGroup, insertPayment, insertTenant, insertTenantOwingRent } from "./groupSeed.fixture";
-import schema from "./schema";
-import { modules } from "./test.setup";
+import {
+  insertGroup,
+  insertPayment,
+  insertTenant,
+  insertTenantOwingRent,
+  losAngelesTime,
+  newBackend,
+  RENT,
+} from "./seed.fixture";
 
-const MARCH_20_IN_LOS_ANGELES = Date.UTC(2026, 2, 20, 20);
-const LAST_HOUR_OF_GRACE_IN_LOS_ANGELES = Date.UTC(2026, 2, 7, 5);
-const RENT = 150000;
+const MARCH_20_IN_LOS_ANGELES = losAngelesTime(2026, 3, 20);
+const LAST_HOUR_OF_GRACE_IN_LOS_ANGELES = losAngelesTime(2026, 3, 6, 21);
 
 describe("groups.create", () => {
   it("creates the group with the new-group defaults and the phone's time zone", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
 
     const groupId = await t.mutation(api.groups.create, { name: "1st Street", timeZone: "America/Chicago" });
     const group = await t.run((ctx) => ctx.db.get(groupId));
@@ -30,7 +34,7 @@ describe("groups.create", () => {
   });
 
   it("makes the creator the owner with full control", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
 
     const groupId = await t.mutation(api.groups.create, { name: "1st Street", timeZone: "America/Chicago" });
     const memberships = await t.run((ctx) => ctx.db.query("memberships").collect());
@@ -54,7 +58,7 @@ describe("groups.create", () => {
   });
 
   it("trims the group name", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
 
     const groupId = await t.mutation(api.groups.create, { name: "  1st Street ", timeZone: "America/Chicago" });
     const group = await t.run((ctx) => ctx.db.get(groupId));
@@ -63,7 +67,7 @@ describe("groups.create", () => {
   });
 
   it("accepts a name of exactly 100 characters", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
 
     const groupId = await t.mutation(api.groups.create, { name: "a".repeat(100), timeZone: "America/Chicago" });
 
@@ -76,7 +80,7 @@ describe("groups.create", () => {
     { reason: "an unknown time zone", name: "1st Street", timeZone: "Mars/Olympus_Mons", field: "Time zone" },
     { reason: "an empty time zone", name: "1st Street", timeZone: "", field: "Time zone" },
   ])("rejects $reason and saves nothing", async ({ name, timeZone, field }) => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
 
     await expect(t.mutation(api.groups.create, { name, timeZone })).rejects.toMatchObject({
       data: { code: "ValidationFailed", details: { field } },
@@ -89,7 +93,7 @@ describe("groups.create", () => {
 
 describe("groups.screen", () => {
   it("returns the group, every tenant with its summary, and the group summary", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const seeded = await t.run(async (ctx) => {
       const groupId = await insertGroup(ctx);
       const lateId = await insertTenantOwingRent(ctx, groupId, RENT, { name: "Apt 1" });
@@ -147,7 +151,7 @@ describe("groups.screen", () => {
   });
 
   it("leaves out tenants of other groups", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const groupId = await t.run(async (ctx) => {
       const otherGroupId = await insertGroup(ctx, { name: "2nd Street" });
       await insertTenantOwingRent(ctx, otherGroupId, RENT);
@@ -162,7 +166,7 @@ describe("groups.screen", () => {
   });
 
   it("counts a payment received today in the group's time zone", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const groupId = await t.run(async (ctx) => {
       const id = await insertGroup(ctx);
       const tenantId = await insertTenantOwingRent(ctx, id, RENT);
@@ -176,7 +180,7 @@ describe("groups.screen", () => {
   });
 
   it("decides lateness on the group's local date, not the server's", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const seeded = await t.run(async (ctx) => {
       const losAngelesId = await insertGroup(ctx, { timeZone: "America/Los_Angeles" });
       const londonId = await insertGroup(ctx, { timeZone: "Europe/London" });
@@ -196,7 +200,7 @@ describe("groups.screen", () => {
   });
 
   it("answers NotFound for an archived group", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const groupId = await t.run((ctx) => insertGroup(ctx, { archivedAt: 1_700_000_000_000 }));
 
     await expect(t.query(api.groups.screen, { groupId, asOf: MARCH_20_IN_LOS_ANGELES })).rejects.toMatchObject({
@@ -205,7 +209,7 @@ describe("groups.screen", () => {
   });
 
   it("answers NotFound for a group that does not exist", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const groupId = await t.run(async (ctx) => {
       const id = await insertGroup(ctx);
       await ctx.db.delete(id);
@@ -218,7 +222,7 @@ describe("groups.screen", () => {
   });
 
   it("rejects an asOf that is not a real timestamp", async () => {
-    const t = convexTest(schema, modules);
+    const t = newBackend();
     const groupId = await t.run((ctx) => insertGroup(ctx));
 
     await expect(t.query(api.groups.screen, { groupId, asOf: -1 })).rejects.toMatchObject({

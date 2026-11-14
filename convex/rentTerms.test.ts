@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "./_generated/api";
 import {
-  api,
   failureOf,
   firstTermRow,
   losAngelesTime,
@@ -9,7 +9,7 @@ import {
   seedTenant,
   termRow,
   termRows,
-} from "./tenantSetup.fixture";
+} from "./seed.fixture";
 
 const MARCH_20 = losAngelesTime(2026, 3, 20);
 const RAISED_RENT = 160000;

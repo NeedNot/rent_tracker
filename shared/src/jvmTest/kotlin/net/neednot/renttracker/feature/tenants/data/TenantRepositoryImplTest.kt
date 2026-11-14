@@ -37,10 +37,6 @@ import net.neednot.renttracker.feature.tenants.domain.TenantDetails
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantGroup
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
-import net.neednot.renttracker.model.rentterms.RentTermsPreviewAfter
-import net.neednot.renttracker.model.rentterms.RentTermsPreviewAfterState
-import net.neednot.renttracker.model.rentterms.RentTermsPreviewBefore
-import net.neednot.renttracker.model.rentterms.RentTermsPreviewBeforeState
 import net.neednot.renttracker.model.rentterms.RentTermsPreviewResult
 import net.neednot.renttracker.model.shared.Group
 import net.neednot.renttracker.model.shared.GroupPaymentOrder
@@ -514,21 +510,21 @@ class TenantRepositoryImplTest {
     private fun previewResult() =
         RentTermsPreviewResult(
             after =
-                RentTermsPreviewAfter(
+                TenantSummary(
                     creditCents = 40_000,
                     lateFeesOwedCents = 0,
                     otherOwedCents = 0,
                     rentOwedCents = 0,
-                    state = RentTermsPreviewAfterState.PaidUp,
+                    state = TenantSummaryState.PaidUp,
                     tenantId = "t1",
                 ),
             before =
-                RentTermsPreviewBefore(
+                TenantSummary(
                     creditCents = 0,
                     lateFeesOwedCents = 5_000,
                     otherOwedCents = 0,
                     rentOwedCents = 50_000,
-                    state = RentTermsPreviewBeforeState.Late,
+                    state = TenantSummaryState.Late,
                     tenantId = "t1",
                 ),
         )

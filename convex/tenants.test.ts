@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { api } from "./_generated/api";
 import {
-  api,
   failureOf,
   losAngelesTime,
   newBackend,
@@ -10,7 +10,7 @@ import {
   seedTenant,
   tenantRow,
   termRows,
-} from "./tenantSetup.fixture";
+} from "./seed.fixture";
 
 const everyDetail = {
   name: "Apt 3B",

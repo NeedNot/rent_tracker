@@ -9,6 +9,7 @@ import net.neednot.renttracker.model.rentterms.RentTermsAddArgs
 import net.neednot.renttracker.model.rentterms.RentTermsEditArgs
 import net.neednot.renttracker.model.rentterms.RentTermsPreviewProposed
 import net.neednot.renttracker.model.rentterms.RentTermsPreviewResult
+import net.neednot.renttracker.model.shared.TenantSummary
 import net.neednot.renttracker.model.tenants.TenantsAddArgs
 import net.neednot.renttracker.model.tenants.TenantsEditArgs
 
@@ -80,15 +81,10 @@ internal fun RentTermDraft.toProposed(rentTermId: String?): RentTermsPreviewProp
     )
 
 internal fun RentTermsPreviewResult.toRentTermPreview(): RentTermPreview =
-    RentTermPreview(
-        before =
-            BalanceTotal(
-                owedCents = before.rentOwedCents + before.lateFeesOwedCents + before.otherOwedCents,
-                creditCents = before.creditCents,
-            ),
-        after =
-            BalanceTotal(
-                owedCents = after.rentOwedCents + after.lateFeesOwedCents + after.otherOwedCents,
-                creditCents = after.creditCents,
-            ),
+    RentTermPreview(before = before.toBalanceTotal(), after = after.toBalanceTotal())
+
+private fun TenantSummary.toBalanceTotal(): BalanceTotal =
+    BalanceTotal(
+        owedCents = rentOwedCents + lateFeesOwedCents + otherOwedCents,
+        creditCents = creditCents,
     )
