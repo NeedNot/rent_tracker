@@ -46,6 +46,7 @@ const FUNCTIONS_SCOPED_TO_THE_CALLER_NOT_A_GROUP = [
   "accounts.ensure",
   "accounts.setDisplayName",
   "accounts.me",
+  "accounts.requestDeletion",
   "groups.create",
   "home.screen",
   "invites.accept",

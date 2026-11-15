@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, type QueryCtx, query } from "./_generated/server";
 import { accountForSubject, requireAccount, requireActive, requireIdentity } from "./access";
 import { appError } from "./appError";
 import { accountProfile, accountProfileFields, NAME_MAX_LENGTH } from "./validators";
@@ -63,12 +63,59 @@ export const setDisplayName = mutation({
 
 export const me = query({
   args: {},
-  returns: accountProfile,
+  returns: accountProfile.extend({ deletionRequestedAt: v.optional(v.number()) }),
   handler: async (ctx) => {
     const account = await requireAccount(ctx);
-    return profileOf(account);
+    return { ...profileOf(account), deletionRequestedAt: account.deletionRequestedAt };
   },
 });
+
+export const requestDeletion = mutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const account = await requireAccount(ctx);
+    if (account.deletionRequestedAt !== undefined) {
+      return account.deletionRequestedAt;
+    }
+
+    const ownedGroups = await groupsOwnedBy(ctx, account._id);
+    if (ownedGroups.length > 0) {
+      throw appError("ValidationFailed", `Transfer ownership of ${joinNames(ownedGroups.map((g) => g.name))} first.`, {
+        groups: ownedGroups.map(({ groupId, name }) => ({ groupId, name })),
+      });
+    }
+
+    const deletionRequestedAt = Date.now();
+    await ctx.db.patch(account._id, {
+      deletionRequestedAt,
+      version: account.version + 1,
+      lastEditedAt: deletionRequestedAt,
+      lastEditedBy: account._id,
+    });
+    return deletionRequestedAt;
+  },
+});
+
+async function groupsOwnedBy(ctx: QueryCtx, accountId: Id<"accounts">) {
+  const memberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_account", (q) => q.eq("accountId", accountId))
+    .collect();
+  const owned = memberships.filter((membership) => membership.role === "owner");
+  const groups = await Promise.all(owned.map((membership) => ctx.db.get(membership.groupId)));
+  return groups
+    .filter((group): group is Doc<"groups"> => group !== null)
+    .map((group) => ({ groupId: group._id, name: group.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function joinNames(names: string[]): string {
+  if (names.length <= 1) {
+    return names.join("");
+  }
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
 
 function profileOf(account: Doc<"accounts">) {
   if (account.email === undefined) {
