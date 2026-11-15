@@ -1,5 +1,6 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
+import { requireMember } from "./access";
 import { appError } from "./appError";
 
 export interface TenantScope {
@@ -31,4 +32,16 @@ export function requireActiveTenant(tenant: Doc<"tenants">, change = "change ren
   if (tenant.status === "archived") {
     throw appError("TenantArchived", `This tenant is archived. Restore the tenant to ${change}.`);
   }
+}
+
+export async function requireTenantInExpectedGroup(
+  ctx: QueryCtx,
+  tenant: Doc<"tenants">,
+  expectedGroupId: Id<"groups"> | undefined,
+): Promise<void> {
+  if (expectedGroupId === undefined || tenant.groupId === expectedGroupId) {
+    return;
+  }
+  await requireMember(ctx, expectedGroupId);
+  throw appError("TenantMoved", "This tenant was moved to another group.");
 }

@@ -6,6 +6,7 @@ import {
   type Backend,
   debtRows,
   failureOf,
+  insertGroup,
   insertPayment,
   losAngelesTime,
   newBackend,
@@ -172,6 +173,51 @@ describe("payments.log", () => {
       message: "This tenant is archived. Restore the tenant to change payments and charges.",
       details: {},
     });
+  });
+
+  it("refuses a tenant moved out of the group the caller expected", async () => {
+    const t = await newBackend();
+    const tenantId = await seedTenant(t);
+    const expectedGroupId = (await tenantRow(t, tenantId)).groupId;
+    await t.run(async (ctx) => ctx.db.patch(tenantId, { groupId: await insertGroup(ctx) }));
+
+    const failure = await failureOf(t.mutation(api.payments.log, logArgs(tenantId, { expectedGroupId })));
+
+    expect(failure).toEqual({ code: "TenantMoved", message: "This tenant was moved to another group.", details: {} });
+    expect(await paymentRows(t, tenantId)).toEqual([]);
+  });
+
+  it("tells a caller outside the expected group only that they have no access there", async () => {
+    const t = await newBackend();
+    const tenantId = await seedTenant(t);
+    const asSam = await signInAsSam(t, tenantId);
+    const expectedGroupId = await t.run((ctx) => insertGroup(ctx));
+
+    const failure = await failureOf(asSam.mutation(api.payments.log, logArgs(tenantId, { expectedGroupId })));
+
+    expect(failure).toMatchObject({ code: "PermissionDenied", message: "You don't have access to this group." });
+  });
+
+  it("saves when the tenant is still in the expected group", async () => {
+    const t = await newBackend();
+    const tenantId = await seedTenant(t);
+    const expectedGroupId = (await tenantRow(t, tenantId)).groupId;
+
+    await t.mutation(api.payments.log, logArgs(tenantId, { expectedGroupId }));
+
+    expect(await paymentRows(t, tenantId)).toHaveLength(1);
+  });
+
+  it("answers a retry with the saved ids even after the tenant moved", async () => {
+    const t = await newBackend();
+    const tenantId = await seedTenant(t);
+    const expectedGroupId = (await tenantRow(t, tenantId)).groupId;
+    const first = await t.mutation(api.payments.log, logArgs(tenantId, { expectedGroupId }));
+    await t.run(async (ctx) => ctx.db.patch(tenantId, { groupId: await insertGroup(ctx) }));
+
+    const retry = await t.mutation(api.payments.log, logArgs(tenantId, { expectedGroupId }));
+
+    expect(retry).toEqual(first);
   });
 
   it("returns the same ids and writes nothing when the clientId repeats", async () => {
