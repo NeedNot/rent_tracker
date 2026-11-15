@@ -4,6 +4,7 @@ package net.neednot.renttracker.model.tenants
 
 import kotlinx.serialization.Serializable
 import net.neednot.renttracker.model.shared.Group
+import net.neednot.renttracker.model.shared.Membership
 import net.neednot.renttracker.model.shared.Tenant
 import net.neednot.renttracker.model.shared.TenantSummary
 

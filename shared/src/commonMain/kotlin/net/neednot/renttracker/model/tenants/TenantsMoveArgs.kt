@@ -2,14 +2,11 @@
 
 package net.neednot.renttracker.model.tenants
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class MembershipRole {
-    @SerialName("owner")
-    Owner,
-
-    @SerialName("member")
-    Member,
-}
+data class TenantsMoveArgs(
+    val expectedVersion: Long,
+    val tenantId: String,
+    val toGroupId: String,
+)

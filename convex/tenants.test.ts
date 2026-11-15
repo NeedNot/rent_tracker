@@ -345,6 +345,17 @@ describe("tenants.archive and tenants.restore", () => {
 });
 
 describe("tenants.screen", () => {
+  it("lets the owner read a tenant in an archived group", async () => {
+    const t = await newBackend();
+    const tenantId = await seedTenant(t);
+    const { groupId } = await tenantRow(t, tenantId);
+    await t.mutation(api.groups.archive, { groupId });
+
+    const screen = await t.query(api.tenants.screen, { tenantId, asOf: losAngelesTime(2026, 2, 1) });
+
+    expect(screen.tenants).toMatchObject([{ _id: tenantId }]);
+  });
+
   it("returns the group, the tenant, every rent term and the summary as flat lists", async () => {
     const t = await newBackend();
     const tenantId = await seedTenant(t);
