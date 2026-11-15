@@ -26,7 +26,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun ArchivedBanner(
     text: UiText,
-    onUnarchiveClicked: () -> Unit,
+    onUnarchiveClicked: (() -> Unit)?,
     isWorking: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -45,12 +45,14 @@ fun ArchivedBanner(
                 )
                 Text(text = text.asString(), style = MaterialTheme.typography.bodyMedium)
             }
-            Button(
-                onClick = onUnarchiveClicked,
-                enabled = !isWorking,
-                modifier = Modifier.align(Alignment.End),
-            ) {
-                Text(stringResource(Res.string.group_unarchive))
+            if (onUnarchiveClicked != null) {
+                Button(
+                    onClick = onUnarchiveClicked,
+                    enabled = !isWorking,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(stringResource(Res.string.group_unarchive))
+                }
             }
         }
     }

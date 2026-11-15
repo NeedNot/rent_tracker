@@ -2,9 +2,11 @@ package net.neednot.renttracker.feature.home.presentation.viewmodel
 
 import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.designsystem.format.owesText
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.ui.offlineBannerText
 import net.neednot.renttracker.feature.home.domain.GroupOverview
 import net.neednot.renttracker.feature.home.domain.HomeError
 import net.neednot.renttracker.feature.home.domain.HomeOverview
@@ -19,33 +21,41 @@ import net.neednot.renttracker.resources.home_tenant_count
 import net.neednot.renttracker.resources.home_tenant_count_none_late
 
 internal fun Synced<HomeOverview, HomeError>.toHomeUiState(
-    declineInviteId: String?,
-    workingInviteId: String?,
-    accountInitial: String?,
+    overlay: HomeOverlay,
+    chrome: HomeChrome,
 ): HomeUiState {
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
+    val home = if (chrome.freshness == Freshness.Online) value else value.copy(invitations = emptyList())
+    val offlineBanner = chrome.freshness.offlineBannerText()
+    val rejectedPayments = chrome.rejectedPayments.toRejectedPaymentsUiState(overlay.isRejectedSheetOpen)
     return when {
-        !value.isEmpty -> {
+        !home.isEmpty -> {
             HomeUiState.Content(
-                groups = value.groups.map { it.toCardUiState() },
-                invitations = value.invitations.map { it.toCardUiState(isWorking = it.inviteId == workingInviteId) },
-                archivedGroupsRow = value.archivedGroupsRow(),
-                declineDialog = value.invitations.firstOrNull { it.inviteId == declineInviteId }?.toDeclineDialog(),
+                groups = home.groups.map { it.toCardUiState() },
+                invitations =
+                    home.invitations.map { it.toCardUiState(isWorking = it.inviteId == overlay.workingInviteId) },
+                archivedGroupsRow = home.archivedGroupsRow(),
+                declineDialog =
+                    home.invitations
+                        .firstOrNull { it.inviteId == overlay.decliningInviteId }
+                        ?.toDeclineDialog(),
                 syncError = syncError,
-                accountInitial = accountInitial,
+                accountInitial = chrome.accountInitial,
+                offlineBanner = offlineBanner,
+                rejectedPayments = rejectedPayments,
             )
         }
 
         syncError != null -> {
-            HomeUiState.Error(syncError, accountInitial)
+            HomeUiState.Error(syncError, chrome.accountInitial, offlineBanner, rejectedPayments)
         }
 
         status == SyncStatus.Syncing -> {
-            HomeUiState.Loading(accountInitial)
+            HomeUiState.Loading(chrome.accountInitial, offlineBanner, rejectedPayments)
         }
 
         else -> {
-            HomeUiState.Empty(accountInitial)
+            HomeUiState.Empty(chrome.accountInitial, offlineBanner, rejectedPayments)
         }
     }
 }

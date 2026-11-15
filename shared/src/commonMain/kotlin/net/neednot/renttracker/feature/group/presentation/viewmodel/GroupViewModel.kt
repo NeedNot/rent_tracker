@@ -20,21 +20,27 @@ import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
 import net.neednot.renttracker.feature.group.domain.GroupError
+import net.neednot.renttracker.feature.group.domain.GroupFreshnessRepository
 import net.neednot.renttracker.feature.group.domain.GroupRepository
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupUiState
 
 class GroupViewModel(
     private val groupId: String,
     private val groupRepository: GroupRepository,
+    groupFreshnessRepository: GroupFreshnessRepository,
     private val messageDispatcher: MessageDispatcher,
     timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : ViewModel() {
     private val overlay = MutableStateFlow(GroupOverlay())
 
     val uiState: StateFlow<GroupUiState> =
-        combine(groupRepository.observeGroup(groupId), overlay) { group, overlay ->
-            group.toGroupUiState(overlay, timeZone)
-        }.stateIn(viewModelScope, WhileScreenIsVisible, GroupUiState.Loading)
+        combine(
+            groupRepository.observeGroup(groupId),
+            groupFreshnessRepository.observeFreshness(groupId),
+            overlay,
+        ) { group, freshness, overlay ->
+            group.toGroupUiState(overlay, timeZone, freshness)
+        }.stateIn(viewModelScope, WhileScreenIsVisible, GroupUiState.Loading())
 
     private val eventChannel = Channel<GroupEvent>(Channel.BUFFERED)
     val events: Flow<GroupEvent> = eventChannel.receiveAsFlow()

@@ -11,6 +11,7 @@ import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.feature.group.domain.FakeGroupFreshnessRepository
 import net.neednot.renttracker.feature.group.domain.FakeGroupRepository
 import net.neednot.renttracker.feature.group.domain.groupDetails
 import net.neednot.renttracker.feature.group.domain.groupTenant
@@ -29,7 +30,10 @@ import kotlin.time.Instant
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupViewModelChromeTest : MainDispatcherTest() {
     private val repository = FakeGroupRepository()
-    private val viewModel by lazy { GroupViewModel("g1", repository, RecordingMessageDispatcher(), TimeZone.UTC) }
+    private val freshnessRepository = FakeGroupFreshnessRepository()
+    private val viewModel by lazy {
+        GroupViewModel("g1", repository, freshnessRepository, RecordingMessageDispatcher(), TimeZone.UTC)
+    }
     private val tenants = listOf(groupTenant("t1"))
 
     private suspend fun chromeOf(

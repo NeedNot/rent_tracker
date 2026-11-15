@@ -13,6 +13,7 @@ import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.feature.group.domain.FakeGroupFreshnessRepository
 import net.neednot.renttracker.feature.group.domain.FakeGroupRepository
 import net.neednot.renttracker.feature.group.domain.GroupError
 import net.neednot.renttracker.feature.group.domain.groupDetails
@@ -31,8 +32,9 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupViewModelActionsTest : MainDispatcherTest() {
     private val repository = FakeGroupRepository()
+    private val freshnessRepository = FakeGroupFreshnessRepository()
     private val dispatcher = RecordingMessageDispatcher()
-    private val viewModel by lazy { GroupViewModel("g1", repository, dispatcher, TimeZone.UTC) }
+    private val viewModel by lazy { GroupViewModel("g1", repository, freshnessRepository, dispatcher, TimeZone.UTC) }
 
     private val tenants = listOf(groupTenant("t1"), groupTenant("t2"))
 

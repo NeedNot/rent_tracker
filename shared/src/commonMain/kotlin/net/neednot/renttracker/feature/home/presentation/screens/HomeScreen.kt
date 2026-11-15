@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
@@ -40,6 +41,9 @@ import net.neednot.renttracker.feature.home.presentation.components.ArchivedGrou
 import net.neednot.renttracker.feature.home.presentation.components.GroupCard
 import net.neednot.renttracker.feature.home.presentation.components.InvitationActions
 import net.neednot.renttracker.feature.home.presentation.components.InvitationCard
+import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentActions
+import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentsCard
+import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentsSheet
 import net.neednot.renttracker.feature.home.presentation.uistate.DeclineInviteUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.GroupCardUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
@@ -77,6 +81,12 @@ fun HomeScreen(
                 onDeclineConfirmed = viewModel::onDeclineConfirmed,
                 onDeclineDismissed = viewModel::onDeclineDismissed,
             ),
+        rejectedPaymentActions =
+            RejectedPaymentActions(
+                onCardClicked = viewModel::onRejectedPaymentsClicked,
+                onPaymentDismissed = viewModel::onRejectedPaymentDismissed,
+                onSheetDismissed = viewModel::onRejectedPaymentsDismissed,
+            ),
         onGroupClicked = onGroupClicked,
         onNewGroupClicked = onNewGroupClicked,
         onArchivedGroupsClicked = onArchivedGroupsClicked,
@@ -90,6 +100,7 @@ fun HomeScreen(
 private fun HomeContent(
     uiState: HomeUiState,
     invitationActions: InvitationActions,
+    rejectedPaymentActions: RejectedPaymentActions,
     onGroupClicked: (groupId: String) -> Unit,
     onNewGroupClicked: () -> Unit,
     onArchivedGroupsClicked: () -> Unit,
@@ -105,40 +116,38 @@ private fun HomeContent(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNewGroupClicked,
-                icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = null) },
-                text = { Text(stringResource(Res.string.home_new_group)) },
-            )
+            if (uiState.canCreateGroup) {
+                ExtendedFloatingActionButton(
+                    onClick = onNewGroupClicked,
+                    icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(stringResource(Res.string.home_new_group)) },
+                )
+            }
         },
     ) { contentPadding ->
-        when (uiState) {
-            is HomeUiState.Loading -> {
-                Loading(contentPadding)
-            }
-
-            is HomeUiState.Empty -> {
-                Message(
-                    title = stringResource(Res.string.home_empty_title),
-                    body = stringResource(Res.string.home_empty_body),
-                    contentPadding = contentPadding,
+        Column(modifier = Modifier.padding(contentPadding)) {
+            uiState.offlineBanner?.let { OfflineBanner(text = it.asString()) }
+            uiState.rejectedPayments?.let { rejected ->
+                RejectedPaymentsCard(
+                    summary = rejected.summary,
+                    onClick = rejectedPaymentActions.onCardClicked,
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp),
                 )
             }
-
-            is HomeUiState.Error -> {
-                Message(title = uiState.message.asString(), body = null, contentPadding = contentPadding)
-            }
-
-            is HomeUiState.Content -> {
-                HomeList(
-                    content = uiState,
-                    invitationActions = invitationActions,
-                    onGroupClicked = onGroupClicked,
-                    onArchivedGroupsClicked = onArchivedGroupsClicked,
-                    contentPadding = contentPadding,
-                )
-            }
+            HomeBody(
+                uiState = uiState,
+                invitationActions = invitationActions,
+                onGroupClicked = onGroupClicked,
+                onArchivedGroupsClicked = onArchivedGroupsClicked,
+            )
         }
+    }
+    uiState.rejectedPayments?.takeIf { it.isSheetOpen }?.let { rejected ->
+        RejectedPaymentsSheet(
+            rejectedPayments = rejected,
+            onPaymentDismissed = rejectedPaymentActions.onPaymentDismissed,
+            onSheetDismissed = rejectedPaymentActions.onSheetDismissed,
+        )
     }
     (uiState as? HomeUiState.Content)?.declineDialog?.let { dialog ->
         DeclineInviteDialog(
@@ -150,15 +159,48 @@ private fun HomeContent(
 }
 
 @Composable
+private fun HomeBody(
+    uiState: HomeUiState,
+    invitationActions: InvitationActions,
+    onGroupClicked: (groupId: String) -> Unit,
+    onArchivedGroupsClicked: () -> Unit,
+) {
+    when (uiState) {
+        is HomeUiState.Loading -> {
+            Loading()
+        }
+
+        is HomeUiState.Empty -> {
+            Message(
+                title = stringResource(Res.string.home_empty_title),
+                body = stringResource(Res.string.home_empty_body),
+            )
+        }
+
+        is HomeUiState.Error -> {
+            Message(title = uiState.message.asString(), body = null)
+        }
+
+        is HomeUiState.Content -> {
+            HomeList(
+                content = uiState,
+                invitationActions = invitationActions,
+                onGroupClicked = onGroupClicked,
+                onArchivedGroupsClicked = onArchivedGroupsClicked,
+            )
+        }
+    }
+}
+
+@Composable
 private fun HomeList(
     content: HomeUiState.Content,
     invitationActions: InvitationActions,
     onGroupClicked: (groupId: String) -> Unit,
     onArchivedGroupsClicked: () -> Unit,
-    contentPadding: PaddingValues,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(contentPadding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -223,9 +265,9 @@ private fun DeclineInviteDialog(
 }
 
 @Composable
-private fun Loading(contentPadding: PaddingValues) {
+private fun Loading() {
     val description = stringResource(Res.string.home_loading)
-    Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
     }
 }
@@ -234,10 +276,9 @@ private fun Loading(contentPadding: PaddingValues) {
 private fun Message(
     title: String,
     body: String?,
-    contentPadding: PaddingValues,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 32.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -287,6 +328,7 @@ private fun HomeContentPreview() {
                         ),
                 ),
             invitationActions = InvitationActions.None,
+            rejectedPaymentActions = RejectedPaymentActions.None,
             onGroupClicked = {},
             onNewGroupClicked = {},
             onArchivedGroupsClicked = {},

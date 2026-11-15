@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
 import net.neednot.renttracker.core.designsystem.components.TenantChipState
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
@@ -153,25 +154,9 @@ private fun GroupContent(
             }
         },
     ) { contentPadding ->
-        when (uiState) {
-            GroupUiState.Loading -> {
-                LoadingIndicator(
-                    description = stringResource(Res.string.group_loading),
-                    modifier = Modifier.padding(contentPadding),
-                )
-            }
-
-            is GroupUiState.Error -> {
-                CenteredMessage(title = uiState.message.asString(), modifier = Modifier.padding(contentPadding))
-            }
-
-            is GroupUiState.Empty -> {
-                NoTenants(empty = uiState, actions = actions, contentPadding = contentPadding)
-            }
-
-            is GroupUiState.Content -> {
-                TenantList(content = uiState, actions = actions, contentPadding = contentPadding)
-            }
+        Column(modifier = Modifier.padding(contentPadding)) {
+            uiState.offlineBanner?.let { OfflineBanner(text = it.asString()) }
+            GroupBody(uiState = uiState, actions = actions)
         }
     }
     chrome?.dialog?.let { dialog ->
@@ -184,18 +169,42 @@ private fun GroupContent(
     }
 }
 
+@Composable
+private fun GroupBody(
+    uiState: GroupUiState,
+    actions: GroupActions,
+) {
+    when (uiState) {
+        is GroupUiState.Loading -> {
+            LoadingIndicator(description = stringResource(Res.string.group_loading))
+        }
+
+        is GroupUiState.Error -> {
+            CenteredMessage(title = uiState.message.asString())
+        }
+
+        is GroupUiState.Empty -> {
+            NoTenants(empty = uiState, actions = actions)
+        }
+
+        is GroupUiState.Content -> {
+            TenantList(content = uiState, actions = actions)
+        }
+    }
+}
+
 private fun GroupUiState.chrome(): GroupChromeUiState? =
     when (this) {
         is GroupUiState.Content -> chrome
         is GroupUiState.Empty -> chrome
-        GroupUiState.Loading, is GroupUiState.Error -> null
+        is GroupUiState.Loading, is GroupUiState.Error -> null
     }
 
 private fun GroupUiState.groupName(): String =
     when (this) {
         is GroupUiState.Content -> groupName
         is GroupUiState.Empty -> groupName
-        GroupUiState.Loading, is GroupUiState.Error -> ""
+        is GroupUiState.Loading, is GroupUiState.Error -> ""
     }
 
 @Composable
@@ -211,10 +220,9 @@ private fun AddTenantButton(onClick: () -> Unit) {
 private fun TenantList(
     content: GroupUiState.Content,
     actions: GroupActions,
-    contentPadding: PaddingValues,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(contentPadding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -225,7 +233,7 @@ private fun TenantList(
             item(key = "archivedBanner") {
                 ArchivedBanner(
                     text = banner,
-                    onUnarchiveClicked = actions.onUnarchiveClicked,
+                    onUnarchiveClicked = actions.onUnarchiveClicked.takeIf { content.chrome.canUnarchive },
                     isWorking = content.chrome.isWorking,
                 )
             }
@@ -269,16 +277,15 @@ private fun GroupSummary(
 private fun NoTenants(
     empty: GroupUiState.Empty,
     actions: GroupActions,
-    contentPadding: PaddingValues,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(contentPadding),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         empty.chrome.archivedBanner?.let { banner ->
             ArchivedBanner(
                 text = banner,
-                onUnarchiveClicked = actions.onUnarchiveClicked,
+                onUnarchiveClicked = actions.onUnarchiveClicked.takeIf { empty.chrome.canUnarchive },
                 isWorking = empty.chrome.isWorking,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
