@@ -277,6 +277,7 @@ class DebtRepositoryImplTest {
                         "tenants:screen",
                         Err(BackendError.Convex("PermissionDenied", "You don't have access to this group.", null)),
                     )
+                    while (awaitItem().status !is SyncStatus.Failed) continue
                     cancelAndIgnoreRemainingEvents()
                 }
 

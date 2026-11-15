@@ -47,7 +47,7 @@ private fun mergedByDate(
     val merged = mutableListOf<DatedLedgerItem>()
     entries.forEach { entry ->
         while (pendingNewestFirst.firstOrNull()?.let { it.date >= entry.date } == true) {
-            merged += pendingNewestFirst.removeFirst()
+            merged += pendingNewestFirst.removeAt(0)
         }
         merged += DatedLedgerItem(entry.date, LedgerItemUiState.Entry(entry.toRowUiState(timeZone, freshness)))
     }

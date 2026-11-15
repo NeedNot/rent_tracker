@@ -83,6 +83,19 @@ class ArchitectureTest {
         )
     }
 
+    @Test
+    fun noListCallsThatOnlyExistOnJava21AndAndroid15() {
+        val java21OnlyCalls = listOf(".removeFirst()", ".removeLast()")
+        assertNoViolations(
+            Konsist
+                .scopeFromProduction()
+                .files
+                .flatMap { file ->
+                    java21OnlyCalls.filter { it in file.text }.map { "${file.path} calls $it; use removeAt instead" }
+                },
+        )
+    }
+
     private val KoFileDeclaration.packageName: String
         get() = packagee?.name.orEmpty()
 
