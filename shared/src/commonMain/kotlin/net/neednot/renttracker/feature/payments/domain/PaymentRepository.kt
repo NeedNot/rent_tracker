@@ -17,7 +17,7 @@ interface PaymentRepository {
         draft: PaymentDraft,
         lateFee: LateFeeDraft?,
         duplicatePolicy: DuplicatePolicy,
-    ): Result<String, PaymentError>
+    ): Result<LoggedPayment, PaymentError>
 
     suspend fun editPayment(
         paymentId: String,

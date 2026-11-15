@@ -19,6 +19,7 @@ import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.FakePaymentRepository
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
 import net.neednot.renttracker.feature.payments.domain.LateFeeSuggestion
+import net.neednot.renttracker.feature.payments.domain.LoggedPayment
 import net.neednot.renttracker.feature.payments.domain.MonthState
 import net.neednot.renttracker.feature.payments.domain.MonthStateChange
 import net.neednot.renttracker.feature.payments.domain.PaymentDraft
@@ -561,7 +562,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
             runCurrent()
             repository.logResult =
                 com.github.michaelbull.result
-                    .Ok("p9")
+                    .Ok(LoggedPayment.Saved("p9"))
 
             editor.events.test {
                 editor.onDuplicateConfirmed()

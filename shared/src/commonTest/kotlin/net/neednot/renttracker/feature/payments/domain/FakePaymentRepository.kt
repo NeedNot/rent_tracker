@@ -12,7 +12,7 @@ import net.neednot.renttracker.core.sync.Synced
 class FakePaymentRepository : PaymentRepository {
     val entry = MutableStateFlow<Synced<PaymentEntryOverview?, PaymentError>>(Synced(null, SyncStatus.Syncing))
 
-    var logResult: Result<String, PaymentError> = Ok("p9")
+    var logResult: Result<LoggedPayment, PaymentError> = Ok(LoggedPayment.Saved("p9"))
     var editResult: Result<Unit, PaymentError> = Ok(Unit)
     var previewResult: Result<List<MonthStateChange>, PaymentError> = Ok(emptyList())
     var previewGate: CompletableDeferred<Unit>? = null
@@ -31,7 +31,7 @@ class FakePaymentRepository : PaymentRepository {
         draft: PaymentDraft,
         lateFee: LateFeeDraft?,
         duplicatePolicy: DuplicatePolicy,
-    ): Result<String, PaymentError> {
+    ): Result<LoggedPayment, PaymentError> {
         calls += PaymentRepositoryCall.Log(clientId, tenantId, draft, lateFee, duplicatePolicy)
         saveGate?.await()
         return logResult

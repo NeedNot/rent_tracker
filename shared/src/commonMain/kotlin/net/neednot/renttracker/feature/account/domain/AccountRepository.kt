@@ -11,5 +11,7 @@ interface AccountRepository {
 
     suspend fun requestDeletion(): Result<Unit, AccountError>
 
+    fun observeUnsyncedPaymentCount(): Flow<Int>
+
     suspend fun signOut(): Result<Unit, AccountError>
 }

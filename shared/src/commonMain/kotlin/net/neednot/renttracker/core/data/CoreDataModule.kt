@@ -12,6 +12,7 @@ val coreDataModule =
         single {
             get<RoomDatabase.Builder<RentTrackerDatabase>>()
                 .setDriver(BundledSQLiteDriver())
+                .addMigrations(PendingPaymentsMigration)
                 .setQueryCoroutineContext(Dispatchers.IO)
                 .build()
         }
@@ -26,4 +27,9 @@ val coreDataModule =
         single { GroupAccessWatcher(database = get(), screenResultStore = get()) }
         single { AccountProfileSync(backend = get(), database = get(), screenResultStore = get()) }
         single<AsOfClock> { HourlyAsOfClock(clock = Clock.System) }
+        single { PendingPaymentQueue(database = get(), scheduler = get()) }
+        single { TenantRefresher(backend = get(), database = get(), screenResultStore = get(), asOfClock = get()) }
+        single { PendingPaymentSender(backend = get(), database = get(), telemetry = get()) }
+        single { PendingPaymentSync(refresher = get(), sender = get(), database = get()) }
+        single { PendingPaymentAutoSync(connectivity = get(), database = get(), sync = get()) }
     }

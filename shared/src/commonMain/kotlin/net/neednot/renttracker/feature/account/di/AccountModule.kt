@@ -13,6 +13,7 @@ val accountModule =
                 backend = get(),
                 authSession = get(),
                 accountProfileSync = get(),
+                pendingPaymentQueue = get(),
                 telemetry = get(),
             )
         }

@@ -12,6 +12,21 @@ interface GroupCacheDao {
     @Query("SELECT groupId FROM tenants WHERE id = :tenantId")
     suspend fun groupIdOfTenant(tenantId: String): String?
 
+    @Query(
+        """
+        DELETE FROM cache_times
+        WHERE scope IN (SELECT 'tenant:' || id FROM tenants WHERE groupId = :groupId)
+        OR EXISTS (
+            SELECT 1 FROM tenants
+            WHERE tenants.groupId = :groupId AND cache_times.scope LIKE 'calendar:' || tenants.id || ':%'
+        )
+        """,
+    )
+    suspend fun deleteTenantCacheTimes(groupId: String)
+
+    @Query("DELETE FROM cache_times WHERE scope IN (:scopes)")
+    suspend fun deleteGroupCacheTimes(vararg scopes: String)
+
     @Query("DELETE FROM rent_terms WHERE tenantId IN (SELECT id FROM tenants WHERE groupId = :groupId)")
     suspend fun deleteRentTerms(groupId: String)
 

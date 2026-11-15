@@ -2,6 +2,7 @@ package net.neednot.renttracker.app
 
 import app.cash.turbine.test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -19,13 +20,31 @@ import net.neednot.renttracker.resources.group_error_not_found
 import net.neednot.renttracker.resources.lost_access_removed
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppViewModelTest : MainDispatcherTest() {
     private val repository = FakeAuthRepository()
     private val lostGroupAccess = MutableSharedFlow<LostGroupAccess>()
     private val messageDispatcher = RecordingMessageDispatcher()
-    private val viewModel by lazy { AppViewModel(repository, lostGroupAccess, messageDispatcher) }
+    private var pendingSyncRunning = false
+    private val viewModel by lazy {
+        AppViewModel(repository, lostGroupAccess, ::syncPendingPaymentsWhileOnline, messageDispatcher)
+    }
+
+    private suspend fun syncPendingPaymentsWhileOnline() {
+        pendingSyncRunning = true
+        awaitCancellation()
+    }
+
+    @Test
+    fun syncsPendingPaymentsWhileTheAppIsOpen() =
+        runTest {
+            viewModel
+            runCurrent()
+
+            assertTrue(pendingSyncRunning)
+        }
 
     @Test
     fun followsTheSessionFromLoadingToSignedInToSignedOut() =

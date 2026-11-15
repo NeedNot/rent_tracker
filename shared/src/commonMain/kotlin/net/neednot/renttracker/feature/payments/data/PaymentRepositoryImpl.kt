@@ -1,13 +1,13 @@
 package net.neednot.renttracker.feature.payments.data
 
 import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.map
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.datetime.LocalDate
-import net.neednot.renttracker.core.backend.Backend
 import net.neednot.renttracker.core.data.AsOfClock
 import net.neednot.renttracker.core.data.GroupAccessWatcher
 import net.neednot.renttracker.core.data.RentTrackerDatabase
@@ -15,9 +15,9 @@ import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.replaceTenant
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.sync.syncedFlow
-import net.neednot.renttracker.core.telemetry.Telemetry
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
+import net.neednot.renttracker.feature.payments.domain.LoggedPayment
 import net.neednot.renttracker.feature.payments.domain.MonthStateChange
 import net.neednot.renttracker.feature.payments.domain.PaymentDraft
 import net.neednot.renttracker.feature.payments.domain.PaymentEntryOverview
@@ -31,16 +31,14 @@ import net.neednot.renttracker.model.payments.PaymentsPreviewResult
 import net.neednot.renttracker.model.tenants.TenantsScreenArgs
 import net.neednot.renttracker.model.tenants.TenantsScreenResult
 
-class PaymentRepositoryImpl(
-    backend: Backend,
+class PaymentRepositoryImpl internal constructor(
+    private val calls: PaymentBackendCalls,
     private val asOfClock: AsOfClock,
     private val database: RentTrackerDatabase,
     private val screenResultStore: ScreenResultStore,
     private val groupAccessWatcher: GroupAccessWatcher,
-    telemetry: Telemetry,
+    private val phoneOutbox: PhoneOutbox,
 ) : PaymentRepository {
-    private val calls = PaymentBackendCalls(backend, telemetry)
-
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeEntry(
         tenantId: String,
@@ -67,14 +65,20 @@ class PaymentRepositoryImpl(
         draft: PaymentDraft,
         lateFee: LateFeeDraft?,
         duplicatePolicy: DuplicatePolicy,
-    ): Result<String, PaymentError> =
-        calls
-            .mutate(
-                name = LOG_PAYMENT,
-                args = draft.toLogArgs(clientId, tenantId, lateFee, duplicatePolicy),
-                argsSerializer = PaymentsLogArgs.serializer(),
-                resultSerializer = PaymentsLogResult.serializer(),
-            ).map { it.paymentId }
+    ): Result<LoggedPayment, PaymentError> {
+        val canWaitOnPhone = lateFee == null
+        if (phoneOutbox.isOffline && canWaitOnPhone) return phoneOutbox.keep(clientId, tenantId, draft)
+        val sent =
+            calls
+                .mutate(
+                    name = LOG_PAYMENT,
+                    args = draft.toLogArgs(clientId, tenantId, lateFee, duplicatePolicy),
+                    argsSerializer = PaymentsLogArgs.serializer(),
+                    resultSerializer = PaymentsLogResult.serializer(),
+                ).map { LoggedPayment.Saved(it.paymentId) }
+        val unreachable = sent.getError() == PaymentError.Offline
+        return if (unreachable && canWaitOnPhone) phoneOutbox.keep(clientId, tenantId, draft) else sent
+    }
 
     override suspend fun editPayment(
         paymentId: String,

@@ -1,6 +1,8 @@
 package net.neednot.renttracker.feature.payments.di
 
+import net.neednot.renttracker.feature.payments.data.PaymentBackendCalls
 import net.neednot.renttracker.feature.payments.data.PaymentRepositoryImpl
+import net.neednot.renttracker.feature.payments.data.PhoneOutbox
 import net.neednot.renttracker.feature.payments.domain.PaymentRepository
 import net.neednot.renttracker.feature.payments.presentation.viewmodel.PaymentEditorTarget
 import net.neednot.renttracker.feature.payments.presentation.viewmodel.PaymentEditorViewModel
@@ -11,12 +13,12 @@ val paymentsModule =
     module {
         single<PaymentRepository> {
             PaymentRepositoryImpl(
-                backend = get(),
+                calls = PaymentBackendCalls(backend = get(), telemetry = get()),
                 asOfClock = get(),
                 database = get(),
                 screenResultStore = get(),
                 groupAccessWatcher = get(),
-                telemetry = get(),
+                phoneOutbox = PhoneOutbox(connectivity = get(), pendingPaymentQueue = get()),
             )
         }
         viewModel { (target: PaymentEditorTarget) ->

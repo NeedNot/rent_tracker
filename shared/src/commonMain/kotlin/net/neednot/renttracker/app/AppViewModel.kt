@@ -22,6 +22,7 @@ import net.neednot.renttracker.resources.lost_access_removed
 class AppViewModel(
     authRepository: AuthRepository,
     lostGroupAccess: Flow<LostGroupAccess>,
+    syncPendingPaymentsWhileOnline: suspend () -> Unit,
     private val messageDispatcher: MessageDispatcher,
 ) : ViewModel() {
     val sessionState: StateFlow<AuthSessionState> = authRepository.sessionState
@@ -30,6 +31,7 @@ class AppViewModel(
     val events: Flow<AppEvent> = eventChannel.receiveAsFlow()
 
     init {
+        viewModelScope.launch { syncPendingPaymentsWhileOnline() }
         viewModelScope.launch {
             lostGroupAccess.collect { loss ->
                 messageDispatcher.show(loss.message())

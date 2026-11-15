@@ -8,9 +8,14 @@ import net.neednot.renttracker.core.auth.AuthSession
 import net.neednot.renttracker.core.auth.BetterAuthSession
 import net.neednot.renttracker.core.auth.GoogleIdTokenProvider
 import net.neednot.renttracker.core.backend.Backend
+import net.neednot.renttracker.core.data.Connectivity
+import net.neednot.renttracker.core.data.PendingPaymentSyncScheduler
 import net.neednot.renttracker.core.telemetry.LogcatTelemetry
 import net.neednot.renttracker.core.telemetry.NoOpTelemetry
 import net.neednot.renttracker.core.telemetry.Telemetry
+import net.neednot.renttracker.sync.AndroidConnectivity
+import net.neednot.renttracker.sync.SyncProblemNotifier
+import net.neednot.renttracker.sync.WorkManagerSyncScheduler
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -33,5 +38,8 @@ val androidAppModule =
                 foregroundActivity = get(),
             )
         }
+        single<Connectivity> { AndroidConnectivity(androidContext()) }
+        single<PendingPaymentSyncScheduler> { WorkManagerSyncScheduler(androidContext()) }
+        single { SyncProblemNotifier(androidContext()) }
         single<Telemetry> { if (BuildConfig.DEBUG) LogcatTelemetry() else NoOpTelemetry() }
     }

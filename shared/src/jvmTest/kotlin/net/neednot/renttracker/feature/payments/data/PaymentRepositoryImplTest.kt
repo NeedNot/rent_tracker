@@ -23,10 +23,14 @@ import net.neednot.renttracker.core.data.AccessLevel
 import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.DismissedLateFeeSuggestionEntity
 import net.neednot.renttracker.core.data.FakeAsOfClock
+import net.neednot.renttracker.core.data.FakeConnectivity
 import net.neednot.renttracker.core.data.GroupAccessWatcher
 import net.neednot.renttracker.core.data.LostGroupAccess
 import net.neednot.renttracker.core.data.MembershipRole
 import net.neednot.renttracker.core.data.PaymentMethod
+import net.neednot.renttracker.core.data.PendingPaymentQueue
+import net.neednot.renttracker.core.data.PendingPaymentStatus
+import net.neednot.renttracker.core.data.RecordingSyncScheduler
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.TenantBalanceState
@@ -45,6 +49,7 @@ import net.neednot.renttracker.feature.payments.domain.DuplicateMatch
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
 import net.neednot.renttracker.feature.payments.domain.LateFeeSuggestion
+import net.neednot.renttracker.feature.payments.domain.LoggedPayment
 import net.neednot.renttracker.feature.payments.domain.MonthState
 import net.neednot.renttracker.feature.payments.domain.MonthStateChange
 import net.neednot.renttracker.feature.payments.domain.PaymentBalance
@@ -66,15 +71,17 @@ class PaymentRepositoryImplTest {
 
     private val backend = FakeBackend()
     private val groupAccessWatcher = GroupAccessWatcher(database, ScreenResultStore(database))
+    private val connectivity = FakeConnectivity()
+    private val syncScheduler = RecordingSyncScheduler()
 
     private val repository =
         PaymentRepositoryImpl(
-            backend = backend,
+            calls = PaymentBackendCalls(backend, NoOpTelemetry()),
             asOfClock = FakeAsOfClock(TEN_O_CLOCK_UTC),
             database = database,
             screenResultStore = ScreenResultStore(database),
             groupAccessWatcher = groupAccessWatcher,
-            telemetry = NoOpTelemetry(),
+            phoneOutbox = PhoneOutbox(connectivity, PendingPaymentQueue(database, syncScheduler)),
         )
 
     private val draft =
@@ -104,7 +111,7 @@ class PaymentRepositoryImplTest {
                     duplicatePolicy = DuplicatePolicy.AskFirst,
                 )
 
-            assertEquals(Ok("p9"), result)
+            assertEquals(Ok(LoggedPayment.Saved("p9")), result)
             val expectedArgs =
                 buildJsonObject {
                     put("amountCents", 150_000)
@@ -375,6 +382,81 @@ class PaymentRepositoryImplTest {
 
             assertEquals(
                 Err(PaymentError.Unexpected("NeedsConfirmation: $MESSAGE")),
+                repository.logPayment("c1", "t1", draft, null, DuplicatePolicy.AskFirst),
+            )
+        }
+
+    @Test
+    fun loggingWhileOfflineKeepsThePaymentOnThePhoneAndSchedulesASync() =
+        runTest {
+            seedTenant()
+            connectivity.isOnline.value = false
+
+            val result = repository.logPayment("c1", "t1", draft, null, DuplicatePolicy.AskFirst)
+
+            assertEquals(Ok(LoggedPayment.SavedOnPhone("c1")), result)
+            assertEquals(emptyList(), backend.mutations)
+            val pending =
+                database
+                    .pendingPaymentDao()
+                    .observeAll()
+                    .first()
+                    .single()
+            assertEquals(
+                listOf("c1", "g1", "Apt 3B", "2026-03-10", "Pending"),
+                listOf(
+                    pending.clientId,
+                    pending.groupId,
+                    pending.tenantName,
+                    pending.dateReceived,
+                    pending.status.name,
+                ),
+            )
+            assertEquals(55_000L, pending.balanceCentsWhenLogged)
+            assertEquals(1, syncScheduler.scheduledCount)
+        }
+
+    @Test
+    fun aServerThatDoesNotAnswerKeepsThePaymentOnThePhone() =
+        runTest {
+            seedTenant()
+            backend.isReachable = false
+
+            val result = repository.logPayment("c1", "t1", draft, null, DuplicatePolicy.AskFirst)
+
+            assertEquals(Ok(LoggedPayment.SavedOnPhone("c1")), result)
+            assertEquals(
+                PendingPaymentStatus.Pending,
+                database.pendingPaymentDao().byClientId("c1")?.status,
+            )
+        }
+
+    @Test
+    fun aPaymentWithALateFeeCannotWaitOnThePhone() =
+        runTest {
+            seedTenant()
+            backend.isReachable = false
+
+            val result =
+                repository.logPayment(
+                    "c1",
+                    "t1",
+                    draft,
+                    LateFeeDraft(5_000, YearMonth(2026, 3)),
+                    DuplicatePolicy.AskFirst,
+                )
+
+            assertEquals(Err(PaymentError.Offline), result)
+            assertEquals(emptyList(), database.pendingPaymentDao().observeAll().first())
+        }
+
+    @Test
+    fun aTenantThatWasNeverLoadedCannotTakeAnOfflinePayment() =
+        runTest {
+            connectivity.isOnline.value = false
+
+            assertEquals(
+                Err(PaymentError.Offline),
                 repository.logPayment("c1", "t1", draft, null, DuplicatePolicy.AskFirst),
             )
         }
