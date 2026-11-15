@@ -14,6 +14,7 @@ val accountModule =
                 authSession = get(),
                 accountProfileSync = get(),
                 pendingPaymentQueue = get(),
+                pendingPaymentReader = get(),
                 telemetry = get(),
             )
         }

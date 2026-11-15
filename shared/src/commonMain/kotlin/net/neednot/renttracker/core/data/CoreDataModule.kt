@@ -28,6 +28,7 @@ val coreDataModule =
         single { AccountProfileSync(backend = get(), database = get(), screenResultStore = get()) }
         single<AsOfClock> { HourlyAsOfClock(clock = Clock.System) }
         single { PendingPaymentQueue(database = get(), scheduler = get()) }
+        single { PendingPaymentReader(database = get()) }
         single { TenantRefresher(backend = get(), database = get(), screenResultStore = get(), asOfClock = get()) }
         single { PendingPaymentSender(backend = get(), database = get(), telemetry = get()) }
         single { PendingPaymentSync(refresher = get(), sender = get(), database = get()) }

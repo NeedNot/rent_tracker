@@ -4,22 +4,12 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onOk
-import kotlinx.coroutines.flow.Flow
 
 class PendingPaymentQueue(
     private val database: RentTrackerDatabase,
     private val scheduler: PendingPaymentSyncScheduler,
 ) {
     private val dao = database.pendingPaymentDao()
-
-    fun observeForTenant(tenantId: String): Flow<List<PendingPaymentEntity>> = dao.observeByTenantId(tenantId)
-
-    fun observe(clientId: String): Flow<PendingPaymentEntity?> = dao.observeByClientId(clientId)
-
-    fun observeDuplicateMatches(clientId: String): Flow<List<PendingDuplicateMatchEntity>> =
-        dao.observeDuplicateMatches(clientId)
-
-    fun observeUnsyncedCount(): Flow<Int> = dao.observeCount()
 
     suspend fun enqueue(
         clientId: String,

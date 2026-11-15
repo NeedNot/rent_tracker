@@ -21,6 +21,7 @@ class PendingPaymentAutoSyncTest {
     private val database = inMemoryDatabase()
     private val backend = FakeBackend()
     private val connectivity = FakeConnectivity(online = false)
+    private val reader = PendingPaymentReader(database)
     private val queue = PendingPaymentQueue(database, RecordingSyncScheduler())
     private val sync =
         PendingPaymentSync(
@@ -47,7 +48,7 @@ class PendingPaymentAutoSyncTest {
             connectivity.isOnline.value = true
 
             withContext(Dispatchers.Default) {
-                withTimeout(5.seconds) { queue.observeUnsyncedCount().filter { it == 0 }.first() }
+                withTimeout(5.seconds) { reader.observeUnsyncedCount().filter { it == 0 }.first() }
             }
             assertEquals(listOf(LOG_PAYMENT), backend.mutations.map { it.first })
             running.cancel()

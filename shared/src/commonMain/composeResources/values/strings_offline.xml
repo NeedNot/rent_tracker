@@ -4,4 +4,8 @@
     <string name="offline_banner_minutes">Offline · last updated %1$d min ago</string>
     <string name="offline_banner_hours">Offline · last updated %1$dh ago</string>
     <string name="offline_banner_days">Offline · last updated %1$dd ago</string>
+    <string name="pending_rejected_no_permission">You no longer have permission to log payments in this group.</string>
+    <string name="pending_rejected_archived">This tenant was archived.</string>
+    <string name="pending_rejected_moved">This tenant was moved to another group.</string>
+    <string name="pending_rejected_not_saved">This payment was not saved. If it was received, ask someone who can log payments to add it.</string>
 </resources>

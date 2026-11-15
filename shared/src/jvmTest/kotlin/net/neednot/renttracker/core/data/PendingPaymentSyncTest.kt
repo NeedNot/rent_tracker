@@ -28,6 +28,7 @@ class PendingPaymentSyncTest {
     private val database = inMemoryDatabase()
     private val backend = FakeBackend()
     private val store = ScreenResultStore(database)
+    private val reader = PendingPaymentReader(database)
     private val queue = PendingPaymentQueue(database, RecordingSyncScheduler())
     private val dao = database.pendingPaymentDao()
 
@@ -135,7 +136,7 @@ class PendingPaymentSyncTest {
             val report = sync().syncAll()
 
             assertEquals(PendingConfirmationReason.PossibleDuplicate, report.needsAttention.single().confirmationReason)
-            val match = queue.observeDuplicateMatches("c1").first().single()
+            val match = reader.observeDuplicateMatches("c1").first().single()
             assertEquals(listOf("p1", "Sam Rivera", "2026-03-01"), listOf(match.matchId, match.byName, match.date))
             assertEquals(DuplicateMatchKind.Payment, match.kind)
         }

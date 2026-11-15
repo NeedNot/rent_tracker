@@ -24,6 +24,15 @@ interface PendingPaymentDao {
     @Query("SELECT * FROM pending_payments WHERE tenantId = :tenantId ORDER BY sequence")
     fun observeByTenantId(tenantId: String): Flow<List<PendingPaymentEntity>>
 
+    @Query(
+        """
+        SELECT * FROM pending_payments
+        WHERE status = :status AND tenantId NOT IN (SELECT id FROM tenants)
+        ORDER BY sequence
+        """,
+    )
+    fun observeWithStatusWithoutCachedTenant(status: PendingPaymentStatus): Flow<List<PendingPaymentEntity>>
+
     @Query("SELECT * FROM pending_payments WHERE clientId = :clientId")
     fun observeByClientId(clientId: String): Flow<PendingPaymentEntity?>
 

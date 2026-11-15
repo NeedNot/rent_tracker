@@ -17,6 +17,7 @@ import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.ConvexJson
 import net.neednot.renttracker.core.data.AccountProfileSync
 import net.neednot.renttracker.core.data.PendingPaymentQueue
+import net.neednot.renttracker.core.data.PendingPaymentReader
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.telemetry.Severity
@@ -32,6 +33,7 @@ class AccountRepositoryImpl(
     private val authSession: AuthSession,
     private val accountProfileSync: AccountProfileSync,
     private val pendingPaymentQueue: PendingPaymentQueue,
+    private val pendingPaymentReader: PendingPaymentReader,
     private val telemetry: Telemetry,
 ) : AccountRepository {
     override fun observeProfile(): Flow<Synced<AccountProfile?, AccountError>> =
@@ -55,7 +57,7 @@ class AccountRepositoryImpl(
     override suspend fun requestDeletion(): Result<Unit, AccountError> =
         mutate(name = REQUEST_DELETION, args = JsonObject(emptyMap()))
 
-    override fun observeUnsyncedPaymentCount(): Flow<Int> = pendingPaymentQueue.observeUnsyncedCount()
+    override fun observeUnsyncedPaymentCount(): Flow<Int> = pendingPaymentReader.observeUnsyncedCount()
 
     override suspend fun signOut(): Result<Unit, AccountError> =
         authSession

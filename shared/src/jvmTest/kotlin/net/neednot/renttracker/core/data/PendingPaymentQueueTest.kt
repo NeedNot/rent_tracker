@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 class PendingPaymentQueueTest {
     private val database = inMemoryDatabase()
     private val scheduler = RecordingSyncScheduler()
+    private val reader = PendingPaymentReader(database)
     private val queue = PendingPaymentQueue(database, scheduler)
     private val dao = database.pendingPaymentDao()
     private val store = ScreenResultStore(database)
@@ -72,7 +73,7 @@ class PendingPaymentQueueTest {
             assertEquals(PendingPaymentStatus.Pending, edited.status)
             assertNull(edited.confirmationReason)
             assertFalse(edited.duplicateConfirmed)
-            assertEquals(emptyList(), queue.observeDuplicateMatches("c1").first())
+            assertEquals(emptyList(), reader.observeDuplicateMatches("c1").first())
             assertEquals(1, scheduler.scheduledCount)
         }
 
@@ -125,6 +126,19 @@ class PendingPaymentQueueTest {
         }
 
     @Test
+    fun rejectedPaymentsWhoseTenantIsNoLongerCachedAreListedApart() =
+        runTest {
+            store.replaceTenant("t1", tenantScreen())
+            dao.insert(pendingPaymentEntity("c1", "t1").copy(status = PendingPaymentStatus.Rejected))
+            dao.insert(pendingPaymentEntity("c2", "gone", sequence = 2).copy(status = PendingPaymentStatus.Rejected))
+            dao.insert(pendingPaymentEntity("c3", "gone", sequence = 3))
+
+            val listed = reader.observeRejectedWithoutCachedTenant().first()
+
+            assertEquals(listOf("c2"), listed.map { it.clientId })
+        }
+
+    @Test
     fun aPaymentThatAlreadySyncedIsNotFound() =
         runTest {
             assertEquals(Err(PendingQueueError.NotFound), queue.edit("c1", marchSecondPayment))
@@ -138,7 +152,7 @@ class PendingPaymentQueueTest {
 
             queue.discard("c1")
 
-            assertEquals(emptyList(), queue.observeDuplicateMatches("c1").first())
+            assertEquals(emptyList(), reader.observeDuplicateMatches("c1").first())
         }
 
     @Test
@@ -150,8 +164,8 @@ class PendingPaymentQueueTest {
 
             queue.clear()
 
-            assertEquals(0, queue.observeUnsyncedCount().first())
-            assertEquals(emptyList(), queue.observeDuplicateMatches("c2").first())
+            assertEquals(0, reader.observeUnsyncedCount().first())
+            assertEquals(emptyList(), reader.observeDuplicateMatches("c2").first())
         }
 
     @Test

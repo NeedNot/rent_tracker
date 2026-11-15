@@ -19,6 +19,7 @@ import net.neednot.renttracker.core.backend.FakeBackend
 import net.neednot.renttracker.core.data.AccountProfileEntity
 import net.neednot.renttracker.core.data.AccountProfileSync
 import net.neednot.renttracker.core.data.PendingPaymentQueue
+import net.neednot.renttracker.core.data.PendingPaymentReader
 import net.neednot.renttracker.core.data.PendingPaymentStatus
 import net.neednot.renttracker.core.data.RecordingSyncScheduler
 import net.neednot.renttracker.core.data.RentTrackerDatabase
@@ -50,6 +51,7 @@ class AccountRepositoryImplTest {
             authSession = authSession,
             accountProfileSync = AccountProfileSync(backend, database, ScreenResultStore(database)),
             pendingPaymentQueue = PendingPaymentQueue(database, RecordingSyncScheduler()),
+            pendingPaymentReader = PendingPaymentReader(database),
             telemetry = NoOpTelemetry(),
         )
 
