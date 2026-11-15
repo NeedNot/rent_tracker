@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.InitialsAvatar
 import net.neednot.renttracker.feature.members.presentation.uistate.TransferCandidateUiState
 import org.jetbrains.compose.resources.stringResource
 
@@ -37,7 +38,7 @@ internal fun TransferCandidateRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         RadioButton(selected = isSelected, onClick = null, enabled = enabled)
-        MemberAvatar(initials = candidate.initials)
+        InitialsAvatar(initials = candidate.initials)
         Column(modifier = Modifier.weight(1f).padding(start = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(text = candidate.name, style = MaterialTheme.typography.titleMedium)
             Text(

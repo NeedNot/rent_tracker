@@ -9,6 +9,7 @@ import net.neednot.renttracker.core.designsystem.format.formatMonthDay
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.ui.initialsOf
 import net.neednot.renttracker.feature.members.domain.Member
 import net.neednot.renttracker.feature.members.domain.MembersError
 import net.neednot.renttracker.feature.members.domain.MembersOverview

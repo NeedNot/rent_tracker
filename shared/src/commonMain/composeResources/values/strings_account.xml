@@ -1,0 +1,21 @@
+<resources>
+    <string name="home_account">Account</string>
+    <string name="account_title">Account</string>
+    <string name="account_back">Back</string>
+    <string name="account_loading">Loading account</string>
+    <string name="account_edit_name">Edit name</string>
+    <string name="account_sign_out">Sign out</string>
+    <string name="account_request_deletion">Request account deletion</string>
+    <string name="account_request_deletion_hint">Handled by our team. Transfer groups you own first.</string>
+    <string name="account_deletion_requested">Deletion requested</string>
+    <string name="account_deletion_requested_detail">Requested %1$s. Our team will handle it.</string>
+    <string name="account_edit_name_title">Edit name</string>
+    <string name="account_edit_name_label">Name</string>
+    <string name="account_delete_dialog_title">Request account deletion?</string>
+    <string name="account_delete_dialog_message">Our team will delete your account. Your name will show as \"Deleted user\" on past entries, and the money records stay with each group. This can\'t be undone from the app.</string>
+    <string name="account_delete_dialog_confirm">Request deletion</string>
+    <string name="account_error_name_length">Enter a name between 1 and 100 characters.</string>
+    <string name="account_error_offline">No connection. Check your internet and try again.</string>
+    <string name="account_error_unexpected">Something went wrong. Please try again.</string>
+    <string name="account_error_session_ended">Your sign-in has ended. Please sign in again.</string>
+</resources>

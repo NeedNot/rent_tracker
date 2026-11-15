@@ -1,4 +1,4 @@
-package net.neednot.renttracker.feature.members.presentation.viewmodel
+package net.neednot.renttracker.core.ui
 
 private val WORD_SEPARATOR = Regex("\\s+")
 private const val INITIALS_LENGTH = 2

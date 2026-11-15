@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AccountsMeResult(
     val accountId: String,
+    val deletionRequestedAt: Long? = null,
     val displayName: String,
     val email: String,
 )

@@ -3,6 +3,7 @@ package net.neednot.renttracker.feature.members.presentation.viewmodel
 import net.neednot.renttracker.core.access.MemberPermissionLabel
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
+import net.neednot.renttracker.core.ui.initialsOf
 import net.neednot.renttracker.feature.members.domain.Member
 import net.neednot.renttracker.feature.members.domain.MembersError
 import net.neednot.renttracker.feature.members.domain.MembersOverview

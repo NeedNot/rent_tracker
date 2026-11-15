@@ -26,6 +26,7 @@ import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.core.navigation.SignInGraphRoute
 import net.neednot.renttracker.core.ui.AppSnackbarHost
+import net.neednot.renttracker.feature.account.presentation.navigation.accountGraph
 import net.neednot.renttracker.feature.auth.presentation.navigation.authGraph
 import net.neednot.renttracker.feature.debts.presentation.navigation.debtsGraph
 import net.neednot.renttracker.feature.group.presentation.navigation.groupGraph
@@ -70,6 +71,7 @@ private fun RootNavHost(
         paymentsGraph(navController)
         debtsGraph(navController)
         membersGraph(navController)
+        accountGraph(navController)
     }
     LaunchedEffect(events) {
         events.collect { event ->

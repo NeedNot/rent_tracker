@@ -23,6 +23,7 @@ class ScreenResultStore(
     private val inviteDao = database.inviteDao()
     private val homeInvitationDao = database.homeInvitationDao()
     private val groupCacheDao = database.groupCacheDao()
+    private val accountProfileDao = database.accountProfileDao()
 
     suspend fun replaceHome(
         groups: List<GroupEntity>,
@@ -101,6 +102,12 @@ class ScreenResultStore(
         inviteDao.deleteInGroupExcept(groupId, invites.map { it.id })
         inviteDao.upsert(invites)
     }
+
+    suspend fun replaceAccountProfile(profile: AccountProfileEntity) =
+        inOneTransaction {
+            accountProfileDao.deleteAll()
+            accountProfileDao.upsert(profile)
+        }
 
     suspend fun clearGroup(groupId: String) =
         inOneTransaction {

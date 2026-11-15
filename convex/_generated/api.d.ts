@@ -9,9 +9,12 @@
  */
 
 import type * as access from "../access.js";
+import type * as accountOwnership from "../accountOwnership.js";
+import type * as accountProfile from "../accountProfile.js";
 import type * as accounts from "../accounts.js";
 import type * as allocationEntity from "../allocationEntity.js";
 import type * as appError from "../appError.js";
+import type * as authWorker from "../authWorker.js";
 import type * as calendarMonthEntity from "../calendarMonthEntity.js";
 import type * as clientRetry from "../clientRetry.js";
 import type * as dateText from "../dateText.js";
@@ -36,6 +39,7 @@ import type * as engine_monthStateChanges from "../engine/monthStateChanges.js";
 import type * as engine_rentPeriods from "../engine/rentPeriods.js";
 import type * as engine_tenantLedger from "../engine/tenantLedger.js";
 import type * as entryAccess from "../entryAccess.js";
+import type * as entryRestore from "../entryRestore.js";
 import type * as entryVersion from "../entryVersion.js";
 import type * as groupSettingsInput from "../groupSettingsInput.js";
 import type * as groupSummary from "../groupSummary.js";
@@ -60,6 +64,9 @@ import type * as permissionRules from "../permissionRules.js";
 import type * as rentTermRules from "../rentTermRules.js";
 import type * as rentTerms from "../rentTerms.js";
 import type * as screenAccounts from "../screenAccounts.js";
+import type * as support from "../support.js";
+import type * as supportAccounts from "../supportAccounts.js";
+import type * as supportRestore from "../supportRestore.js";
 import type * as tenantDetails from "../tenantDetails.js";
 import type * as tenantLedgerAdapter from "../tenantLedgerAdapter.js";
 import type * as tenantLedgerRows from "../tenantLedgerRows.js";
@@ -67,6 +74,7 @@ import type * as tenantScope from "../tenantScope.js";
 import type * as tenantSummary from "../tenantSummary.js";
 import type * as tenants from "../tenants.js";
 import type * as validators from "../validators.js";
+import type * as workerPost from "../workerPost.js";
 
 import type {
   ApiFromModules,
@@ -76,9 +84,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   access: typeof access;
+  accountOwnership: typeof accountOwnership;
+  accountProfile: typeof accountProfile;
   accounts: typeof accounts;
   allocationEntity: typeof allocationEntity;
   appError: typeof appError;
+  authWorker: typeof authWorker;
   calendarMonthEntity: typeof calendarMonthEntity;
   clientRetry: typeof clientRetry;
   dateText: typeof dateText;
@@ -103,6 +114,7 @@ declare const fullApi: ApiFromModules<{
   "engine/rentPeriods": typeof engine_rentPeriods;
   "engine/tenantLedger": typeof engine_tenantLedger;
   entryAccess: typeof entryAccess;
+  entryRestore: typeof entryRestore;
   entryVersion: typeof entryVersion;
   groupSettingsInput: typeof groupSettingsInput;
   groupSummary: typeof groupSummary;
@@ -127,6 +139,9 @@ declare const fullApi: ApiFromModules<{
   rentTermRules: typeof rentTermRules;
   rentTerms: typeof rentTerms;
   screenAccounts: typeof screenAccounts;
+  support: typeof support;
+  supportAccounts: typeof supportAccounts;
+  supportRestore: typeof supportRestore;
   tenantDetails: typeof tenantDetails;
   tenantLedgerAdapter: typeof tenantLedgerAdapter;
   tenantLedgerRows: typeof tenantLedgerRows;
@@ -134,6 +149,7 @@ declare const fullApi: ApiFromModules<{
   tenantSummary: typeof tenantSummary;
   tenants: typeof tenants;
   validators: typeof validators;
+  workerPost: typeof workerPost;
 }>;
 
 /**

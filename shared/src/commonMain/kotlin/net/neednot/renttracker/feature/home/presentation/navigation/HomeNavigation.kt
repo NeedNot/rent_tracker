@@ -3,6 +3,7 @@ package net.neednot.renttracker.feature.home.presentation.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import net.neednot.renttracker.core.navigation.AccountRoute
 import net.neednot.renttracker.core.navigation.ArchivedGroupsRoute
 import net.neednot.renttracker.core.navigation.CreateGroupRoute
 import net.neednot.renttracker.core.navigation.GroupRoute
@@ -17,6 +18,7 @@ fun NavGraphBuilder.homeGraph(navController: NavController) {
             onGroupClicked = { groupId -> navController.navigate(GroupRoute(groupId)) },
             onNewGroupClicked = { navController.navigate(CreateGroupRoute) },
             onArchivedGroupsClicked = { navController.navigate(ArchivedGroupsRoute) },
+            onAccountClicked = { navController.navigate(AccountRoute) },
         )
     }
     composable<ArchivedGroupsRoute> {

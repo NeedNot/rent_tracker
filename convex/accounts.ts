@@ -1,7 +1,8 @@
 import { v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { accountForSubject, requireAccount, requireActive, requireIdentity } from "./access";
+import { requireOwnsNoGroups } from "./accountOwnership";
+import { profileOf } from "./accountProfile";
 import { appError } from "./appError";
 import { accountProfile, accountProfileFields, NAME_MAX_LENGTH } from "./validators";
 
@@ -63,19 +64,34 @@ export const setDisplayName = mutation({
 
 export const me = query({
   args: {},
-  returns: accountProfile,
+  returns: accountProfile.extend({ deletionRequestedAt: v.optional(v.number()) }),
   handler: async (ctx) => {
     const account = await requireAccount(ctx);
-    return profileOf(account);
+    return { ...profileOf(account), deletionRequestedAt: account.deletionRequestedAt };
   },
 });
 
-function profileOf(account: Doc<"accounts">) {
-  if (account.email === undefined) {
-    throw new Error(`Active account ${account._id} has no email`);
-  }
-  return { accountId: account._id, displayName: account.displayName, email: account.email };
-}
+export const requestDeletion = mutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const account = await requireAccount(ctx);
+    if (account.deletionRequestedAt !== undefined) {
+      return account.deletionRequestedAt;
+    }
+
+    await requireOwnsNoGroups(ctx, account._id);
+
+    const deletionRequestedAt = Date.now();
+    await ctx.db.patch(account._id, {
+      deletionRequestedAt,
+      version: account.version + 1,
+      lastEditedAt: deletionRequestedAt,
+      lastEditedBy: account._id,
+    });
+    return deletionRequestedAt;
+  },
+});
 
 function defaultDisplayName(email: string): string {
   const localPart = email.split("@")[0]?.trim() ?? "";

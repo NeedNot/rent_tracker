@@ -13,21 +13,33 @@ import net.neednot.renttracker.core.ui.MessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
+import net.neednot.renttracker.core.ui.initialsOf
+import net.neednot.renttracker.feature.home.domain.HomeAccountRepository
 import net.neednot.renttracker.feature.home.domain.HomeError
 import net.neednot.renttracker.feature.home.domain.HomeRepository
 import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
 
 class HomeViewModel(
     private val homeRepository: HomeRepository,
+    private val homeAccountRepository: HomeAccountRepository,
     private val messageDispatcher: MessageDispatcher,
 ) : ViewModel() {
     private val decliningInviteId = MutableStateFlow<String?>(null)
     private val workingInviteId = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<HomeUiState> =
-        combine(homeRepository.observeHome(), decliningInviteId, workingInviteId) { home, declining, working ->
-            home.toHomeUiState(declineInviteId = declining, workingInviteId = working)
-        }.stateIn(viewModelScope, WhileScreenIsVisible, HomeUiState.Loading)
+        combine(
+            homeRepository.observeHome(),
+            homeAccountRepository.observeAccountName(),
+            decliningInviteId,
+            workingInviteId,
+        ) { home, accountName, declining, working ->
+            home.toHomeUiState(
+                declineInviteId = declining,
+                workingInviteId = working,
+                accountInitial = accountName?.let(::initialsOf)?.take(1),
+            )
+        }.stateIn(viewModelScope, WhileScreenIsVisible, HomeUiState.Loading())
 
     fun onAcceptClicked(inviteId: String) {
         answer(inviteId) { homeRepository.acceptInvitation(inviteId) }

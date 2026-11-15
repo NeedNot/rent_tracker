@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.InitialsAvatar
 import net.neednot.renttracker.feature.members.presentation.uistate.MemberHeaderUiState
 
 @Composable
@@ -29,7 +30,10 @@ internal fun MemberHeaderCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            MemberAvatar(initials = header.initials, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
+            InitialsAvatar(
+                initials = header.initials,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(text = header.name, style = MaterialTheme.typography.titleMedium)
                 header.email?.let { email ->

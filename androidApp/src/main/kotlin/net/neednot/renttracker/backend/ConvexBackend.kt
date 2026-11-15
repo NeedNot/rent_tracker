@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -59,17 +60,20 @@ class ConvexBackend(
         scope.launch { followSession() }
     }
 
+    // Calls into the Convex client from the main thread can deadlock it when two of them start together.
     override fun <T> subscribe(
         name: String,
         args: JsonObject,
         resultSerializer: KSerializer<T>,
     ): Flow<Result<T, BackendError>> =
-        client.subscribe<JsonElement>(name, ConvexJson.toClientArgs(args)).map { update ->
-            update.fold(
-                onSuccess = { value -> decode(resultSerializer, value) },
-                onFailure = { error -> Err(error.toBackendError()) },
-            )
-        }
+        client
+            .subscribe<JsonElement>(name, ConvexJson.toClientArgs(args))
+            .map { update ->
+                update.fold(
+                    onSuccess = { value -> decode(resultSerializer, value) },
+                    onFailure = { error -> Err(error.toBackendError()) },
+                )
+            }.flowOn(Dispatchers.IO)
 
     override suspend fun <T> mutation(
         name: String,
@@ -142,7 +146,7 @@ class ConvexBackend(
         request: suspend () -> JsonElement,
     ): Result<T, BackendError> =
         try {
-            decode(resultSerializer, request())
+            decode(resultSerializer, withContext(Dispatchers.IO) { request() })
         } catch (error: ConvexError) {
             Err(error.toBackendError())
         } catch (error: ServerError) {

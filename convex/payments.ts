@@ -11,6 +11,7 @@ import type { CalendarDate } from "./engine/calendarDate";
 import { monthStateChanges } from "./engine/monthStateChanges";
 import { computeTenantLedger } from "./engine/tenantLedger";
 import { requireMayChangeEntry } from "./entryAccess";
+import { clearCancellation } from "./entryRestore";
 import { requireCurrentEntry } from "./entryVersion";
 import { requireName } from "./inputValidation";
 import { localDateAt } from "./localDate";
@@ -163,11 +164,10 @@ export const restore = mutation({
     const { payment, tenant, group } = await loadPaymentScope(ctx, args.paymentId);
     const membership = await requirePermission(ctx, group._id, "payments", "addEdit");
     await requireChangeable(ctx, { payment, tenant }, membership, args.expectedVersion);
-    const version = payment.version + 1;
     if (payment.deletedAt !== undefined) {
-      await ctx.db.patch(payment._id, { deletedAt: undefined, deletedBy: undefined, deleteReason: undefined, version });
+      await clearCancellation(ctx, payment);
     } else if (payment.bouncedAt !== undefined) {
-      await ctx.db.patch(payment._id, { bouncedAt: undefined, bouncedBy: undefined, version });
+      await ctx.db.patch(payment._id, { bouncedAt: undefined, bouncedBy: undefined, version: payment.version + 1 });
     } else {
       throw validationFailed("This payment is not cancelled or bounced.");
     }

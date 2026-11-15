@@ -25,6 +25,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.access.MemberPermissionLabel
+import net.neednot.renttracker.core.designsystem.components.InitialsAvatar
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.feature.members.presentation.uistate.MemberRowAction
 import net.neednot.renttracker.feature.members.presentation.uistate.MemberRowUiState
@@ -52,13 +53,13 @@ internal fun MemberRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (member.isOwner) {
-            MemberAvatar(
+            InitialsAvatar(
                 initials = member.initials,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             )
         } else {
-            MemberAvatar(initials = member.initials)
+            InitialsAvatar(initials = member.initials)
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             MemberName(name = member.name, isYou = member.isYou)

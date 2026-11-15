@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import net.neednot.renttracker.core.ui.firstNameOf
 import net.neednot.renttracker.feature.members.domain.Member
 import net.neednot.renttracker.feature.members.domain.MembersRepository
 import net.neednot.renttracker.feature.members.presentation.uistate.RemoveMemberDialogUiState

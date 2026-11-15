@@ -14,6 +14,7 @@ import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.feature.home.domain.FakeHomeAccountRepository
 import net.neednot.renttracker.feature.home.domain.FakeHomeRepository
 import net.neednot.renttracker.feature.home.domain.HomeError
 import net.neednot.renttracker.feature.home.domain.HomeInvitation
@@ -38,8 +39,9 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeInvitationsViewModelTest : MainDispatcherTest() {
     private val repository = FakeHomeRepository()
+    private val accountRepository = FakeHomeAccountRepository()
     private val messages = RecordingMessageDispatcher()
-    private val viewModel by lazy { HomeViewModel(repository, messages) }
+    private val viewModel by lazy { HomeViewModel(repository, accountRepository, messages) }
 
     private val oakAve = invitation("i1", "Oak Ave Duplex", MemberPermissionLabel.Bookkeeper)
 

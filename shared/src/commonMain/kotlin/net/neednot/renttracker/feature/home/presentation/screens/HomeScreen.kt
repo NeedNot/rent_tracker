@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
+import net.neednot.renttracker.feature.home.presentation.components.AccountButton
 import net.neednot.renttracker.feature.home.presentation.components.ArchivedGroupsRow
 import net.neednot.renttracker.feature.home.presentation.components.GroupCard
 import net.neednot.renttracker.feature.home.presentation.components.InvitationActions
@@ -62,6 +63,7 @@ fun HomeScreen(
     onGroupClicked: (groupId: String) -> Unit,
     onNewGroupClicked: () -> Unit,
     onArchivedGroupsClicked: () -> Unit,
+    onAccountClicked: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
@@ -78,6 +80,7 @@ fun HomeScreen(
         onGroupClicked = onGroupClicked,
         onNewGroupClicked = onNewGroupClicked,
         onArchivedGroupsClicked = onArchivedGroupsClicked,
+        onAccountClicked = onAccountClicked,
         modifier = modifier,
     )
 }
@@ -90,11 +93,17 @@ private fun HomeContent(
     onGroupClicked: (groupId: String) -> Unit,
     onNewGroupClicked: () -> Unit,
     onArchivedGroupsClicked: () -> Unit,
+    onAccountClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text(stringResource(Res.string.app_name)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(Res.string.app_name)) },
+                actions = { AccountButton(initial = uiState.accountInitial, onClick = onAccountClicked) },
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onNewGroupClicked,
@@ -104,11 +113,11 @@ private fun HomeContent(
         },
     ) { contentPadding ->
         when (uiState) {
-            HomeUiState.Loading -> {
+            is HomeUiState.Loading -> {
                 Loading(contentPadding)
             }
 
-            HomeUiState.Empty -> {
+            is HomeUiState.Empty -> {
                 Message(
                     title = stringResource(Res.string.home_empty_title),
                     body = stringResource(Res.string.home_empty_body),
@@ -252,6 +261,7 @@ private fun HomeContentPreview() {
         HomeContent(
             uiState =
                 HomeUiState.Content(
+                    accountInitial = "S",
                     invitations =
                         listOf(
                             InvitationCardUiState(
@@ -280,6 +290,7 @@ private fun HomeContentPreview() {
             onGroupClicked = {},
             onNewGroupClicked = {},
             onArchivedGroupsClicked = {},
+            onAccountClicked = {},
         )
     }
 }
