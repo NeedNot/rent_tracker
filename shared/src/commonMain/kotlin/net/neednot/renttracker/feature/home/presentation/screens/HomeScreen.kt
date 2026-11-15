@@ -41,6 +41,7 @@ import net.neednot.renttracker.feature.home.presentation.components.ArchivedGrou
 import net.neednot.renttracker.feature.home.presentation.components.GroupCard
 import net.neednot.renttracker.feature.home.presentation.components.InvitationActions
 import net.neednot.renttracker.feature.home.presentation.components.InvitationCard
+import net.neednot.renttracker.feature.home.presentation.components.LateRentAlertsDialog
 import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentActions
 import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentsCard
 import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentsSheet
@@ -49,6 +50,7 @@ import net.neednot.renttracker.feature.home.presentation.uistate.GroupCardUiStat
 import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.InvitationCardUiState
 import net.neednot.renttracker.feature.home.presentation.viewmodel.HomeViewModel
+import net.neednot.renttracker.feature.home.presentation.viewmodel.LateRentAlertsAnswer
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.app_name
 import net.neednot.renttracker.resources.common_cancel
@@ -91,6 +93,7 @@ fun HomeScreen(
         onNewGroupClicked = onNewGroupClicked,
         onArchivedGroupsClicked = onArchivedGroupsClicked,
         onAccountClicked = onAccountClicked,
+        onLateRentAlertsAnswered = viewModel::onLateRentAlertsAnswered,
         modifier = modifier,
     )
 }
@@ -105,6 +108,7 @@ private fun HomeContent(
     onNewGroupClicked: () -> Unit,
     onArchivedGroupsClicked: () -> Unit,
     onAccountClicked: () -> Unit,
+    onLateRentAlertsAnswered: (LateRentAlertsAnswer) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -147,6 +151,12 @@ private fun HomeContent(
             rejectedPayments = rejected,
             onPaymentDismissed = rejectedPaymentActions.onPaymentDismissed,
             onSheetDismissed = rejectedPaymentActions.onSheetDismissed,
+        )
+    }
+    if ((uiState as? HomeUiState.Content)?.isLateRentPromptShown == true) {
+        LateRentAlertsDialog(
+            onAllowed = { onLateRentAlertsAnswered(LateRentAlertsAnswer.Allow) },
+            onDeclined = { onLateRentAlertsAnswered(LateRentAlertsAnswer.NotNow) },
         )
     }
     (uiState as? HomeUiState.Content)?.declineDialog?.let { dialog ->
@@ -333,6 +343,7 @@ private fun HomeContentPreview() {
             onNewGroupClicked = {},
             onArchivedGroupsClicked = {},
             onAccountClicked = {},
+            onLateRentAlertsAnswered = {},
         )
     }
 }

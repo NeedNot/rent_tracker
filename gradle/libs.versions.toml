@@ -20,6 +20,7 @@ convex-android = "0.8.0"
 better-auth = "0.2.0"
 androidx-credentials = "1.6.0"
 googleid = "1.2.1"
+firebase-messaging = "26.0.2"
 turbine = "1.2.1"
 konsist = "0.18.1"
 roborazzi = "1.79.0"
@@ -70,6 +71,7 @@ convex-android = { module = "dev.convex:android-convexmobile", version.ref = "co
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging" }
 better-auth = { module = "com.github.NeedNot.better-auth-android:better-auth", version.ref = "better-auth" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import net.neednot.renttracker.core.auth.AuthSessionState
@@ -23,8 +24,9 @@ import net.neednot.renttracker.resources.lost_access_removed
 class AppViewModel(
     authRepository: AuthRepository,
     lostGroupAccess: Flow<LostGroupAccess>,
-    syncPendingPaymentsWhileOnline: suspend () -> Unit,
+    whileAppIsOpen: List<suspend () -> Unit>,
     pendingPaymentLinks: Flow<PendingPaymentLink>,
+    groupLinks: Flow<String>,
     private val messageDispatcher: MessageDispatcher,
 ) : ViewModel() {
     val sessionState: StateFlow<AuthSessionState> = authRepository.sessionState
@@ -33,7 +35,13 @@ class AppViewModel(
     val events: Flow<AppEvent> = eventChannel.receiveAsFlow()
 
     init {
-        viewModelScope.launch { syncPendingPaymentsWhileOnline() }
+        whileAppIsOpen.forEach { work -> viewModelScope.launch { work() } }
+        viewModelScope.launch {
+            groupLinks.collect { groupId ->
+                val session = sessionState.first { it != AuthSessionState.Loading }
+                if (session is AuthSessionState.SignedIn) eventChannel.send(AppEvent.OpenGroup(groupId))
+            }
+        }
         viewModelScope.launch {
             pendingPaymentLinks.collect { link ->
                 eventChannel.send(AppEvent.OpenPendingPayment(link.tenantId, link.clientId))

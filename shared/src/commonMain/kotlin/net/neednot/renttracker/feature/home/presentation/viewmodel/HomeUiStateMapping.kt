@@ -40,6 +40,7 @@ internal fun Synced<HomeOverview, HomeError>.toHomeUiState(
                         .firstOrNull { it.inviteId == overlay.decliningInviteId }
                         ?.toDeclineDialog(),
                 syncError = syncError,
+                isLateRentPromptShown = overlay.isLateRentPromptShown,
                 accountInitial = chrome.accountInitial,
                 offlineBanner = offlineBanner,
                 rejectedPayments = rejectedPayments,

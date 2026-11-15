@@ -14,6 +14,7 @@ import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.home.domain.FakeHomeAccountRepository
+import net.neednot.renttracker.feature.home.domain.FakeHomeLateRentAlerts
 import net.neednot.renttracker.feature.home.domain.FakeHomeOfflineRepository
 import net.neednot.renttracker.feature.home.domain.FakeHomeRepository
 import net.neednot.renttracker.feature.home.domain.GroupOverview
@@ -45,7 +46,13 @@ class HomeOfflineViewModelTest : MainDispatcherTest() {
     private val offlineRepository = FakeHomeOfflineRepository()
     private val accountRepository = FakeHomeAccountRepository()
     private val viewModel by lazy {
-        HomeViewModel(repository, offlineRepository, accountRepository, RecordingMessageDispatcher())
+        HomeViewModel(
+            repository,
+            offlineRepository,
+            accountRepository,
+            FakeHomeLateRentAlerts(),
+            RecordingMessageDispatcher(),
+        )
     }
 
     private val mapleCourt =

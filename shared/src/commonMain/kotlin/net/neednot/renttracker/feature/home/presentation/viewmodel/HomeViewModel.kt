@@ -17,7 +17,9 @@ import net.neednot.renttracker.core.ui.WhileScreenIsVisible
 import net.neednot.renttracker.core.ui.initialsOf
 import net.neednot.renttracker.feature.home.domain.HomeAccountRepository
 import net.neednot.renttracker.feature.home.domain.HomeError
+import net.neednot.renttracker.feature.home.domain.HomeLateRentAlerts
 import net.neednot.renttracker.feature.home.domain.HomeOfflineRepository
+import net.neednot.renttracker.feature.home.domain.HomeOverview
 import net.neednot.renttracker.feature.home.domain.HomeRepository
 import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
 
@@ -25,6 +27,7 @@ class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val homeOfflineRepository: HomeOfflineRepository,
     private val homeAccountRepository: HomeAccountRepository,
+    private val lateRentAlerts: HomeLateRentAlerts,
     private val messageDispatcher: MessageDispatcher,
 ) : ViewModel() {
     private val overlay = MutableStateFlow(HomeOverlay())
@@ -40,7 +43,10 @@ class HomeViewModel(
 
     val uiState: StateFlow<HomeUiState> =
         combine(homeRepository.observeHome(), chrome, overlay) { home, chrome, overlay ->
-            home.toHomeUiState(overlay, chrome)
+            home.toHomeUiState(
+                overlay.copy(isLateRentPromptShown = shouldAskAboutLateRent(home.value, overlay)),
+                chrome,
+            )
         }.stateIn(viewModelScope, WhileScreenIsVisible, HomeUiState.Loading())
 
     fun onAcceptClicked(inviteId: String) {
@@ -72,6 +78,17 @@ class HomeViewModel(
     fun onRejectedPaymentDismissed(clientId: String) {
         viewModelScope.launch { homeOfflineRepository.dismissRejectedPayment(clientId) }
     }
+
+    fun onLateRentAlertsAnswered(answer: LateRentAlertsAnswer) {
+        lateRentAlerts.markAsked()
+        if (answer == LateRentAlertsAnswer.Allow) lateRentAlerts.requestPermission()
+        overlay.update { it.copy(hasAnsweredLateRentPrompt = true) }
+    }
+
+    private fun shouldAskAboutLateRent(
+        home: HomeOverview,
+        overlay: HomeOverlay,
+    ): Boolean = !overlay.hasAnsweredLateRentPrompt && home.groups.isNotEmpty() && lateRentAlerts.shouldAsk()
 
     private fun answer(
         inviteId: String,

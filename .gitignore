@@ -3,6 +3,7 @@
 .kotlin/
 build/
 local.properties
+androidApp/google-services.json
 *.iml
 .idea/
 captures/

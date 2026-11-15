@@ -18,12 +18,15 @@ import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.FakeBackend
 import net.neednot.renttracker.core.data.AccountProfileEntity
 import net.neednot.renttracker.core.data.AccountProfileSync
+import net.neednot.renttracker.core.data.FakePushTokens
 import net.neednot.renttracker.core.data.PendingPaymentQueue
 import net.neednot.renttracker.core.data.PendingPaymentReader
 import net.neednot.renttracker.core.data.PendingPaymentStatus
+import net.neednot.renttracker.core.data.PushTokenRegistration
 import net.neednot.renttracker.core.data.RecordingSyncScheduler
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
+import net.neednot.renttracker.core.data.SignOutCleanup
 import net.neednot.renttracker.core.data.pendingPaymentEntity
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.telemetry.NoOpTelemetry
@@ -44,14 +47,19 @@ class AccountRepositoryImplTest {
 
     private val backend = FakeBackend()
     private val authSession = FakeAuthSession()
+    private val pushTokens = FakePushTokens()
 
     private val repository =
         AccountRepositoryImpl(
             backend = backend,
             authSession = authSession,
             accountProfileSync = AccountProfileSync(backend, database, ScreenResultStore(database)),
-            pendingPaymentQueue = PendingPaymentQueue(database, RecordingSyncScheduler()),
             pendingPaymentReader = PendingPaymentReader(database),
+            signOutCleanup =
+                SignOutCleanup(
+                    pendingPaymentQueue = PendingPaymentQueue(database, RecordingSyncScheduler()),
+                    pushTokenRegistration = PushTokenRegistration(backend, pushTokens, NoOpTelemetry()),
+                ),
             telemetry = NoOpTelemetry(),
         )
 
@@ -216,6 +224,35 @@ class AccountRepositoryImplTest {
             assertEquals(Ok(Unit), repository.signOut())
 
             assertEquals(1, authSession.signOutCount)
+        }
+
+    @Test
+    fun signingOutUnregistersThisPhonesPushTokenFirst() =
+        runTest {
+            backend.mutationAnswers["pushTokens:unregister"] = Ok(JsonNull)
+
+            repository.signOut()
+
+            assertEquals(listOf("pushTokens:unregister"), backend.mutations.map { it.first })
+            assertEquals(buildJsonObject { put("token", "phone-token") }, backend.mutations.single().second)
+        }
+
+    @Test
+    fun signingOutDeletesThePushTokenFromThePhone() =
+        runTest {
+            repository.signOut()
+
+            assertEquals(1, pushTokens.deletedCount)
+        }
+
+    @Test
+    fun aFailedSignOutKeepsThePushTokenOnThePhone() =
+        runTest {
+            authSession.signOutResult = Err(AuthSessionError.Network)
+
+            repository.signOut()
+
+            assertEquals(0, pushTokens.deletedCount)
         }
 
     @Test

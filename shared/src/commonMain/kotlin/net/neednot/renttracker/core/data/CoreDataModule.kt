@@ -34,5 +34,8 @@ val coreDataModule =
         single { PendingPaymentSync(refresher = get(), sender = get(), database = get()) }
         single { FreshnessSource(connectivity = get(), database = get(), clock = Clock.System) }
         single { PendingPaymentLinks() }
+        single { GroupLinks() }
+        single { PushTokenRegistration(backend = get(), pushTokens = get(), telemetry = get()) }
+        single { SignOutCleanup(pendingPaymentQueue = get(), pushTokenRegistration = get()) }
         single { PendingPaymentAutoSync(connectivity = get(), database = get(), sync = get()) }
     }

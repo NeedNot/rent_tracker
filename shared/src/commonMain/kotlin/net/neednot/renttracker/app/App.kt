@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.Flow
 import net.neednot.renttracker.core.auth.AuthSessionState
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.core.navigation.GroupRoute
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.core.navigation.SignInGraphRoute
 import net.neednot.renttracker.core.navigation.TenantRoute
@@ -79,6 +80,10 @@ private fun RootNavHost(
             when (event) {
                 AppEvent.ReturnHome -> {
                     navController.popBackStack<HomeRoute>(inclusive = false)
+                }
+
+                is AppEvent.OpenGroup -> {
+                    navController.navigate(GroupRoute(event.groupId)) { launchSingleTop = true }
                 }
 
                 is AppEvent.OpenPendingPayment -> {
