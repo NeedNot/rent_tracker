@@ -1,12 +1,16 @@
 import { betterAuth } from "better-auth";
 import { AUTH_BASE_PATH, authOptions } from "./authOptions";
 import type { Env } from "./env";
+import { handleInternalUserRequest, INTERNAL_USERS_PATH } from "./internalUserRoutes";
 
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith(`${AUTH_BASE_PATH}/`)) {
       return betterAuth(authOptions(env)).handler(request);
+    }
+    if (url.pathname.startsWith(INTERNAL_USERS_PATH)) {
+      return await handleInternalUserRequest(request, env);
     }
     if (request.method === "GET" && url.pathname === "/health") {
       return new Response("ok");

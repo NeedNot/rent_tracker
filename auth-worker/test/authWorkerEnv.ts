@@ -5,6 +5,7 @@ import { migratedSqliteD1 } from "./sqliteD1";
 export const AUTH_URL = "https://auth.rent-tracker.test";
 export const APP_ORIGIN = "rent-tracker://app";
 export const GOOGLE_WEB_CLIENT_ID = "web-client-id.apps.googleusercontent.com";
+export const SHARED_SECRET = "a-long-random-shared-secret";
 export const GOOGLE_ANDROID_CLIENT_ID = "android-client-id.apps.googleusercontent.com";
 
 export type TestAuthWorker = {
@@ -28,6 +29,7 @@ export function testAuthWorker(): TestAuthWorker {
       BETTER_AUTH_SECRET: "test-secret-that-is-at-least-32-characters-long",
       APP_ORIGIN,
       GOOGLE_CLIENT_IDS: `${GOOGLE_WEB_CLIENT_ID}, ${GOOGLE_ANDROID_CLIENT_ID}`,
+      SHARED_SECRET,
     },
   };
 }

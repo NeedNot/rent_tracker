@@ -7,4 +7,5 @@ export type Env = {
   readonly BETTER_AUTH_SECRET: string;
   readonly APP_ORIGIN: string;
   readonly GOOGLE_CLIENT_IDS: string;
+  readonly SHARED_SECRET?: string;
 };
