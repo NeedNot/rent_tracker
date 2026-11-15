@@ -51,6 +51,9 @@ const FUNCTIONS_SCOPED_TO_THE_CALLER_NOT_A_GROUP = [
   "home.screen",
   "invites.accept",
   "invites.decline",
+  "notificationSettings.list",
+  "pushTokens.register",
+  "pushTokens.unregister",
 ];
 
 const anyMember = { kind: "anyMember" } as const;
@@ -605,6 +608,16 @@ const inviteRows: MatrixRow[] = [
   },
 ];
 
+const notificationRows: MatrixRow[] = [
+  {
+    action: "notificationSettings.set",
+    categories: ["payments"],
+    requirement: anyMember,
+    attempt: (scene) =>
+      scene.caller.mutation(api.notificationSettings.set, { groupId: scene.groupId, notificationsOn: false }),
+  },
+];
+
 const matrix: MatrixRow[] = [
   ...groupRows,
   ...tenantRows,
@@ -613,6 +626,7 @@ const matrix: MatrixRow[] = [
   ...debtRows,
   ...memberRows,
   ...inviteRows,
+  ...notificationRows,
 ];
 
 const cells = matrix.flatMap((row) =>
