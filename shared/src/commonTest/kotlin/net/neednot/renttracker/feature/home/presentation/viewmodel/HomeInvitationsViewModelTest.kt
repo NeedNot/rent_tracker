@@ -15,6 +15,7 @@ import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.home.domain.FakeHomeAccountRepository
+import net.neednot.renttracker.feature.home.domain.FakeHomeLateRentAlerts
 import net.neednot.renttracker.feature.home.domain.FakeHomeOfflineRepository
 import net.neednot.renttracker.feature.home.domain.FakeHomeRepository
 import net.neednot.renttracker.feature.home.domain.HomeError
@@ -47,6 +48,7 @@ class HomeInvitationsViewModelTest : MainDispatcherTest() {
             repository,
             FakeHomeOfflineRepository(),
             accountRepository,
+            FakeHomeLateRentAlerts(),
             messages,
         )
     }

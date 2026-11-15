@@ -32,11 +32,15 @@ import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.account.presentation.components.AccountActionsCard
 import net.neednot.renttracker.feature.account.presentation.components.AccountHeaderCard
+import net.neednot.renttracker.feature.account.presentation.components.AccountNotificationsCard
 import net.neednot.renttracker.feature.account.presentation.components.EditNameDialog
 import net.neednot.renttracker.feature.account.presentation.components.RequestDeletionDialog
 import net.neednot.renttracker.feature.account.presentation.components.SignOutPendingDialog
 import net.neednot.renttracker.feature.account.presentation.uistate.AccountUiState
 import net.neednot.renttracker.feature.account.presentation.uistate.DeletionRowUiState
+import net.neednot.renttracker.feature.account.presentation.uistate.GroupNotificationsRowUiState
+import net.neednot.renttracker.feature.account.presentation.uistate.NotificationsSectionUiState
+import net.neednot.renttracker.feature.account.presentation.viewmodel.AccountNotificationsViewModel
 import net.neednot.renttracker.feature.account.presentation.viewmodel.AccountViewModel
 import net.neednot.renttracker.feature.account.presentation.viewmodel.SignOutWarningAnswer
 import net.neednot.renttracker.resources.Res
@@ -51,14 +55,18 @@ fun AccountScreen(
     onBackClicked: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel = koinViewModel(),
+    notificationsViewModel: AccountNotificationsViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val notifications by notificationsViewModel.uiState.collectAsState()
     AccountContent(
         uiState = uiState,
+        notifications = notifications,
         actions =
             AccountActions(
                 onBackClicked = onBackClicked,
                 onSignOutClicked = viewModel::onSignOutClicked,
+                onGroupNotificationsToggled = notificationsViewModel::onGroupToggled,
                 signOutWarning =
                     SignOutWarningActions(
                         onConfirmed = { viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.SignOutAnyway) },
@@ -85,6 +93,7 @@ fun AccountScreen(
 private class AccountActions(
     val onBackClicked: () -> Unit,
     val onSignOutClicked: () -> Unit,
+    val onGroupNotificationsToggled: (groupId: String) -> Unit,
     val signOutWarning: SignOutWarningActions,
     val editName: EditNameActions,
     val deletion: DeletionActions,
@@ -112,6 +121,7 @@ private class DeletionActions(
 @Composable
 private fun AccountContent(
     uiState: AccountUiState,
+    notifications: NotificationsSectionUiState,
     actions: AccountActions,
     modifier: Modifier = Modifier,
 ) {
@@ -153,7 +163,12 @@ private fun AccountContent(
             }
 
             is AccountUiState.Content -> {
-                AccountBody(content = uiState, actions = actions, modifier = Modifier.padding(contentPadding))
+                AccountBody(
+                    content = uiState,
+                    notifications = notifications,
+                    actions = actions,
+                    modifier = Modifier.padding(contentPadding),
+                )
             }
         }
     }
@@ -162,6 +177,7 @@ private fun AccountContent(
 @Composable
 private fun AccountBody(
     content: AccountUiState.Content,
+    notifications: NotificationsSectionUiState,
     actions: AccountActions,
     modifier: Modifier = Modifier,
 ) {
@@ -187,6 +203,9 @@ private fun AccountBody(
             email = content.email,
             onEditNameClicked = actions.editName.onClicked,
         )
+        (notifications as? NotificationsSectionUiState.Shown)?.let { section ->
+            AccountNotificationsCard(section = section, onGroupToggled = actions.onGroupNotificationsToggled)
+        }
         AccountActionsCard(
             deletion = content.deletion,
             onSignOutClicked = actions.onSignOutClicked,
@@ -228,10 +247,16 @@ private fun AccountContentPreview() {
                     email = "sam@example.com",
                     deletion = DeletionRowUiState.Requested(UiText.Plain("Requested Nov 14. Our team will handle it.")),
                 ),
+            notifications =
+                NotificationsSectionUiState.Shown(
+                    groups = listOf(GroupNotificationsRowUiState("g1", "1st Street", isOn = true)),
+                    isBlockedOnPhone = false,
+                ),
             actions =
                 AccountActions(
                     onBackClicked = {},
                     onSignOutClicked = {},
+                    onGroupNotificationsToggled = {},
                     signOutWarning = SignOutWarningActions({}, {}),
                     editName = EditNameActions({}, {}, {}, {}),
                     deletion = DeletionActions({}, {}, {}),

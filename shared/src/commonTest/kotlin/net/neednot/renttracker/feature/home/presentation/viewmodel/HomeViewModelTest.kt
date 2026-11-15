@@ -12,6 +12,7 @@ import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.home.domain.FakeHomeAccountRepository
+import net.neednot.renttracker.feature.home.domain.FakeHomeLateRentAlerts
 import net.neednot.renttracker.feature.home.domain.FakeHomeOfflineRepository
 import net.neednot.renttracker.feature.home.domain.FakeHomeRepository
 import net.neednot.renttracker.feature.home.domain.GroupOverview
@@ -35,11 +36,13 @@ class HomeViewModelTest : MainDispatcherTest() {
     private val repository = FakeHomeRepository()
     private val accountRepository = FakeHomeAccountRepository()
     private val messages = RecordingMessageDispatcher()
+    private val lateRentAlerts = FakeHomeLateRentAlerts()
     private val viewModel by lazy {
         HomeViewModel(
             repository,
             FakeHomeOfflineRepository(),
             accountRepository,
+            lateRentAlerts,
             messages,
         )
     }
@@ -191,5 +194,67 @@ class HomeViewModelTest : MainDispatcherTest() {
 
             advanceTimeBy(2)
             assertEquals(0, repository.home.subscriptionCount.value)
+        }
+
+    @Test
+    fun asksAboutLateRentNotificationsOnceTheFirstGroupExists() =
+        runTest {
+            lateRentAlerts.wouldAsk = true
+
+            viewModel.uiState.test {
+                skipItems(1)
+                repository.showGroups(emptyList(), SyncStatus.Synced)
+                assertEquals(HomeUiState.Empty(), awaitItem())
+
+                repository.showGroups(listOf(mapleCourt), SyncStatus.Synced)
+
+                assertEquals(true, (awaitItem() as HomeUiState.Content).isLateRentPromptShown)
+            }
+        }
+
+    @Test
+    fun allowingLateRentNotificationsAsksForThePermissionOnce() =
+        runTest {
+            lateRentAlerts.wouldAsk = true
+            viewModel.uiState.test {
+                skipItems(1)
+                repository.showGroups(listOf(mapleCourt), SyncStatus.Synced)
+                skipItems(1)
+
+                viewModel.onLateRentAlertsAnswered(LateRentAlertsAnswer.Allow)
+
+                assertEquals(false, (awaitItem() as HomeUiState.Content).isLateRentPromptShown)
+            }
+            assertEquals(1, lateRentAlerts.permissionRequests)
+            assertEquals(1, lateRentAlerts.askedCount)
+        }
+
+    @Test
+    fun notNowClosesTheLateRentPromptWithoutAskingForThePermission() =
+        runTest {
+            lateRentAlerts.wouldAsk = true
+            viewModel.uiState.test {
+                skipItems(1)
+                repository.showGroups(listOf(mapleCourt), SyncStatus.Synced)
+                skipItems(1)
+
+                viewModel.onLateRentAlertsAnswered(LateRentAlertsAnswer.NotNow)
+
+                assertEquals(false, (awaitItem() as HomeUiState.Content).isLateRentPromptShown)
+            }
+            assertEquals(0, lateRentAlerts.permissionRequests)
+            assertEquals(1, lateRentAlerts.askedCount)
+        }
+
+    @Test
+    fun neverShowsTheLateRentPromptWhenThePhoneHasNothingToAsk() =
+        runTest {
+            viewModel.uiState.test {
+                skipItems(1)
+
+                repository.showGroups(listOf(mapleCourt), SyncStatus.Synced)
+
+                assertEquals(false, (awaitItem() as HomeUiState.Content).isLateRentPromptShown)
+            }
         }
 }

@@ -26,6 +26,7 @@ sealed interface HomeUiState {
         val archivedGroupsRow: UiText? = null,
         val declineDialog: DeclineInviteUiState? = null,
         val syncError: UiText? = null,
+        val isLateRentPromptShown: Boolean = false,
         override val accountInitial: String? = null,
         override val offlineBanner: UiText? = null,
         override val rejectedPayments: RejectedPaymentsUiState? = null,

@@ -29,13 +29,15 @@ class AppViewModelTest : MainDispatcherTest() {
     private val lostGroupAccess = MutableSharedFlow<LostGroupAccess>()
     private val messageDispatcher = RecordingMessageDispatcher()
     private val pendingPaymentLinks = MutableSharedFlow<PendingPaymentLink>()
+    private val groupLinks = MutableSharedFlow<String>()
     private var pendingSyncRunning = false
     private val viewModel by lazy {
         AppViewModel(
             repository,
             lostGroupAccess,
-            ::syncPendingPaymentsWhileOnline,
+            listOf(::syncPendingPaymentsWhileOnline),
             pendingPaymentLinks,
+            groupLinks,
             messageDispatcher,
         )
     }
@@ -115,5 +117,33 @@ class AppViewModelTest : MainDispatcherTest() {
                 listOf(UiMessage(UiText.Resource(Res.string.group_error_not_found), UiMessageVariant.Error)),
                 messageDispatcher.shown,
             )
+        }
+
+    @Test
+    fun aLateRentNotificationOpensItsGroupWhenSignedIn() =
+        runTest {
+            repository.sessionState.value = AuthSessionState.SignedIn("user-1")
+            val events = viewModel.events
+            runCurrent()
+
+            events.test {
+                groupLinks.emit("g1")
+
+                assertEquals(AppEvent.OpenGroup("g1"), awaitItem())
+            }
+        }
+
+    @Test
+    fun aLateRentNotificationOpensNothingWhenSignedOut() =
+        runTest {
+            repository.sessionState.value = AuthSessionState.SignedOut
+            val events = viewModel.events
+            runCurrent()
+
+            events.test {
+                groupLinks.emit("g1")
+
+                expectNoEvents()
+            }
         }
 }

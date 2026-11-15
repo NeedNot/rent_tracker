@@ -2,9 +2,11 @@ package net.neednot.renttracker.feature.home.di
 
 import kotlinx.datetime.TimeZone
 import net.neednot.renttracker.feature.home.data.HomeAccountRepositoryImpl
+import net.neednot.renttracker.feature.home.data.HomeLateRentAlertsImpl
 import net.neednot.renttracker.feature.home.data.HomeOfflineRepositoryImpl
 import net.neednot.renttracker.feature.home.data.HomeRepositoryImpl
 import net.neednot.renttracker.feature.home.domain.HomeAccountRepository
+import net.neednot.renttracker.feature.home.domain.HomeLateRentAlerts
 import net.neednot.renttracker.feature.home.domain.HomeOfflineRepository
 import net.neednot.renttracker.feature.home.domain.HomeRepository
 import net.neednot.renttracker.feature.home.presentation.viewmodel.ArchivedGroupsViewModel
@@ -34,6 +36,7 @@ val homeModule =
             )
         }
         single<HomeAccountRepository> { HomeAccountRepositoryImpl(accountProfileSync = get()) }
+        single<HomeLateRentAlerts> { HomeLateRentAlertsImpl(lateRentAlerts = get()) }
         viewModelOf(::HomeViewModel)
         viewModel { ArchivedGroupsViewModel(homeRepository = get()) }
         viewModelOf(::CreateGroupViewModel)

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account_notifications_title">Late rent notifications</string>
+    <string name="account_notifications_hint">One notification a day at 9:00 AM group time when rent is late.</string>
+    <string name="account_notifications_empty">You\'ll get late-rent notifications for groups where you can log payments.</string>
+    <string name="account_notifications_blocked">Notifications are off for Rent Tracker in Android settings.</string>
+    <string name="home_late_rent_alerts_title">Get notified when rent is late?</string>
+    <string name="home_late_rent_alerts_message">We\'ll send one notification at 9:00 AM when tenants become late, and a reminder on Mondays while anyone is still late.</string>
+    <string name="home_late_rent_alerts_allow">Allow</string>
+    <string name="home_late_rent_alerts_not_now">Not now</string>
+</resources>
