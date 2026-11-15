@@ -12,6 +12,7 @@ sealed interface AccountUiState {
         val deletion: DeletionRowUiState,
         val editNameDialog: EditNameDialogUiState? = null,
         val isDeleteDialogShown: Boolean = false,
+        val unsyncedPaymentsOnSignOut: Int? = null,
         val syncError: UiText? = null,
     ) : AccountUiState
 

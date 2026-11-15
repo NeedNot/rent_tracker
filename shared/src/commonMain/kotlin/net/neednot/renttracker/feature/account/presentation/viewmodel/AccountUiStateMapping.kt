@@ -19,13 +19,24 @@ internal fun Synced<AccountProfile?, AccountError>.toAccountUiState(
     timeZone: TimeZone,
     editNameDialog: EditNameDialogUiState?,
     isDeleteDialogShown: Boolean,
+    unsyncedPaymentsOnSignOut: Int?,
 ): AccountUiState {
     val profile = value
     val failure = (status as? SyncStatus.Failed)?.error
     return when {
-        profile != null -> profile.toContent(timeZone, editNameDialog, isDeleteDialogShown, failure?.text())
-        failure != null -> AccountUiState.Error(failure.text())
-        else -> AccountUiState.Loading
+        profile != null -> {
+            profile
+                .toContent(timeZone, editNameDialog, isDeleteDialogShown, failure?.text())
+                .copy(unsyncedPaymentsOnSignOut = unsyncedPaymentsOnSignOut)
+        }
+
+        failure != null -> {
+            AccountUiState.Error(failure.text())
+        }
+
+        else -> {
+            AccountUiState.Loading
+        }
     }
 }
 

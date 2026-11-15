@@ -34,9 +34,11 @@ import net.neednot.renttracker.feature.account.presentation.components.AccountAc
 import net.neednot.renttracker.feature.account.presentation.components.AccountHeaderCard
 import net.neednot.renttracker.feature.account.presentation.components.EditNameDialog
 import net.neednot.renttracker.feature.account.presentation.components.RequestDeletionDialog
+import net.neednot.renttracker.feature.account.presentation.components.SignOutPendingDialog
 import net.neednot.renttracker.feature.account.presentation.uistate.AccountUiState
 import net.neednot.renttracker.feature.account.presentation.uistate.DeletionRowUiState
 import net.neednot.renttracker.feature.account.presentation.viewmodel.AccountViewModel
+import net.neednot.renttracker.feature.account.presentation.viewmodel.SignOutWarningAnswer
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.account_back
 import net.neednot.renttracker.resources.account_loading
@@ -57,6 +59,11 @@ fun AccountScreen(
             AccountActions(
                 onBackClicked = onBackClicked,
                 onSignOutClicked = viewModel::onSignOutClicked,
+                signOutWarning =
+                    SignOutWarningActions(
+                        onConfirmed = { viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.SignOutAnyway) },
+                        onDismissed = { viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.StaySignedIn) },
+                    ),
                 editName =
                     EditNameActions(
                         onClicked = viewModel::onEditNameClicked,
@@ -78,8 +85,14 @@ fun AccountScreen(
 private class AccountActions(
     val onBackClicked: () -> Unit,
     val onSignOutClicked: () -> Unit,
+    val signOutWarning: SignOutWarningActions,
     val editName: EditNameActions,
     val deletion: DeletionActions,
+)
+
+private class SignOutWarningActions(
+    val onConfirmed: () -> Unit,
+    val onDismissed: () -> Unit,
 )
 
 private class EditNameActions(
@@ -188,6 +201,13 @@ private fun AccountBody(
             onDismissed = actions.editName.onDismissed,
         )
     }
+    content.unsyncedPaymentsOnSignOut?.let { count ->
+        SignOutPendingDialog(
+            unsyncedCount = count,
+            onConfirmed = actions.signOutWarning.onConfirmed,
+            onDismissed = actions.signOutWarning.onDismissed,
+        )
+    }
     if (content.isDeleteDialogShown) {
         RequestDeletionDialog(
             onConfirmed = actions.deletion.onConfirmed,
@@ -212,6 +232,7 @@ private fun AccountContentPreview() {
                 AccountActions(
                     onBackClicked = {},
                     onSignOutClicked = {},
+                    signOutWarning = SignOutWarningActions({}, {}),
                     editName = EditNameActions({}, {}, {}, {}),
                     deletion = DeletionActions({}, {}, {}),
                 ),
