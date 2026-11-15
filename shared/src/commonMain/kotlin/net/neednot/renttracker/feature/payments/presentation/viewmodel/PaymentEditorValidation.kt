@@ -33,7 +33,7 @@ internal fun PaymentEditorUiState.validate(): Result<ValidPaymentForm, Map<Payme
 private fun PaymentEditorUiState.toFormOrNull(): ValidPaymentForm? {
     val amountCents = parseDollarsToCents(amount)
     val date = date
-    val offer = lateFeeOffer?.takeIf { it.isChecked }
+    val offer = offeredLateFee?.takeIf { it.isChecked }
     val lateFee = offer?.let { checked -> parseDollarsToCents(checked.amount)?.let { LateFeeDraft(it, checked.month) } }
     val isComplete = amountCents != null && date != null && (offer == null || lateFee != null)
     return if (isComplete) {
@@ -58,7 +58,7 @@ internal fun PaymentEditorUiState.fieldErrors(includesMissing: Boolean): Map<Pay
         amountFieldError(amount, includesMissing)?.let { put(PaymentEditorField.Amount, it) }
         dateError()?.let { put(PaymentEditorField.Date, it) }
         lengthError(note, InputLimits.MAX_NOTES_LENGTH)?.let { put(PaymentEditorField.Note, it) }
-        lateFeeOffer?.takeIf { it.isChecked }?.let { offer ->
+        offeredLateFee?.takeIf { it.isChecked }?.let { offer ->
             amountFieldError(offer.amount, includesMissing)?.let { put(PaymentEditorField.LateFeeAmount, it) }
         }
     }

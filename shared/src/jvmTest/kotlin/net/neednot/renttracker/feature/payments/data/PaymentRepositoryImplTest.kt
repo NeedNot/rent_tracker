@@ -24,11 +24,13 @@ import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.DismissedLateFeeSuggestionEntity
 import net.neednot.renttracker.core.data.FakeAsOfClock
 import net.neednot.renttracker.core.data.FakeConnectivity
+import net.neednot.renttracker.core.data.FreshnessSource
 import net.neednot.renttracker.core.data.GroupAccessWatcher
 import net.neednot.renttracker.core.data.LostGroupAccess
 import net.neednot.renttracker.core.data.MembershipRole
 import net.neednot.renttracker.core.data.PaymentMethod
 import net.neednot.renttracker.core.data.PendingPaymentQueue
+import net.neednot.renttracker.core.data.PendingPaymentReader
 import net.neednot.renttracker.core.data.PendingPaymentStatus
 import net.neednot.renttracker.core.data.RecordingSyncScheduler
 import net.neednot.renttracker.core.data.RentTrackerDatabase
@@ -60,6 +62,7 @@ import net.neednot.renttracker.feature.payments.domain.SavedPayment
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 
 class PaymentRepositoryImplTest {
     private val database =
@@ -81,7 +84,13 @@ class PaymentRepositoryImplTest {
             database = database,
             screenResultStore = ScreenResultStore(database),
             groupAccessWatcher = groupAccessWatcher,
-            phoneOutbox = PhoneOutbox(connectivity, PendingPaymentQueue(database, syncScheduler)),
+            phoneOutbox =
+                PhoneOutbox(
+                    connectivity,
+                    PendingPaymentQueue(database, syncScheduler),
+                    PendingPaymentReader(database),
+                    FreshnessSource(connectivity, database, Clock.System),
+                ),
         )
 
     private val draft =

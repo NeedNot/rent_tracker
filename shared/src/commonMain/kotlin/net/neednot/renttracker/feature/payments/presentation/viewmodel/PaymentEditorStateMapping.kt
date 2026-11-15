@@ -3,6 +3,8 @@ package net.neednot.renttracker.feature.payments.presentation.viewmodel
 import net.neednot.renttracker.core.designsystem.format.formatDollarsInput
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.payments.domain.PaymentEntryOverview
+import net.neednot.renttracker.feature.payments.domain.PaymentError
+import net.neednot.renttracker.feature.payments.domain.PendingPayment
 import net.neednot.renttracker.feature.payments.presentation.uistate.LateFeeOfferUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentHeaderUiState
@@ -21,6 +23,21 @@ internal fun PaymentEditorUiState.showing(overview: PaymentEntryOverview): Payme
         lastUsedMethod = if (saved == null) overview.lastPaymentMethod else null,
         note = saved?.note.orEmpty(),
         lateFeeOffer = if (saved == null) overview.lateFeeOffer() else null,
+        fieldErrors = emptyMap(),
+        duplicate = null,
+    )
+}
+
+internal fun PaymentEditorUiState.showingPending(pending: PendingPayment?): PaymentEditorUiState {
+    if (pending == null) return copy(isLoading = false, error = PaymentError.NotFound.text())
+    return copy(
+        isLoading = false,
+        header = PaymentHeaderUiState(tenantName = pending.tenantName),
+        amount = formatDollarsInput(pending.details.amountCents),
+        date = pending.details.dateReceived,
+        method = pending.details.method,
+        note = pending.details.note.orEmpty(),
+        lateFeeOffer = null,
         fieldErrors = emptyMap(),
         duplicate = null,
     )

@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import net.neednot.renttracker.core.navigation.EditPaymentRoute
+import net.neednot.renttracker.core.navigation.EditPendingPaymentRoute
 import net.neednot.renttracker.core.navigation.LogPaymentRoute
 import net.neednot.renttracker.feature.payments.presentation.screens.PaymentEditorScreen
 import net.neednot.renttracker.feature.payments.presentation.viewmodel.PaymentEditorTarget
@@ -21,6 +22,18 @@ fun NavGraphBuilder.paymentsGraph(navController: NavController) {
         val route = entry.toRoute<EditPaymentRoute>()
         PaymentEditorScreen(
             target = PaymentEditorTarget(tenantId = route.tenantId, paymentId = route.paymentId),
+            onClosed = { navController.popBackStack() },
+        )
+    }
+    composable<EditPendingPaymentRoute> { entry ->
+        val route = entry.toRoute<EditPendingPaymentRoute>()
+        PaymentEditorScreen(
+            target =
+                PaymentEditorTarget(
+                    tenantId = route.tenantId,
+                    paymentId = null,
+                    pendingClientId = route.clientId,
+                ),
             onClosed = { navController.popBackStack() },
         )
     }

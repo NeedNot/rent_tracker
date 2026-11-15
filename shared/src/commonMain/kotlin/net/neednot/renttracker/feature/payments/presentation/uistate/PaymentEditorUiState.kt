@@ -21,4 +21,10 @@ data class PaymentEditorUiState(
     val error: UiText? = null,
     val duplicate: DuplicateDialogUiState? = null,
     val isSaving: Boolean = false,
-)
+    val offlineBanner: UiText? = null,
+    val isSyncAlertsExplainerShown: Boolean = false,
+) {
+    val isOffline: Boolean get() = offlineBanner != null
+    val offeredLateFee: LateFeeOfferUiState? get() = lateFeeOffer.takeUnless { isOffline }
+    val shownMonthChanges: MonthChangesUiState? get() = monthChanges.takeUnless { isOffline }
+}

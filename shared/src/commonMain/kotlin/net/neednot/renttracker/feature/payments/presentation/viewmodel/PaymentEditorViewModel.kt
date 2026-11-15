@@ -10,16 +10,20 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import net.neednot.renttracker.core.data.PaymentMethod
 import net.neednot.renttracker.core.sync.Synced
+import net.neednot.renttracker.core.ui.MessageDispatcher
+import net.neednot.renttracker.core.ui.offlineBannerText
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.PaymentEntryOverview
 import net.neednot.renttracker.feature.payments.domain.PaymentError
 import net.neednot.renttracker.feature.payments.domain.PaymentRepository
+import net.neednot.renttracker.feature.payments.domain.PaymentSyncAlerts
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorField
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorUiState
 import kotlin.uuid.ExperimentalUuidApi
@@ -29,9 +33,14 @@ import kotlin.uuid.Uuid
 class PaymentEditorViewModel(
     private val tenantId: String,
     private val paymentId: String?,
+    private val pendingClientId: String?,
     private val paymentRepository: PaymentRepository,
+    syncAlerts: PaymentSyncAlerts,
+    messageDispatcher: MessageDispatcher,
 ) : ViewModel() {
-    private val mutableUiState = MutableStateFlow(PaymentEditorUiState(isNewPayment = paymentId == null))
+    private val savedOnPhoneNotice = SavedOnPhoneNotice(syncAlerts, messageDispatcher)
+    private val mutableUiState =
+        MutableStateFlow(PaymentEditorUiState(isNewPayment = paymentId == null && pendingClientId == null))
     val uiState: StateFlow<PaymentEditorUiState> = mutableUiState.asStateFlow()
 
     private val eventChannel = Channel<PaymentEditorEvent>(Channel.BUFFERED)
@@ -47,7 +56,19 @@ class PaymentEditorViewModel(
         }
 
     init {
-        viewModelScope.launch { show(paymentRepository.cachedOrFirstSyncedEntry(tenantId, paymentId)) }
+        viewModelScope.launch {
+            paymentRepository.observeFreshness(tenantId).collect { freshness ->
+                mutableUiState.update { it.copy(offlineBanner = freshness.offlineBannerText()) }
+            }
+        }
+        viewModelScope.launch {
+            if (pendingClientId == null) {
+                show(paymentRepository.cachedOrFirstSyncedEntry(tenantId, paymentId))
+            } else {
+                val pending = paymentRepository.observePendingPayment(pendingClientId).first()
+                mutableUiState.update { it.showingPending(pending) }
+            }
+        }
     }
 
     fun onFieldChanged(
@@ -92,6 +113,12 @@ class PaymentEditorViewModel(
         mutableUiState.update { it.copy(duplicate = null) }
     }
 
+    fun onSyncAlertsAnswered(answer: SyncAlertsAnswer) {
+        mutableUiState.update { it.copy(isSyncAlertsExplainerShown = false) }
+        savedOnPhoneNotice.explained(answer)
+        eventChannel.trySend(PaymentEditorEvent.PaymentSaved)
+    }
+
     private fun save(duplicatePolicy: DuplicatePolicy) {
         val state = uiState.value
         if (state.isSaving || state.isLoading) return
@@ -106,41 +133,36 @@ class PaymentEditorViewModel(
                         duplicate = null,
                     )
                 }
+                val request = PaymentSaveRequest(tenantId, paymentId, pendingClientId, clientId, expectedVersion)
                 viewModelScope.launch {
                     paymentRepository
-                        .save(PaymentSaveRequest(tenantId, paymentId, clientId, expectedVersion), form, duplicatePolicy)
-                        .onOk { eventChannel.send(PaymentEditorEvent.PaymentSaved) }
-                        .onErr { error -> onSaveFailed(error) }
+                        .save(request, form, duplicatePolicy)
+                        .onOk { outcome ->
+                            when {
+                                outcome == PaymentSaveOutcome.Synced -> {
+                                    eventChannel.send(PaymentEditorEvent.PaymentSaved)
+                                }
+
+                                savedOnPhoneNotice.needsExplanation() -> {
+                                    mutableUiState.update { it.copy(isSyncAlertsExplainerShown = true) }
+                                }
+
+                                else -> {
+                                    savedOnPhoneNotice.announce()
+                                    eventChannel.send(PaymentEditorEvent.PaymentSaved)
+                                }
+                            }
+                        }.onErr { error ->
+                            mutableUiState.update { it.afterSaveFailure(error, callerAccountId) }
+                            if (error is PaymentError.EditConflict) {
+                                show(paymentRepository.entryFromServer(tenantId, paymentId))
+                            }
+                        }
                     mutableUiState.update { it.copy(isSaving = false) }
                 }
             },
             failure = { errors -> mutableUiState.update { it.copy(fieldErrors = errors) } },
         )
-    }
-
-    private suspend fun onSaveFailed(error: PaymentError) {
-        when (error) {
-            is PaymentError.PossibleDuplicate -> {
-                val lateFeeMonth = uiState.value.lateFeeOffer?.month
-                mutableUiState.update { it.copy(duplicate = error.matches.toDialog(callerAccountId, lateFeeMonth)) }
-            }
-
-            is PaymentError.EditConflict -> {
-                mutableUiState.update { it.copy(conflictBanner = conflictBanner(error.editedByName)) }
-                show(paymentRepository.entryFromServer(tenantId, paymentId))
-            }
-
-            else -> {
-                val field = (error as? PaymentError.ValidationFailed)?.let { paymentEditorFieldOf(it.field) }
-                mutableUiState.update {
-                    if (field != null) {
-                        it.copy(fieldErrors = it.fieldErrors + (field to error.text()))
-                    } else {
-                        it.copy(error = error.text())
-                    }
-                }
-            }
-        }
     }
 
     private fun show(snapshot: Synced<PaymentEntryOverview?, PaymentError>) {

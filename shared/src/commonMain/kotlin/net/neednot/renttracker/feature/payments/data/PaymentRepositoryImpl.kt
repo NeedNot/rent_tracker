@@ -13,6 +13,7 @@ import net.neednot.renttracker.core.data.GroupAccessWatcher
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.replaceTenant
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.sync.syncedFlow
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
@@ -23,6 +24,7 @@ import net.neednot.renttracker.feature.payments.domain.PaymentDraft
 import net.neednot.renttracker.feature.payments.domain.PaymentEntryOverview
 import net.neednot.renttracker.feature.payments.domain.PaymentError
 import net.neednot.renttracker.feature.payments.domain.PaymentRepository
+import net.neednot.renttracker.feature.payments.domain.PendingPayment
 import net.neednot.renttracker.model.payments.PaymentsEditArgs
 import net.neednot.renttracker.model.payments.PaymentsLogArgs
 import net.neednot.renttracker.model.payments.PaymentsLogResult
@@ -59,6 +61,10 @@ class PaymentRepositoryImpl internal constructor(
             store = { result -> screenResultStore.replaceTenant(tenantId, result) },
         )
 
+    override fun observeFreshness(tenantId: String): Flow<Freshness> = phoneOutbox.observeFreshness(tenantId)
+
+    override fun observePendingPayment(clientId: String): Flow<PendingPayment?> = phoneOutbox.observe(clientId)
+
     override suspend fun logPayment(
         clientId: String,
         tenantId: String,
@@ -90,6 +96,11 @@ class PaymentRepositoryImpl internal constructor(
             args = draft.toEditArgs(paymentId, expectedVersion),
             argsSerializer = PaymentsEditArgs.serializer(),
         )
+
+    override suspend fun editPendingPayment(
+        clientId: String,
+        draft: PaymentDraft,
+    ): Result<Unit, PaymentError> = phoneOutbox.edit(clientId, draft)
 
     override suspend fun previewPaymentChange(
         tenantId: String,
