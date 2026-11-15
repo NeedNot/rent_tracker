@@ -235,8 +235,3 @@ fun allocationEntity(
     debtId = null,
     amountCents = amountCents,
 )
-
-suspend fun RentTrackerDatabase.cacheCaller(membership: MembershipEntity) {
-    signedInAccountDao().upsert(SignedInAccountEntity(membership.accountId))
-    membershipDao().upsert(listOf(membership))
-}
