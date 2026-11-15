@@ -21,6 +21,7 @@ import net.neednot.renttracker.resources.home_tenant_count_none_late
 internal fun Synced<HomeOverview, HomeError>.toHomeUiState(
     declineInviteId: String?,
     workingInviteId: String?,
+    accountInitial: String?,
 ): HomeUiState {
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
     return when {
@@ -31,19 +32,20 @@ internal fun Synced<HomeOverview, HomeError>.toHomeUiState(
                 archivedGroupsRow = value.archivedGroupsRow(),
                 declineDialog = value.invitations.firstOrNull { it.inviteId == declineInviteId }?.toDeclineDialog(),
                 syncError = syncError,
+                accountInitial = accountInitial,
             )
         }
 
         syncError != null -> {
-            HomeUiState.Error(syncError)
+            HomeUiState.Error(syncError, accountInitial)
         }
 
         status == SyncStatus.Syncing -> {
-            HomeUiState.Loading
+            HomeUiState.Loading(accountInitial)
         }
 
         else -> {
-            HomeUiState.Empty
+            HomeUiState.Empty(accountInitial)
         }
     }
 }

@@ -2,6 +2,7 @@ package net.neednot.renttracker.app
 
 import net.neednot.renttracker.core.data.coreDataModule
 import net.neednot.renttracker.core.ui.coreUiModule
+import net.neednot.renttracker.feature.account.di.accountModule
 import net.neednot.renttracker.feature.auth.di.authModule
 import net.neednot.renttracker.feature.debts.di.debtsModule
 import net.neednot.renttracker.feature.group.di.groupModule
@@ -25,6 +26,7 @@ private val sharedModules =
         paymentsModule,
         debtsModule,
         membersModule,
+        accountModule,
     )
 
 fun initKoin(

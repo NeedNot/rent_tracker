@@ -24,5 +24,6 @@ val coreDataModule =
         single { get<RentTrackerDatabase>().dismissedLateFeeSuggestionDao() }
         single { ScreenResultStore(database = get()) }
         single { GroupAccessWatcher(database = get(), screenResultStore = get()) }
+        single { AccountProfileSync(backend = get(), database = get(), screenResultStore = get()) }
         single<AsOfClock> { HourlyAsOfClock(clock = Clock.System) }
     }

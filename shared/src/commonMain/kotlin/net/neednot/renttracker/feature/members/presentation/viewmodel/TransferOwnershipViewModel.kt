@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
+import net.neednot.renttracker.core.ui.firstNameOf
 import net.neednot.renttracker.feature.members.domain.MembersRepository
 import net.neednot.renttracker.feature.members.presentation.uistate.TransferConfirmUiState
 import net.neednot.renttracker.feature.members.presentation.uistate.TransferOwnershipUiState
