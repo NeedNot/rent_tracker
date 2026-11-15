@@ -7,6 +7,7 @@ import { requireRetryOfSameTenant } from "./clientRetry";
 import { validCustomDebtInput, validDebtEdit, validLateFeeInput } from "./debtInput";
 import { requireConfirmedOrUnique } from "./duplicateEntries";
 import { requireMayChangeEntry } from "./entryAccess";
+import { clearCancellation, requireCancelled } from "./entryRestore";
 import { requireCurrentEntry } from "./entryVersion";
 import { requireName } from "./inputValidation";
 import { loadTenantScope, requireActiveTenant, type TenantScope } from "./tenantScope";
@@ -138,15 +139,8 @@ export const restore = mutation({
     const { debt, tenant, group } = await loadDebtScope(ctx, args.debtId);
     const membership = await requirePermission(ctx, group._id, "debts", "addEdit");
     await requireChangeable(ctx, { debt, tenant }, membership, args.expectedVersion);
-    if (debt.deletedAt === undefined) {
-      throw validationFailed("This charge is not cancelled.");
-    }
-    await ctx.db.patch(debt._id, {
-      deletedAt: undefined,
-      deletedBy: undefined,
-      deleteReason: undefined,
-      version: debt.version + 1,
-    });
+    requireCancelled(debt, "charge");
+    await clearCancellation(ctx, debt);
     return null;
   },
 });

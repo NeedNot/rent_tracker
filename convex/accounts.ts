@@ -1,7 +1,8 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, type QueryCtx, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { accountForSubject, requireAccount, requireActive, requireIdentity } from "./access";
+import { requireOwnsNoGroups } from "./accountOwnership";
+import { profileOf } from "./accountProfile";
 import { appError } from "./appError";
 import { accountProfile, accountProfileFields, NAME_MAX_LENGTH } from "./validators";
 
@@ -79,12 +80,7 @@ export const requestDeletion = mutation({
       return account.deletionRequestedAt;
     }
 
-    const ownedGroups = await groupsOwnedBy(ctx, account._id);
-    if (ownedGroups.length > 0) {
-      throw appError("ValidationFailed", `Transfer ownership of ${joinNames(ownedGroups.map((g) => g.name))} first.`, {
-        groups: ownedGroups.map(({ groupId, name }) => ({ groupId, name })),
-      });
-    }
+    await requireOwnsNoGroups(ctx, account._id);
 
     const deletionRequestedAt = Date.now();
     await ctx.db.patch(account._id, {
@@ -96,33 +92,6 @@ export const requestDeletion = mutation({
     return deletionRequestedAt;
   },
 });
-
-async function groupsOwnedBy(ctx: QueryCtx, accountId: Id<"accounts">) {
-  const memberships = await ctx.db
-    .query("memberships")
-    .withIndex("by_account", (q) => q.eq("accountId", accountId))
-    .collect();
-  const owned = memberships.filter((membership) => membership.role === "owner");
-  const groups = await Promise.all(owned.map((membership) => ctx.db.get(membership.groupId)));
-  return groups
-    .filter((group): group is Doc<"groups"> => group !== null)
-    .map((group) => ({ groupId: group._id, name: group.name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function joinNames(names: string[]): string {
-  if (names.length <= 1) {
-    return names.join("");
-  }
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-}
-
-function profileOf(account: Doc<"accounts">) {
-  if (account.email === undefined) {
-    throw new Error(`Active account ${account._id} has no email`);
-  }
-  return { accountId: account._id, displayName: account.displayName, email: account.email };
-}
 
 function defaultDisplayName(email: string): string {
   const localPart = email.split("@")[0]?.trim() ?? "";

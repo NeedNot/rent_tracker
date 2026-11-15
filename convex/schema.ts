@@ -23,7 +23,8 @@ export default defineSchema({
     ...versionFields,
   })
     .index("by_auth_subject", ["authSubject"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_deleted_deletion_requested", ["deletedAt", "deletionRequestedAt"]),
 
   groups: defineTable({
     name: v.string(),
@@ -58,7 +59,8 @@ export default defineSchema({
     declinedAt: v.optional(v.number()),
   })
     .index("by_email", ["email"])
-    .index("by_group", ["groupId"]),
+    .index("by_group", ["groupId"])
+    .index("by_invited_by", ["invitedBy"]),
 
   tenants: defineTable({
     groupId: v.id("groups"),

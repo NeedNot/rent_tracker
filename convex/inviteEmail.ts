@@ -3,9 +3,9 @@ import { internal } from "./_generated/api";
 import { internalAction, internalQuery } from "./_generated/server";
 import { isPendingInvite } from "./invitePending";
 import { inviterNameOf } from "./inviteReceived";
+import { postToWorker } from "./workerPost";
 
 const INVITES_PATH = "/invites";
-const SECRET_HEADER = "X-Rent-Tracker-Secret";
 
 const inviteEmailMessage = v.object({
   email: v.string(),
@@ -53,21 +53,8 @@ export const send = internalAction({
 });
 
 async function postToEmailWorker(body: InviteEmailMessage): Promise<void> {
-  const workerUrl = requiredEnv("EMAIL_WORKER_URL").replace(/\/+$/, "");
-  const response = await fetch(`${workerUrl}${INVITES_PATH}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", [SECRET_HEADER]: requiredEnv("WORKER_SHARED_SECRET") },
-    body: JSON.stringify(body),
-  });
+  const response = await postToWorker("EMAIL_WORKER_URL", INVITES_PATH, body);
   if (!response.ok) {
     throw new Error(`The email worker refused the invite email with HTTP ${response.status}.`);
   }
-}
-
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value === "") {
-    throw new Error(`The Convex environment variable ${name} is not set.`);
-  }
-  return value;
 }
