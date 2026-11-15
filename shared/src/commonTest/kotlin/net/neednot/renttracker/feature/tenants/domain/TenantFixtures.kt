@@ -89,12 +89,14 @@ fun callerPermissions(
     payments: AccessLevel = AccessLevel.Full,
     debts: AccessLevel = AccessLevel.Full,
     editOthers: Boolean = false,
+    canMoveTenants: Boolean = isOwner,
 ) = CallerPermissions(
     accountId = accountId,
     isOwner = isOwner,
     payments = payments,
     debts = debts,
     editOthers = editOthers,
+    canMoveTenants = canMoveTenants,
 )
 
 fun paymentEntry(

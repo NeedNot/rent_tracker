@@ -8,6 +8,7 @@ sealed interface GroupUiState {
     data class Empty(
         val groupName: String,
         val archived: UiText?,
+        val chrome: GroupChromeUiState,
     ) : GroupUiState
 
     data class Content(
@@ -16,6 +17,7 @@ sealed interface GroupUiState {
         val tenantCounts: UiText,
         val archived: UiText?,
         val tenants: List<TenantRowUiState>,
+        val chrome: GroupChromeUiState,
         val syncError: UiText? = null,
     ) : GroupUiState
 

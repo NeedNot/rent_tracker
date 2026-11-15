@@ -2,7 +2,13 @@ import ts from "typescript";
 import { type RuleContext, type Violation, violationAt } from "../violation.ts";
 import { forEachDescendant } from "../visit.ts";
 
-export const ACCESS_HELPERS = ["requireIdentity", "requireAccount", "requireMember", "requirePermission"];
+export const ACCESS_HELPERS = [
+  "requireIdentity",
+  "requireAccount",
+  "requireMember",
+  "requireOwner",
+  "requirePermission",
+];
 
 const PUBLIC_FUNCTION_BUILDERS = ["query", "mutation", "action"];
 const GENERATED_SERVER_MODULE = /(^|\/)_generated\/server(\.js)?$/;

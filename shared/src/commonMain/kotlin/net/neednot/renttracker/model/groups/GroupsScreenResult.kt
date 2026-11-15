@@ -5,6 +5,7 @@ package net.neednot.renttracker.model.groups
 import kotlinx.serialization.Serializable
 import net.neednot.renttracker.model.shared.Group
 import net.neednot.renttracker.model.shared.GroupSummary
+import net.neednot.renttracker.model.shared.Membership
 import net.neednot.renttracker.model.shared.Tenant
 import net.neednot.renttracker.model.shared.TenantSummary
 
@@ -12,6 +13,7 @@ import net.neednot.renttracker.model.shared.TenantSummary
 data class GroupsScreenResult(
     val groupSummaries: List<GroupSummary>,
     val groups: List<Group>,
+    val memberships: List<Membership>,
     val tenantSummaries: List<TenantSummary>,
     val tenants: List<Tenant>,
 )

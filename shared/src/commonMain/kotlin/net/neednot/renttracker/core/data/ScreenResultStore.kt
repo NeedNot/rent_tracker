@@ -18,32 +18,38 @@ class ScreenResultStore(
     private val ledgerRowDao = database.ledgerRowDao()
     private val allocationDao = database.allocationDao()
     private val calendarMonthDao = database.calendarMonthDao()
+    private val signedInAccountDao = database.signedInAccountDao()
+    private val memberProfileDao = database.memberProfileDao()
+    private val inviteDao = database.inviteDao()
+    private val homeInvitationDao = database.homeInvitationDao()
+    private val groupCacheDao = database.groupCacheDao()
 
     suspend fun replaceHome(
         groups: List<GroupEntity>,
         groupSummaries: List<GroupSummaryEntity>,
+        invitations: List<HomeInvitationEntity>,
     ) = inOneTransaction {
         val groupIds = groups.map { it.id }
         groupDao.upsert(groups)
         groupDao.deleteAllExcept(groupIds)
         groupSummaryDao.upsert(groupSummaries)
         groupSummaryDao.deleteAllExcept(groupIds)
+        homeInvitationDao.upsert(invitations)
+        homeInvitationDao.deleteAllExcept(invitations.map { it.inviteId })
     }
 
     suspend fun replaceGroup(
         groupId: String,
-        groups: List<GroupEntity>,
-        tenants: List<TenantEntity>,
-        tenantSummaries: List<TenantSummaryEntity>,
-        groupSummaries: List<GroupSummaryEntity>,
+        scope: GroupScopeEntities,
     ) = inOneTransaction {
-        val tenantIds = tenants.map { it.id }
-        groupDao.upsert(groups)
-        groupSummaryDao.upsert(groupSummaries)
+        val tenantIds = scope.tenants.map { it.id }
+        groupDao.upsert(scope.groups)
+        groupSummaryDao.upsert(scope.groupSummaries)
         tenantSummaryDao.deleteInGroupExcept(groupId, tenantIds)
         tenantDao.deleteInGroupExcept(groupId, tenantIds)
-        tenantDao.upsert(tenants)
-        tenantSummaryDao.upsert(tenantSummaries)
+        tenantDao.upsert(scope.tenants)
+        tenantSummaryDao.upsert(scope.tenantSummaries)
+        storeCallerMemberships(scope.callerMemberships)
     }
 
     suspend fun replaceTenant(
@@ -65,8 +71,7 @@ class ScreenResultStore(
         ledgerRowDao.upsert(scope.ledgerRows)
         ledgerRowDao.deleteOfTenantExcept(tenantId, scope.ledgerRows.map { it.key })
         accountNameDao.upsert(scope.accountNames)
-        membershipDao.upsert(scope.memberships)
-        membershipDao.deleteInGroupsExcept(groups.map { it.id }, scope.memberships.map { it.id })
+        storeCallerMemberships(scope.callerMemberships)
         allocationDao.upsert(scope.allocations)
         allocationDao.deleteOfTenantExcept(tenantId, scope.allocations.map { it.key })
         scope.calendarMonths.map { it.month.substringBefore('-').toInt() }.distinct().forEach { year ->
@@ -82,6 +87,46 @@ class ScreenResultStore(
     ) = inOneTransaction {
         calendarMonthDao.deleteYear(tenantId, year)
         calendarMonthDao.upsert(calendarMonths)
+    }
+
+    suspend fun replaceMembers(
+        groupId: String,
+        memberships: List<MembershipEntity>,
+        memberProfiles: List<MemberProfileEntity>,
+        invites: List<InviteEntity>,
+    ) = inOneTransaction {
+        membershipDao.deleteInGroupExcept(groupId, memberships.map { it.id })
+        membershipDao.upsert(memberships)
+        memberProfileDao.upsert(memberProfiles)
+        inviteDao.deleteInGroupExcept(groupId, invites.map { it.id })
+        inviteDao.upsert(invites)
+    }
+
+    suspend fun clearGroup(groupId: String) =
+        inOneTransaction {
+            with(groupCacheDao) {
+                deleteRentTerms(groupId)
+                deletePayments(groupId)
+                deleteDebts(groupId)
+                deleteLedgerRows(groupId)
+                deleteAllocations(groupId)
+                deleteCalendarMonths(groupId)
+                deleteTenantSummaries(groupId)
+                deleteTenants(groupId)
+                deleteMemberships(groupId)
+                deleteInvites(groupId)
+                deleteGroupSummary(groupId)
+                deleteGroup(groupId)
+            }
+        }
+
+    private suspend fun storeCallerMemberships(callerMemberships: List<MembershipEntity>) {
+        callerMemberships.forEach { caller ->
+            signedInAccountDao.deleteAllExcept(caller.accountId)
+            signedInAccountDao.upsert(SignedInAccountEntity(caller.accountId))
+            membershipDao.deleteOtherMembershipsOfAccount(caller.groupId, caller.accountId, caller.id)
+        }
+        membershipDao.upsert(callerMemberships)
     }
 
     private suspend fun inOneTransaction(write: suspend () -> Unit) {

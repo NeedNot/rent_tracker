@@ -55,6 +55,7 @@ export default defineSchema({
     expiresAt: v.number(),
     acceptedAt: v.optional(v.number()),
     revokedAt: v.optional(v.number()),
+    declinedAt: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_group", ["groupId"]),

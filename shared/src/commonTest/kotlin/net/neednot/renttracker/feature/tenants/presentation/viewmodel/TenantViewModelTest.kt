@@ -482,6 +482,25 @@ class TenantViewModelTest : MainDispatcherTest() {
         }
 
     @Test
+    fun moveIsOnlyOfferedToACallerWhoCanMoveTenants() =
+        runTest {
+            val canMove = contentOf(tenantOverview(permissions = callerPermissions(canMoveTenants = true)))
+            val cannotMove = contentOf(tenantOverview(permissions = callerPermissions(canMoveTenants = false)))
+            val unknownCaller = contentOf(tenantOverview(permissions = null))
+
+            assertEquals(listOf(true, false, false), listOf(canMove, cannotMove, unknownCaller).map { it.canMove })
+        }
+
+    @Test
+    fun anArchivedTenantCannotBeMoved() =
+        runTest {
+            val content =
+                contentOf(tenantOverview(isArchived = true, permissions = callerPermissions(canMoveTenants = true)))
+
+            assertEquals(false, content.canMove)
+        }
+
+    @Test
     fun anArchivedTenantHasNoLogPaymentOrAddCharge() =
         runTest {
             val content = contentOf(tenantOverview(isArchived = true, permissions = callerPermissions(isOwner = true)))

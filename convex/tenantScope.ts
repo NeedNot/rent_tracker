@@ -20,7 +20,11 @@ export async function loadTenantScope(ctx: QueryCtx, tenantId: Id<"tenants">): P
   if (tenant === null) {
     throw appError("NotFound", "This tenant no longer exists.");
   }
-  return { tenant, group: await loadActiveGroup(ctx, tenant.groupId) };
+  const group = await ctx.db.get(tenant.groupId);
+  if (group === null) {
+    throw appError("NotFound", "This group no longer exists.");
+  }
+  return { tenant, group };
 }
 
 export function requireActiveTenant(tenant: Doc<"tenants">, change = "change rent"): void {

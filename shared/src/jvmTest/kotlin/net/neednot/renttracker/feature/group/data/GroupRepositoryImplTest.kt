@@ -2,6 +2,7 @@ package net.neednot.renttracker.feature.group.data
 
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
@@ -12,9 +13,17 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import net.neednot.renttracker.core.access.CallerAccess
+import net.neednot.renttracker.core.access.PermissionPreset
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.FakeBackend
+import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.FakeAsOfClock
+import net.neednot.renttracker.core.data.GroupAccessWatcher
+import net.neednot.renttracker.core.data.GroupScopeEntities
+import net.neednot.renttracker.core.data.LostGroupAccess
+import net.neednot.renttracker.core.data.MembershipRole
+import net.neednot.renttracker.core.data.PaymentOrder
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.groupEntity
@@ -26,6 +35,7 @@ import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.telemetry.NoOpTelemetry
 import net.neednot.renttracker.feature.group.domain.GroupDetails
 import net.neednot.renttracker.feature.group.domain.GroupError
+import net.neednot.renttracker.feature.group.domain.GroupSettings
 import net.neednot.renttracker.feature.group.domain.GroupTenant
 import net.neednot.renttracker.feature.group.domain.GroupTenantState
 import net.neednot.renttracker.feature.group.domain.TenantBalance
@@ -33,6 +43,13 @@ import net.neednot.renttracker.model.groups.GroupsScreenResult
 import net.neednot.renttracker.model.shared.Group
 import net.neednot.renttracker.model.shared.GroupPaymentOrder
 import net.neednot.renttracker.model.shared.GroupSummary
+import net.neednot.renttracker.model.shared.Membership
+import net.neednot.renttracker.model.shared.MembershipDebts
+import net.neednot.renttracker.model.shared.MembershipMembers
+import net.neednot.renttracker.model.shared.MembershipPayments
+import net.neednot.renttracker.model.shared.MembershipRentTerms
+import net.neednot.renttracker.model.shared.MembershipSettings
+import net.neednot.renttracker.model.shared.MembershipTenants
 import net.neednot.renttracker.model.shared.Tenant
 import net.neednot.renttracker.model.shared.TenantStatus
 import net.neednot.renttracker.model.shared.TenantSummary
@@ -41,6 +58,9 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import net.neednot.renttracker.core.data.TenantStatus as CachedTenantStatus
+import net.neednot.renttracker.model.shared.MembershipRole as ConvexMembershipRole
+
+private typealias SyncedGroup = Synced<GroupDetails?, GroupError>
 
 class GroupRepositoryImplTest {
     private val database =
@@ -53,6 +73,7 @@ class GroupRepositoryImplTest {
     private val backend = FakeBackend()
     private val asOfClock = FakeAsOfClock(TEN_O_CLOCK)
     private val screenResultStore = ScreenResultStore(database)
+    private val groupAccessWatcher = GroupAccessWatcher(database, screenResultStore)
 
     private val repository =
         GroupRepositoryImpl(
@@ -60,6 +81,7 @@ class GroupRepositoryImplTest {
             asOfClock = asOfClock,
             database = database,
             screenResultStore = screenResultStore,
+            groupAccessWatcher = groupAccessWatcher,
             telemetry = NoOpTelemetry(),
         )
 
@@ -93,11 +115,22 @@ class GroupRepositoryImplTest {
                     GroupDetails(
                         groupId = GROUP_ID,
                         name = "1st Street",
+                        settings = GroupSettings("1st Street", "America/Chicago", PaymentOrder.RentFirst, 5, null),
+                        version = 1,
+                        archivedAt = null,
                         totalOwedCents = 0,
                         lateTenantCount = 0,
                         archivedOwedCents = 240_000,
                         activeTenants = listOf(groupTenant("t1", "Apt 1A")),
                         archivedTenants = listOf(groupTenant("t2", "Apt 9Z", balance = TenantBalance.Owes(240_000))),
+                        access =
+                            CallerAccess(
+                                membershipId = "m1",
+                                accountId = "me",
+                                role = MembershipRole.Member,
+                                permissions = PermissionPreset.Bookkeeper.permissions,
+                                groupArchived = false,
+                            ),
                     )
                 assertEquals(Synced(expected, SyncStatus.Synced), awaitItem())
                 cancelAndIgnoreRemainingEvents()
@@ -234,6 +267,71 @@ class GroupRepositoryImplTest {
         }
 
     @Test
+    fun theOwnerGetsFullAccessWhateverItsStoredLevels() =
+        runTest {
+            repository.observeGroup(GROUP_ID).test {
+                skipItems(1)
+
+                backend.answerGroupScreen(
+                    tenants = emptyList(),
+                    tenantSummaries = emptyList(),
+                    caller = bookkeeper(role = ConvexMembershipRole.Owner),
+                )
+
+                val access = awaitItem().value?.access
+                assertEquals(PermissionPreset.ownerPermissions, access?.permissions)
+                assertEquals(true, access?.isOwner)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun aRemovedCallerLosesTheCachedGroupAndTheAppIsTold() =
+        runTest {
+            cacheAnotherGroupWithATenant()
+            groupAccessWatcher.losses.test {
+                repository.observeGroup(GROUP_ID).test {
+                    skipItems(1)
+                    backend.answerGroupScreen(
+                        tenants = listOf(tenant("t1", "Apt 1A")),
+                        tenantSummaries = listOf(summary("t1")),
+                    )
+                    skipItems(1)
+
+                    backend.answerSubscription(GROUP_SCREEN, Err(convexError("PermissionDenied")))
+
+                    assertEquals(Synced(null, SyncStatus.Failed(GroupError.NoAccess)), awaitFailure())
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                assertEquals(LostGroupAccess(GROUP_ID, "1st Street", AccessLossReason.Removed), awaitItem())
+            }
+            assertEquals(null, database.groupDao().observeById(GROUP_ID).first())
+            assertEquals(emptyList(), cachedActiveTenantIds(GROUP_ID))
+            assertEquals(listOf("other-tenant"), cachedActiveTenantIds(OTHER_GROUP_ID))
+        }
+
+    @Test
+    fun aCachedGroupThatIsGoneIsClearedAndReportedAsGone() =
+        runTest {
+            groupAccessWatcher.losses.test {
+                repository.observeGroup(GROUP_ID).test {
+                    skipItems(1)
+                    backend.answerGroupScreen(tenants = emptyList(), tenantSummaries = emptyList())
+                    skipItems(1)
+
+                    backend.answerSubscription(GROUP_SCREEN, Err(convexError("NotFound")))
+
+                    assertEquals(Synced(null, SyncStatus.Failed(GroupError.NotFound)), awaitFailure())
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                assertEquals(LostGroupAccess(GROUP_ID, "1st Street", AccessLossReason.GroupGone), awaitItem())
+            }
+            assertEquals(null, database.groupDao().observeById(GROUP_ID).first())
+        }
+
+    @Test
     fun aServerErrorKeepsTheCachedGroupAndReportsTheFailure() =
         runTest {
             repository.observeGroup(GROUP_ID).test {
@@ -274,11 +372,13 @@ class GroupRepositoryImplTest {
         tenants: List<Tenant>,
         tenantSummaries: List<TenantSummary>,
         groupSummary: GroupSummary = groupSummary(),
+        caller: Membership = bookkeeper(),
     ) {
         val result =
             GroupsScreenResult(
                 groupSummaries = listOf(groupSummary),
                 groups = listOf(group()),
+                memberships = listOf(caller),
                 tenantSummaries = tenantSummaries,
                 tenants = tenants,
             )
@@ -288,12 +388,24 @@ class GroupRepositoryImplTest {
     private suspend fun cacheAnotherGroupWithATenant() {
         screenResultStore.replaceGroup(
             groupId = OTHER_GROUP_ID,
-            groups = listOf(groupEntity(OTHER_GROUP_ID)),
-            tenants = listOf(tenantEntity(id = "other-tenant", groupId = OTHER_GROUP_ID)),
-            tenantSummaries = listOf(tenantSummaryEntity("other-tenant")),
-            groupSummaries = listOf(groupSummaryEntity(OTHER_GROUP_ID)),
+            scope =
+                GroupScopeEntities(
+                    groups = listOf(groupEntity(OTHER_GROUP_ID)),
+                    tenants = listOf(tenantEntity(id = "other-tenant", groupId = OTHER_GROUP_ID)),
+                    tenantSummaries = listOf(tenantSummaryEntity("other-tenant")),
+                    groupSummaries = listOf(groupSummaryEntity(OTHER_GROUP_ID)),
+                    callerMemberships = emptyList(),
+                ),
         )
     }
+
+    private suspend fun ReceiveTurbine<SyncedGroup>.awaitFailure(): SyncedGroup {
+        var item = awaitItem()
+        while (item.status !is SyncStatus.Failed) item = awaitItem()
+        return item
+    }
+
+    private fun convexError(code: String) = BackendError.Convex(code = code, message = code, details = null)
 
     private suspend fun cachedActiveTenantIds(groupId: String): List<String> =
         database
@@ -311,6 +423,24 @@ class GroupRepositoryImplTest {
             ownerId = "owner",
             paymentOrder = GroupPaymentOrder.RentFirst,
             timeZone = "America/Chicago",
+            version = 1,
+        )
+
+    private fun bookkeeper(role: ConvexMembershipRole = ConvexMembershipRole.Member) =
+        Membership(
+            creationTime = 1.25,
+            id = "m1",
+            accountId = "me",
+            debts = MembershipDebts.AddEdit,
+            editOthers = false,
+            groupId = GROUP_ID,
+            members = MembershipMembers.Read,
+            notificationsOn = true,
+            payments = MembershipPayments.AddEdit,
+            rentTerms = MembershipRentTerms.Read,
+            role = role,
+            settings = MembershipSettings.Read,
+            tenants = MembershipTenants.Read,
             version = 1,
         )
 

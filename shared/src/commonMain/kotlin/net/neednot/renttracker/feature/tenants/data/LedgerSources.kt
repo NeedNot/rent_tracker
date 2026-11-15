@@ -59,7 +59,7 @@ private fun RentTrackerDatabase.observeLedgerPeople(
 ): Flow<LedgerPeople> =
     combine(
         accountNameDao().observeAll(),
-        membershipDao().observeByGroupId(groupId),
+        membershipDao().observeCaller(groupId),
         dismissedLateFeeSuggestionDao().observeDismissedMonths(tenantId),
         ::LedgerPeople,
     )

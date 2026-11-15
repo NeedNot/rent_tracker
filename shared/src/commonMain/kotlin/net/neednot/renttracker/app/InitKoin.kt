@@ -6,6 +6,7 @@ import net.neednot.renttracker.feature.auth.di.authModule
 import net.neednot.renttracker.feature.debts.di.debtsModule
 import net.neednot.renttracker.feature.group.di.groupModule
 import net.neednot.renttracker.feature.home.di.homeModule
+import net.neednot.renttracker.feature.members.di.membersModule
 import net.neednot.renttracker.feature.payments.di.paymentsModule
 import net.neednot.renttracker.feature.tenants.di.tenantsModule
 import org.koin.core.context.startKoin
@@ -23,6 +24,7 @@ private val sharedModules =
         tenantsModule,
         paymentsModule,
         debtsModule,
+        membersModule,
     )
 
 fun initKoin(

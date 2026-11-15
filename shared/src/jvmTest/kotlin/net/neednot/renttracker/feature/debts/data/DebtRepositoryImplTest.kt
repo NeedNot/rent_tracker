@@ -17,12 +17,16 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.FakeBackend
+import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.DebtKind
 import net.neednot.renttracker.core.data.FakeAsOfClock
+import net.neednot.renttracker.core.data.GroupAccessWatcher
+import net.neednot.renttracker.core.data.LostGroupAccess
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.TenantBalanceState
 import net.neednot.renttracker.core.data.accountNameEntity
+import net.neednot.renttracker.core.data.cacheCaller
 import net.neednot.renttracker.core.data.debtEntity
 import net.neednot.renttracker.core.data.groupEntity
 import net.neednot.renttracker.core.data.membershipEntity
@@ -50,6 +54,7 @@ class DebtRepositoryImplTest {
             .build()
 
     private val backend = FakeBackend()
+    private val groupAccessWatcher = GroupAccessWatcher(database, ScreenResultStore(database))
 
     private val repository =
         DebtRepositoryImpl(
@@ -57,6 +62,7 @@ class DebtRepositoryImplTest {
             asOfClock = FakeAsOfClock(TEN_O_CLOCK_UTC),
             database = database,
             screenResultStore = ScreenResultStore(database),
+            groupAccessWatcher = groupAccessWatcher,
             telemetry = NoOpTelemetry(),
         )
 
@@ -260,6 +266,26 @@ class DebtRepositoryImplTest {
         }
 
     @Test
+    fun aCallerRemovedFromTheGroupLosesItsCacheAndTheAppIsTold() =
+        runTest {
+            seedTenant()
+
+            groupAccessWatcher.losses.test {
+                repository.observeEntry("t1", debtId = null).test {
+                    skipItems(1)
+                    backend.answerSubscription(
+                        "tenants:screen",
+                        Err(BackendError.Convex("PermissionDenied", "You don't have access to this group.", null)),
+                    )
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                assertEquals(LostGroupAccess("g1", "1st Street", AccessLossReason.Removed), awaitItem())
+            }
+            assertEquals(null, database.tenantDao().observeById("t1").first())
+        }
+
+    @Test
     fun theEntrySubscribesToTheTenantScreenWithTheCurrentHour() =
         runTest {
             repository.observeEntry("t1", debtId = null).test {
@@ -341,7 +367,7 @@ class DebtRepositoryImplTest {
         database.tenantSummaryDao().upsert(
             listOf(tenantSummaryEntity("t1", TenantBalanceState.Owes, rentOwedCents = 55_000)),
         )
-        database.membershipDao().upsert(listOf(membershipEntity("m1", "g1")))
+        database.cacheCaller(membershipEntity("m1", "g1"))
         database.accountNameDao().upsert(listOf(accountNameEntity("account", "Dana")))
     }
 

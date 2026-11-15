@@ -27,8 +27,7 @@ import kotlin.test.assertEquals
 
 class ArchivedTenantsViewModelTest : MainDispatcherTest() {
     private val repository = FakeGroupRepository()
-    private val messageDispatcher = RecordingMessageDispatcher()
-    private val viewModel by lazy { ArchivedTenantsViewModel("g1", repository, messageDispatcher) }
+    private val viewModel by lazy { ArchivedTenantsViewModel("g1", repository) }
 
     private val archivedTenants =
         listOf(
@@ -109,21 +108,5 @@ class ArchivedTenantsViewModelTest : MainDispatcherTest() {
                 assertEquals(listOf("t7", "t8", "t9"), content.tenants.map { it.tenantId })
                 assertEquals(UiText.Resource(Res.string.group_error_offline), content.syncError)
             }
-        }
-
-    @Test
-    fun aGroupThatIsGoneShowsAMessageAndLeaves() =
-        runTest {
-            backgroundScope.launch { viewModel.uiState.collect {} }
-
-            viewModel.events.test {
-                repository.group.value = Synced(null, SyncStatus.Failed(GroupError.NotFound))
-
-                assertEquals(GroupEvent.GroupGone, awaitItem())
-            }
-            assertEquals(
-                listOf(UiMessage(UiText.Resource(Res.string.group_error_not_found), UiMessageVariant.Error)),
-                messageDispatcher.shown,
-            )
         }
 }

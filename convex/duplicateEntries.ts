@@ -3,10 +3,9 @@ import type { QueryCtx } from "./_generated/server";
 import { appError } from "./appError";
 import { monthName, shortDate } from "./dateText";
 import { addDays, type CalendarDate, type CalendarMonth } from "./engine/calendarDate";
+import { DELETED_USER_NAME } from "./validators";
 
 export const DUPLICATE_PAYMENT_WINDOW_DAYS = 3;
-
-const DELETED_USER_NAME = "Deleted user";
 
 export type DuplicateMatch = {
   kind: "payment" | "lateFee";

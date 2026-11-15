@@ -5,6 +5,7 @@ import {
   insertAccount,
   insertGroup,
   insertMembership,
+  insertTenant,
   losAngelesTime,
   newBackend,
   newTenant,
@@ -47,7 +48,7 @@ describe("access helpers", () => {
     expect(await failureOf(asSam.query(api.groups.screen, { groupId, asOf }))).toMatchObject({
       code: "PermissionDenied",
     });
-    expect(await asSam.query(api.home.screen, { asOf })).toEqual({ groups: [], groupSummaries: [] });
+    expect(await asSam.query(api.home.screen, { asOf })).toEqual({ groups: [], groupSummaries: [], invitations: [] });
   });
 
   it("let a read-only member view the group but not add tenants", async () => {
@@ -114,5 +115,58 @@ describe("access helpers", () => {
     await asSam.mutation(api.tenants.archive, { tenantId, expectedVersion: 1 });
 
     expect(await t.run((ctx) => ctx.db.get(tenantId))).toMatchObject({ lastEditedBy: samId });
+  });
+
+  describe("in an archived group", () => {
+    const archivedAt = 1_700_000_000_000;
+
+    it("hides the group from a member but not from the owner", async () => {
+      const t = await newBackend();
+      const groupId = await t.run(async (ctx) => {
+        const groupId = await insertGroup(ctx, { archivedAt });
+        await insertMembership(ctx, groupId, await insertAccount(ctx, sam), { tenants: "full" });
+        return groupId;
+      });
+
+      const failure = await failureOf(t.withIdentity(sam).query(api.groups.screen, { groupId, asOf }));
+
+      expect(failure).toMatchObject({ code: "NotFound", message: "This group no longer exists." });
+      expect(await t.query(api.groups.screen, { groupId, asOf })).toMatchObject({ groups: [{ _id: groupId }] });
+    });
+
+    it("rejects adding a tenant, even for the owner", async () => {
+      const t = await newBackend();
+      const groupId = await t.run((ctx) => insertGroup(ctx, { archivedAt }));
+
+      const failure = await failureOf(t.mutation(api.tenants.add, { groupId, ...newTenant }));
+
+      expect(failure).toMatchObject({ code: "NotFound", message: "This group no longer exists." });
+    });
+
+    it("rejects logging a payment, even for the owner", async () => {
+      const t = await newBackend();
+      const tenantId = await t.run(async (ctx) => insertTenant(ctx, await insertGroup(ctx, { archivedAt })));
+
+      const failure = await failureOf(
+        t.mutation(api.payments.log, {
+          tenantId,
+          clientId: "c1",
+          amountCents: 1000,
+          dateReceived: "2026-03-01",
+          method: "cash",
+        }),
+      );
+
+      expect(failure).toMatchObject({ code: "NotFound" });
+    });
+
+    it("accepts writes again after the owner unarchives", async () => {
+      const t = await newBackend();
+      const groupId = await t.run((ctx) => insertGroup(ctx, { archivedAt }));
+
+      await t.mutation(api.groups.unarchive, { groupId });
+
+      expect(await t.mutation(api.tenants.add, { groupId, ...newTenant })).toBeTruthy();
+    });
   });
 });

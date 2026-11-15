@@ -77,7 +77,8 @@ private fun TenantSummaryEntity.toLateFeeSuggestion(): LateFeeSuggestion? {
 private fun LateFeeSuggestion.isDismissedIn(dismissedMonths: List<String>): Boolean =
     forMonth.toString() in dismissedMonths
 
-private fun MembershipEntity.canAddDebts(): Boolean = role == MembershipRole.Owner || debts != AccessLevel.Read
+private fun MembershipEntity.canAddDebts(): Boolean =
+    role == MembershipRole.Owner || permissions.debts != AccessLevel.Read
 
 private fun PaymentEntity.toSavedPayment(): SavedPayment =
     SavedPayment(

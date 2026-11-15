@@ -69,7 +69,7 @@ private fun RentTrackerDatabase.observeGroupToday(
     }
 
 private fun RentTrackerDatabase.observeCallerAccountId(groupId: String): Flow<String?> =
-    membershipDao().observeByGroupId(groupId).map { it?.accountId }
+    membershipDao().observeCaller(groupId).map { it?.accountId }
 
 private fun RentTrackerDatabase.observeSavedCharge(debtId: String?): Flow<DebtEntity?> =
     if (debtId == null) {

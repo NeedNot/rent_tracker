@@ -23,7 +23,7 @@ internal fun RentTrackerDatabase.observeGroupToday(
     }
 
 internal fun RentTrackerDatabase.observeCaller(groupId: String): Flow<MembershipEntity?> =
-    membershipDao().observeByGroupId(groupId)
+    membershipDao().observeCaller(groupId)
 
 private fun GroupEntity.localDateAt(epochMillis: Long): LocalDate =
     Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(TimeZone.of(timeZone)).date

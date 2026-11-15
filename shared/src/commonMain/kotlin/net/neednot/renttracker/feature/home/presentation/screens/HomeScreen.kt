@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -18,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,15 +35,23 @@ import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
+import net.neednot.renttracker.feature.home.presentation.components.ArchivedGroupsRow
 import net.neednot.renttracker.feature.home.presentation.components.GroupCard
+import net.neednot.renttracker.feature.home.presentation.components.InvitationActions
+import net.neednot.renttracker.feature.home.presentation.components.InvitationCard
+import net.neednot.renttracker.feature.home.presentation.uistate.DeclineInviteUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.GroupCardUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
+import net.neednot.renttracker.feature.home.presentation.uistate.InvitationCardUiState
 import net.neednot.renttracker.feature.home.presentation.viewmodel.HomeViewModel
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.app_name
+import net.neednot.renttracker.resources.common_cancel
 import net.neednot.renttracker.resources.home_empty_body
 import net.neednot.renttracker.resources.home_empty_title
 import net.neednot.renttracker.resources.home_groups_heading
+import net.neednot.renttracker.resources.home_invitation_decline
+import net.neednot.renttracker.resources.home_invitations_heading
 import net.neednot.renttracker.resources.home_loading
 import net.neednot.renttracker.resources.home_new_group
 import org.jetbrains.compose.resources.stringResource
@@ -51,14 +61,23 @@ import org.koin.compose.viewmodel.koinViewModel
 fun HomeScreen(
     onGroupClicked: (groupId: String) -> Unit,
     onNewGroupClicked: () -> Unit,
+    onArchivedGroupsClicked: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     HomeContent(
         uiState = uiState,
+        invitationActions =
+            InvitationActions(
+                onAcceptClicked = viewModel::onAcceptClicked,
+                onDeclineClicked = viewModel::onDeclineClicked,
+                onDeclineConfirmed = viewModel::onDeclineConfirmed,
+                onDeclineDismissed = viewModel::onDeclineDismissed,
+            ),
         onGroupClicked = onGroupClicked,
         onNewGroupClicked = onNewGroupClicked,
+        onArchivedGroupsClicked = onArchivedGroupsClicked,
         modifier = modifier,
     )
 }
@@ -67,8 +86,10 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     uiState: HomeUiState,
+    invitationActions: InvitationActions,
     onGroupClicked: (groupId: String) -> Unit,
     onNewGroupClicked: () -> Unit,
+    onArchivedGroupsClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -100,22 +121,31 @@ private fun HomeContent(
             }
 
             is HomeUiState.Content -> {
-                GroupList(
-                    groups = uiState.groups,
-                    syncError = uiState.syncError,
+                HomeList(
+                    content = uiState,
+                    invitationActions = invitationActions,
                     onGroupClicked = onGroupClicked,
+                    onArchivedGroupsClicked = onArchivedGroupsClicked,
                     contentPadding = contentPadding,
                 )
             }
         }
     }
+    (uiState as? HomeUiState.Content)?.declineDialog?.let { dialog ->
+        DeclineInviteDialog(
+            dialog = dialog,
+            onConfirmed = invitationActions.onDeclineConfirmed,
+            onDismissed = invitationActions.onDeclineDismissed,
+        )
+    }
 }
 
 @Composable
-private fun GroupList(
-    groups: List<GroupCardUiState>,
-    syncError: UiText?,
+private fun HomeList(
+    content: HomeUiState.Content,
+    invitationActions: InvitationActions,
     onGroupClicked: (groupId: String) -> Unit,
+    onArchivedGroupsClicked: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     LazyColumn(
@@ -123,7 +153,7 @@ private fun GroupList(
         contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        syncError?.let { error ->
+        content.syncError?.let { error ->
             item(key = "syncError") {
                 Text(
                     text = error.asString(),
@@ -132,18 +162,55 @@ private fun GroupList(
                 )
             }
         }
-        item(key = "heading") {
-            Text(
-                text = stringResource(Res.string.home_groups_heading),
-                modifier = Modifier.padding(top = 8.dp).semantics { heading() },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.titleSmall,
-            )
+        if (content.invitations.isNotEmpty()) {
+            item(key = "invitationsHeading") { SectionHeading(stringResource(Res.string.home_invitations_heading)) }
+            items(content.invitations, key = { "invitation:${it.inviteId}" }) { invitation ->
+                InvitationCard(
+                    invitation = invitation,
+                    onAcceptClicked = { invitationActions.onAcceptClicked(invitation.inviteId) },
+                    onDeclineClicked = { invitationActions.onDeclineClicked(invitation.inviteId) },
+                )
+            }
         }
-        items(groups, key = { it.groupId }) { group ->
-            GroupCard(group = group, onClick = { onGroupClicked(group.groupId) })
+        if (content.groups.isNotEmpty()) {
+            item(key = "groupsHeading") { SectionHeading(stringResource(Res.string.home_groups_heading)) }
+            items(content.groups, key = { it.groupId }) { group ->
+                GroupCard(group = group, onClick = { onGroupClicked(group.groupId) })
+            }
+        }
+        content.archivedGroupsRow?.let { row ->
+            item(key = "archivedGroups") { ArchivedGroupsRow(text = row, onClick = onArchivedGroupsClicked) }
         }
     }
+}
+
+@Composable
+private fun SectionHeading(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.padding(top = 8.dp).semantics { heading() },
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.titleSmall,
+    )
+}
+
+@Composable
+private fun DeclineInviteDialog(
+    dialog: DeclineInviteUiState,
+    onConfirmed: () -> Unit,
+    onDismissed: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissed,
+        confirmButton = {
+            TextButton(onClick = onConfirmed) {
+                Text(text = stringResource(Res.string.home_invitation_decline), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) } },
+        title = { Text(dialog.title.asString()) },
+        text = { Text(dialog.message.asString()) },
+    )
 }
 
 @Composable
@@ -185,6 +252,17 @@ private fun HomeContentPreview() {
         HomeContent(
             uiState =
                 HomeUiState.Content(
+                    invitations =
+                        listOf(
+                            InvitationCardUiState(
+                                inviteId = "i1",
+                                groupName = "Oak Ave Duplex",
+                                summary = UiText.Plain("Sam Rivera invited you as Bookkeeper"),
+                                description = UiText.Plain("Invitation to Oak Ave Duplex"),
+                                isWorking = false,
+                            ),
+                        ),
+                    archivedGroupsRow = UiText.Plain("Archived groups (1)"),
                     groups =
                         listOf(
                             GroupCardUiState(
@@ -198,8 +276,10 @@ private fun HomeContentPreview() {
                             ),
                         ),
                 ),
+            invitationActions = InvitationActions.None,
             onGroupClicked = {},
             onNewGroupClicked = {},
+            onArchivedGroupsClicked = {},
         )
     }
 }

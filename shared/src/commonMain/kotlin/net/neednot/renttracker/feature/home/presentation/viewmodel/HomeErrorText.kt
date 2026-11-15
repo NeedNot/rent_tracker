@@ -9,6 +9,7 @@ import net.neednot.renttracker.resources.home_error_unexpected
 internal fun HomeError.text(): UiText =
     when (this) {
         is HomeError.ValidationFailed -> UiText.Plain(message)
+        is HomeError.Rejected -> UiText.Plain(message)
         HomeError.Offline -> UiText.Resource(Res.string.home_error_offline)
         is HomeError.Unexpected -> UiText.Resource(Res.string.home_error_unexpected)
     }

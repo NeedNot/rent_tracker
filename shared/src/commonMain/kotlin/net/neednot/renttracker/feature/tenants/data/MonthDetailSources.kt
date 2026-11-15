@@ -25,7 +25,7 @@ internal data class MonthDetailSources(
 )
 
 internal fun MonthDetailSources.toMonthDetail(): MonthDetail {
-    val permissions = ledger.membership?.toCallerPermissions()
+    val permissions = ledger.membership?.toCallerPermissions(group)
     return MonthDetail(
         month = calendarMonth.toCalendarMonth(),
         payments = monthPayments(),

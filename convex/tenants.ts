@@ -9,6 +9,8 @@ import { debtDoc, groupDoc, membershipDoc, paymentDoc, rentTermDoc, tenantDoc } 
 import { requireExpectedVersion } from "./editConflict";
 import { type CalendarMonth, monthOf } from "./engine/calendarDate";
 import { computeTenantLedger } from "./engine/tenantLedger";
+import { groupSummary, groupSummaryOf } from "./groupSummary";
+import { loadGroupTenantSummaries } from "./groupTenantSummaries";
 import { requireCalendarYear } from "./inputValidation";
 import { ledgerRow, ledgerRowsOf } from "./ledgerRow";
 import { localDateAt } from "./localDate";
@@ -94,6 +96,51 @@ export const restore = mutation({
     }
     await ctx.db.patch(tenant._id, { status: "active", version: tenant.version + 1, ...editStamp(accountId) });
     return null;
+  },
+});
+
+export const move = mutation({
+  args: { ...tenantVersionArgs, toGroupId: v.id("groups") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
+    const { accountId } = await requirePermission(ctx, group._id, "tenants", "full");
+    await requireCurrentTenant(ctx, tenant, args.expectedVersion);
+    if (args.toGroupId === group._id) {
+      throw validationFailed("This tenant is already in that group.", { field: "toGroupId" });
+    }
+    const target = await loadActiveGroup(ctx, args.toGroupId);
+    await requirePermission(ctx, target._id, "tenants", "full");
+    await ctx.db.patch(tenant._id, { groupId: target._id, version: tenant.version + 1, ...editStamp(accountId) });
+    return null;
+  },
+});
+
+export const moveTargets = query({
+  args: { tenantId: v.id("tenants"), asOf: v.number() },
+  returns: v.object({ groups: v.array(groupDoc), groupSummaries: v.array(groupSummary) }),
+  handler: async (ctx, args) => {
+    const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
+    const { accountId } = await requirePermission(ctx, group._id, "tenants", "full");
+    const memberships = await ctx.db
+      .query("memberships")
+      .withIndex("by_account", (q) => q.eq("accountId", accountId))
+      .collect();
+    const groups: Doc<"groups">[] = [];
+    for (const membership of memberships) {
+      const candidate = await ctx.db.get(membership.groupId);
+      const canReceive = membership.role === "owner" || membership.tenants === "full";
+      if (candidate !== null && candidate.archivedAt === undefined && canReceive && candidate._id !== tenant.groupId) {
+        groups.push(candidate);
+      }
+    }
+    const groupSummaries = await Promise.all(
+      groups.map(async (target) => {
+        const { tenants, tenantSummaries } = await loadGroupTenantSummaries(ctx, target, args.asOf);
+        return groupSummaryOf(target._id, tenants, tenantSummaries);
+      }),
+    );
+    return { groups, groupSummaries };
   },
 });
 

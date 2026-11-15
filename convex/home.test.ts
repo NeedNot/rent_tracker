@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { insertGroup, insertPayment, insertTenantOwingRent, losAngelesTime, newBackend, RENT } from "./seed.fixture";
+import {
+  insertAccount,
+  insertGroup,
+  insertMembership,
+  insertPayment,
+  insertTenantOwingRent,
+  losAngelesTime,
+  newBackend,
+  RENT,
+  sam,
+} from "./seed.fixture";
 
 const MARCH_20_IN_LOS_ANGELES = losAngelesTime(2026, 3, 20);
 const LAST_HOUR_OF_GRACE_IN_LOS_ANGELES = losAngelesTime(2026, 3, 6, 21);
@@ -11,7 +21,7 @@ describe("home.screen", () => {
 
     const home = await t.query(api.home.screen, { asOf: MARCH_20_IN_LOS_ANGELES });
 
-    expect(home).toEqual({ groups: [], groupSummaries: [] });
+    expect(home).toEqual({ groups: [], groupSummaries: [], invitations: [] });
   });
 
   it("summarizes each group: active debt, late count and archived debt apart", async () => {
@@ -84,17 +94,35 @@ describe("home.screen", () => {
     ]);
   });
 
-  it("leaves out archived groups", async () => {
+  it("lists the owner's archived groups with their summaries", async () => {
     const t = await newBackend();
-    const openId = await t.run(async (ctx) => {
+    const { archivedId, openId } = await t.run(async (ctx) => {
       const archivedId = await insertGroup(ctx, { name: "Sold", archivedAt: 1_700_000_000_000 });
       await insertTenantOwingRent(ctx, archivedId, RENT);
-      return await insertGroup(ctx, { name: "1st Street" });
+      return { archivedId, openId: await insertGroup(ctx, { name: "1st Street" }) };
     });
 
     const home = await t.query(api.home.screen, { asOf: MARCH_20_IN_LOS_ANGELES });
 
-    expect(home.groups.map((group) => group.name)).toEqual(["1st Street"]);
-    expect(home.groupSummaries.map((summary) => summary.groupId)).toEqual([openId]);
+    expect(home.groups.map((group) => [group.name, group.archivedAt])).toEqual([
+      ["Sold", 1_700_000_000_000],
+      ["1st Street", undefined],
+    ]);
+    expect(home.groupSummaries).toMatchObject([
+      { groupId: archivedId, activeTenantCount: 1, totalOwedCents: RENT },
+      { groupId: openId, activeTenantCount: 0, totalOwedCents: 0 },
+    ]);
+  });
+
+  it("never shows an archived group to a member who is not the owner", async () => {
+    const t = await newBackend();
+    await t.run(async (ctx) => {
+      const groupId = await insertGroup(ctx, { archivedAt: 1_700_000_000_000 });
+      await insertMembership(ctx, groupId, await insertAccount(ctx, sam));
+    });
+
+    const home = await t.withIdentity(sam).query(api.home.screen, { asOf: MARCH_20_IN_LOS_ANGELES });
+
+    expect(home).toEqual({ groups: [], groupSummaries: [], invitations: [] });
   });
 });

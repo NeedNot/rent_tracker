@@ -2,15 +2,19 @@ package net.neednot.renttracker.feature.tenants.data
 
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.map
+import com.github.michaelbull.result.onErr
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.YearMonth
 import kotlinx.serialization.builtins.serializer
 import net.neednot.renttracker.core.backend.Backend
+import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.AsOfClock
 import net.neednot.renttracker.core.data.DismissedLateFeeSuggestionEntity
+import net.neednot.renttracker.core.data.GroupAccessWatcher
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.replaceTenant
@@ -41,6 +45,7 @@ class TenantRepositoryImpl(
     private val asOfClock: AsOfClock,
     private val database: RentTrackerDatabase,
     private val screenResultStore: ScreenResultStore,
+    private val groupAccessWatcher: GroupAccessWatcher,
     telemetry: Telemetry,
 ) : TenantRepository {
     private val calls = TenantBackendCalls(backend, telemetry)
@@ -50,14 +55,21 @@ class TenantRepositoryImpl(
         syncedFlow(
             cached = database.observeTenantOverview(tenantId, asOfClock.asOf),
             serverResults =
-                asOfClock.asOf.flatMapLatest { asOf ->
-                    calls.subscribe(
-                        name = TENANT_SCREEN,
-                        args = TenantsScreenArgs(asOf = asOf, tenantId = tenantId),
-                        argsSerializer = TenantsScreenArgs.serializer(),
-                        resultSerializer = TenantsScreenResult.serializer(),
-                    )
-                },
+                asOfClock.asOf
+                    .flatMapLatest { asOf ->
+                        calls.subscribe(
+                            name = TENANT_SCREEN,
+                            args = TenantsScreenArgs(asOf = asOf, tenantId = tenantId),
+                            argsSerializer = TenantsScreenArgs.serializer(),
+                            resultSerializer = TenantsScreenResult.serializer(),
+                        )
+                    }.onEach { result ->
+                        result.onErr { error ->
+                            if (error is TenantError.PermissionDenied) {
+                                groupAccessWatcher.reportForTenant(tenantId, AccessLossReason.Removed)
+                            }
+                        }
+                    },
             store = { result -> screenResultStore.replaceTenant(tenantId, result) },
         )
 

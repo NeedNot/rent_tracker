@@ -10,4 +10,5 @@ import net.neednot.renttracker.model.shared.GroupSummary
 data class HomeScreenResult(
     val groupSummaries: List<GroupSummary>,
     val groups: List<Group>,
+    val invitations: List<Invitation>,
 )

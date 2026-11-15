@@ -171,19 +171,29 @@ fun membershipEntity(
     id: String,
     groupId: String,
     role: MembershipRole = MembershipRole.Owner,
+    accountId: String = "account",
+    permissions: PermissionSet = fullPermissions(),
+    creationTime: Long = 0,
 ) = MembershipEntity(
     id = id,
     groupId = groupId,
-    accountId = "account",
+    accountId = accountId,
     role = role,
-    tenants = AccessLevel.Full,
-    rentTerms = AccessLevel.Full,
-    payments = AccessLevel.Full,
-    debts = AccessLevel.Full,
-    members = AccessLevel.Full,
-    settings = SettingsAccessLevel.Full,
-    editOthers = true,
+    permissions = permissions,
+    creationTime = creationTime,
+    version = 1,
 )
+
+fun fullPermissions() =
+    PermissionSet(
+        tenants = AccessLevel.Full,
+        rentTerms = AccessLevel.Full,
+        payments = AccessLevel.Full,
+        debts = AccessLevel.Full,
+        members = AccessLevel.Full,
+        settings = SettingsAccessLevel.Full,
+        editOthers = true,
+    )
 
 fun calendarMonthEntity(
     tenantId: String,

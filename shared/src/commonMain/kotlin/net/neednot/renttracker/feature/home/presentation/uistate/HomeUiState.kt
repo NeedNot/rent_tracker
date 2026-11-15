@@ -9,6 +9,9 @@ sealed interface HomeUiState {
 
     data class Content(
         val groups: List<GroupCardUiState>,
+        val invitations: List<InvitationCardUiState> = emptyList(),
+        val archivedGroupsRow: UiText? = null,
+        val declineDialog: DeclineInviteUiState? = null,
         val syncError: UiText? = null,
     ) : HomeUiState
 

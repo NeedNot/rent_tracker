@@ -21,13 +21,18 @@ import androidx.room.RoomDatabase
         DismissedLateFeeSuggestionEntity::class,
         CalendarMonthEntity::class,
         AllocationEntity::class,
+        SignedInAccountEntity::class,
+        MemberProfileEntity::class,
+        InviteEntity::class,
+        HomeInvitationEntity::class,
     ],
-    version = 4,
+    version = 5,
     autoMigrations = [
         AutoMigration(
             from = 1,
             to = 2,
         ), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4),
+        AutoMigration(from = 4, to = 5),
     ],
 )
 @ConstructedBy(RentTrackerDatabaseConstructor::class)
@@ -60,6 +65,16 @@ abstract class RentTrackerDatabase : RoomDatabase() {
     abstract fun calendarMonthDao(): CalendarMonthDao
 
     abstract fun allocationDao(): AllocationDao
+
+    abstract fun signedInAccountDao(): SignedInAccountDao
+
+    abstract fun memberProfileDao(): MemberProfileDao
+
+    abstract fun inviteDao(): InviteDao
+
+    abstract fun homeInvitationDao(): HomeInvitationDao
+
+    abstract fun groupCacheDao(): GroupCacheDao
 
     companion object {
         const val FILE_NAME = "rent-tracker.db"

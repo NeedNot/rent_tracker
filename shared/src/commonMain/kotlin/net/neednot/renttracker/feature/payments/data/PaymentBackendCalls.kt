@@ -28,9 +28,9 @@ internal class PaymentBackendCalls(
         args: A,
         argsSerializer: KSerializer<A>,
         resultSerializer: KSerializer<T>,
+        watch: (Flow<Result<T, BackendError>>) -> Flow<Result<T, BackendError>> = { it },
     ): Flow<Result<T, PaymentError>> =
-        backend
-            .subscribe(name, ConvexJson.encodeArgs(argsSerializer, args), resultSerializer)
+        watch(backend.subscribe(name, ConvexJson.encodeArgs(argsSerializer, args), resultSerializer))
             .map { result -> result.toPaymentResult() }
 
     suspend fun <A, T> queryOnce(

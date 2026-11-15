@@ -25,7 +25,7 @@ describe("access-helper rule", () => {
     const [violation] = lintConvexDirectory(path.join(fixtures, "accessHelpers/missingHelper"));
 
     expect(violation?.message).toBe(
-      "handler must call one of requireIdentity, requireAccount, requireMember, requirePermission",
+      "handler must call one of requireIdentity, requireAccount, requireMember, requireOwner, requirePermission",
     );
   });
 

@@ -20,7 +20,10 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.FakeBackend
+import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.FakeAsOfClock
+import net.neednot.renttracker.core.data.GroupAccessWatcher
+import net.neednot.renttracker.core.data.LostGroupAccess
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.TenantBalanceState
@@ -62,6 +65,7 @@ class TenantRepositoryImplTest {
 
     private val backend = FakeBackend()
     private val asOfClock = FakeAsOfClock(TEN_O_CLOCK_UTC)
+    private val groupAccessWatcher = GroupAccessWatcher(database, ScreenResultStore(database))
 
     private val repository =
         TenantRepositoryImpl(
@@ -69,6 +73,7 @@ class TenantRepositoryImplTest {
             asOfClock = asOfClock,
             database = database,
             screenResultStore = ScreenResultStore(database),
+            groupAccessWatcher = groupAccessWatcher,
             telemetry = NoOpTelemetry(),
         )
 
@@ -100,6 +105,29 @@ class TenantRepositoryImplTest {
                 assertEquals(Synced(null, SyncStatus.Syncing), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    @Test
+    fun aCallerRemovedFromTheGroupLosesItsCacheAndTheAppIsTold() =
+        runTest {
+            groupAccessWatcher.losses.test {
+                repository.observeTenant("t1").test {
+                    skipItems(1)
+                    backend.answerTenantScreen(rentTerms = listOf(rentTerm("r1", "2024-01")))
+                    skipItems(1)
+
+                    backend.answerSubscription(
+                        TENANT_SCREEN,
+                        Err(BackendError.Convex("PermissionDenied", "You don't have access to this group.", null)),
+                    )
+
+                    while (awaitItem().status !is SyncStatus.Failed) continue
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                assertEquals(LostGroupAccess("g1", "1st Street", AccessLossReason.Removed), awaitItem())
+            }
+            assertEquals(null, database.tenantDao().observeById("t1").first())
         }
 
     @Test

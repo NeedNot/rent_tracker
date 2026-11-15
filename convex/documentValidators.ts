@@ -11,3 +11,5 @@ export const membershipDoc = schema.doc("memberships");
 export const paymentDoc = schema.doc("payments");
 
 export const debtDoc = schema.doc("debts");
+
+export const inviteDoc = schema.doc("invites");

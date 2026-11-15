@@ -16,6 +16,7 @@ sealed interface TenantUiState {
         val ledgerPreview: List<LedgerRowUiState> = emptyList(),
         val canLogPayment: Boolean = false,
         val canAddCharge: Boolean = false,
+        val canMove: Boolean = false,
         val lateFeeSuggestion: LateFeeSuggestionUiState? = null,
         val calendar: CalendarUiState? = null,
         val monthDetail: MonthDetailUiState? = null,
