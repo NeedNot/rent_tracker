@@ -14,10 +14,19 @@ class HomeErrorMappingTest {
     }
 
     @Test
-    fun otherServerCodesAreUnexpected() {
-        val error = BackendError.Convex(code = "NotFound", message = "This group no longer exists.", details = null)
+    fun aMissingInviteAndADeniedCallKeepTheServersMessage() {
+        val notFound = BackendError.Convex(code = "NotFound", message = "This invite no longer exists.", details = null)
+        val denied = BackendError.Convex(code = "PermissionDenied", message = "Not yours.", details = null)
 
-        assertEquals(HomeError.Unexpected("NotFound: This group no longer exists."), error.toHomeError())
+        assertEquals(HomeError.Rejected("This invite no longer exists."), notFound.toHomeError())
+        assertEquals(HomeError.Rejected("Not yours."), denied.toHomeError())
+    }
+
+    @Test
+    fun otherServerCodesAreUnexpected() {
+        val error = BackendError.Convex(code = "NotSignedIn", message = "Sign in first.", details = null)
+
+        assertEquals(HomeError.Unexpected("NotSignedIn: Sign in first."), error.toHomeError())
     }
 
     @Test

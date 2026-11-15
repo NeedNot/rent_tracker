@@ -1,5 +1,7 @@
 package net.neednot.renttracker.core.data
 
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -10,11 +12,7 @@ data class MembershipEntity(
     val groupId: String,
     val accountId: String,
     val role: MembershipRole,
-    val tenants: AccessLevel,
-    val rentTerms: AccessLevel,
-    val payments: AccessLevel,
-    val debts: AccessLevel,
-    val members: AccessLevel,
-    val settings: SettingsAccessLevel,
-    val editOthers: Boolean,
+    @Embedded val permissions: PermissionSet,
+    @ColumnInfo(defaultValue = "0") val creationTime: Long,
+    @ColumnInfo(defaultValue = "0") val version: Long,
 )

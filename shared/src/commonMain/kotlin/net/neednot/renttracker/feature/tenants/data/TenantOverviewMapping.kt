@@ -40,7 +40,7 @@ internal fun RentTrackerDatabase.observeTenantOverview(
             observeLedgerSources(tenantId, tenant.groupId),
         ) { group, summary, rentTerms, asOfMillis, ledgerSources ->
             group?.let {
-                val permissions = ledgerSources.membership?.toCallerPermissions()
+                val permissions = ledgerSources.membership?.toCallerPermissions(group)
                 val isArchived = tenant.status == TenantStatus.Archived
                 TenantOverview(
                     tenant = tenant.toTenant(),

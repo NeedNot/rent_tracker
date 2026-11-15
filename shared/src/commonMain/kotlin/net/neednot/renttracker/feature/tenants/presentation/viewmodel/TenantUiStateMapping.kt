@@ -76,6 +76,7 @@ private fun TenantOverview.toContent(
         ledgerPreview = ledger.take(LEDGER_PREVIEW_SIZE).map { it.toRowUiState(timeZone) },
         canLogPayment = !tenant.isArchived && permissions?.canLogPayments == true,
         canAddCharge = !tenant.isArchived && permissions?.canAddCharges == true,
+        canMove = !tenant.isArchived && permissions?.canMoveTenants == true,
         lateFeeSuggestion = lateFeeSuggestion?.toUiState(),
         calendar = calendar?.toCalendarUiState(firstYear = tenant.details.moveIn.year),
         monthDetail = monthDetail,

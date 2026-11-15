@@ -23,5 +23,6 @@ val coreDataModule =
         single { get<RentTrackerDatabase>().ledgerRowDao() }
         single { get<RentTrackerDatabase>().dismissedLateFeeSuggestionDao() }
         single { ScreenResultStore(database = get()) }
+        single { GroupAccessWatcher(database = get(), screenResultStore = get()) }
         single<AsOfClock> { HourlyAsOfClock(clock = Clock.System) }
     }

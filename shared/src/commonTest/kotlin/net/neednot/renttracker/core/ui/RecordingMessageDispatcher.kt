@@ -1,8 +1,6 @@
-package net.neednot.renttracker.feature.group.presentation.viewmodel
+package net.neednot.renttracker.core.ui
 
 import kotlinx.coroutines.flow.emptyFlow
-import net.neednot.renttracker.core.ui.MessageDispatcher
-import net.neednot.renttracker.core.ui.UiMessage
 
 class RecordingMessageDispatcher : MessageDispatcher {
     val shown = mutableListOf<UiMessage>()

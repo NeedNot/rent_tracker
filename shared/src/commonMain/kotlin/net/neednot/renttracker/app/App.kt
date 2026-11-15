@@ -20,6 +20,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.Flow
 import net.neednot.renttracker.core.auth.AuthSessionState
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
@@ -29,6 +30,7 @@ import net.neednot.renttracker.feature.auth.presentation.navigation.authGraph
 import net.neednot.renttracker.feature.debts.presentation.navigation.debtsGraph
 import net.neednot.renttracker.feature.group.presentation.navigation.groupGraph
 import net.neednot.renttracker.feature.home.presentation.navigation.homeGraph
+import net.neednot.renttracker.feature.members.presentation.navigation.membersGraph
 import net.neednot.renttracker.feature.payments.presentation.navigation.paymentsGraph
 import net.neednot.renttracker.feature.tenants.presentation.navigation.tenantsGraph
 import net.neednot.renttracker.resources.Res
@@ -47,7 +49,7 @@ fun App() {
         AppSnackbarHost {
             when (val start = startDestination) {
                 null -> SessionLoading()
-                else -> RootNavHost(startDestination = start, sessionState = sessionState)
+                else -> RootNavHost(startDestination = start, sessionState = sessionState, events = viewModel.events)
             }
         }
     }
@@ -57,6 +59,7 @@ fun App() {
 private fun RootNavHost(
     startDestination: Any,
     sessionState: AuthSessionState,
+    events: Flow<AppEvent>,
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = startDestination) {
@@ -66,6 +69,14 @@ private fun RootNavHost(
         tenantsGraph(navController)
         paymentsGraph(navController)
         debtsGraph(navController)
+        membersGraph(navController)
+    }
+    LaunchedEffect(events) {
+        events.collect { event ->
+            when (event) {
+                AppEvent.ReturnHome -> navController.popBackStack<HomeRoute>(inclusive = false)
+            }
+        }
     }
     LaunchedEffect(sessionState) {
         if (sessionState == AuthSessionState.SignedOut && !navController.isSigningIn()) {

@@ -5,6 +5,10 @@ sealed interface HomeError {
         val message: String,
     ) : HomeError
 
+    data class Rejected(
+        val message: String,
+    ) : HomeError
+
     data object Offline : HomeError
 
     data class Unexpected(

@@ -73,6 +73,7 @@ import net.neednot.renttracker.resources.tenant_back
 import net.neednot.renttracker.resources.tenant_loading
 import net.neednot.renttracker.resources.tenant_menu_archive
 import net.neednot.renttracker.resources.tenant_menu_edit_details
+import net.neednot.renttracker.resources.tenant_menu_move
 import net.neednot.renttracker.resources.tenant_menu_restore
 import net.neednot.renttracker.resources.tenant_more_options
 import net.neednot.renttracker.resources.tenant_restore_confirm
@@ -92,6 +93,7 @@ fun TenantScreen(
     onAddChargeClicked: (suggestedMonth: String?, suggestedCents: Long?) -> Unit,
     onViewLedgerClicked: () -> Unit,
     onEditEntryClicked: (EntryEditTarget) -> Unit,
+    onMoveClicked: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TenantViewModel = koinViewModel { parametersOf(route) },
 ) {
@@ -124,6 +126,7 @@ fun TenantScreen(
                     ),
                 onLateFeeAddClicked = { suggestion -> onAddChargeClicked(suggestion.month, suggestion.cents) },
                 onLateFeeDismissed = viewModel::onLateFeeDismissed,
+                onMoveClicked = onMoveClicked,
                 onArchiveClicked = viewModel::onArchiveClicked,
                 onRestoreClicked = viewModel::onRestoreClicked,
                 onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
@@ -150,6 +153,7 @@ private fun TenantContent(
     calendarActions: CalendarActions,
     onLateFeeAddClicked: (LateFeeSuggestionUiState) -> Unit,
     onLateFeeDismissed: () -> Unit,
+    onMoveClicked: () -> Unit,
     onArchiveClicked: () -> Unit,
     onRestoreClicked: () -> Unit,
     onStatusChangeConfirmed: () -> Unit,
@@ -174,7 +178,9 @@ private fun TenantContent(
                     content?.let {
                         TenantMenu(
                             isArchived = it.isArchived,
+                            canMove = it.canMove,
                             onEditDetailsClicked = { onEditDetailsClicked(it.groupId) },
+                            onMoveClicked = onMoveClicked,
                             onArchiveClicked = onArchiveClicked,
                             onRestoreClicked = onRestoreClicked,
                         )
@@ -248,7 +254,9 @@ private fun TenantTitle(
 @Composable
 private fun TenantMenu(
     isArchived: Boolean,
+    canMove: Boolean,
     onEditDetailsClicked: () -> Unit,
+    onMoveClicked: () -> Unit,
     onArchiveClicked: () -> Unit,
     onRestoreClicked: () -> Unit,
 ) {
@@ -276,6 +284,15 @@ private fun TenantMenu(
                     onEditDetailsClicked()
                 },
             )
+            if (canMove) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.tenant_menu_move)) },
+                    onClick = {
+                        isOpen = false
+                        onMoveClicked()
+                    },
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(Res.string.tenant_menu_archive)) },
                 onClick = {
@@ -473,6 +490,7 @@ private fun TenantContentPreview() {
             calendarActions = CalendarActions.None,
             onLateFeeAddClicked = {},
             onLateFeeDismissed = {},
+            onMoveClicked = {},
             onArchiveClicked = {},
             onRestoreClicked = {},
             onStatusChangeConfirmed = {},

@@ -1,23 +1,23 @@
 package net.neednot.renttracker.core.data
 
+import net.neednot.renttracker.model.shared.Membership
+import net.neednot.renttracker.model.shared.MembershipDebts
+import net.neednot.renttracker.model.shared.MembershipMembers
+import net.neednot.renttracker.model.shared.MembershipPayments
+import net.neednot.renttracker.model.shared.MembershipRentTerms
+import net.neednot.renttracker.model.shared.MembershipSettings
+import net.neednot.renttracker.model.shared.MembershipTenants
 import net.neednot.renttracker.model.shared.TenantSummary
 import net.neednot.renttracker.model.shared.TenantSummaryState
 import net.neednot.renttracker.model.tenants.Debt
 import net.neednot.renttracker.model.tenants.LedgerRow
-import net.neednot.renttracker.model.tenants.Membership
-import net.neednot.renttracker.model.tenants.MembershipDebts
-import net.neednot.renttracker.model.tenants.MembershipMembers
-import net.neednot.renttracker.model.tenants.MembershipPayments
-import net.neednot.renttracker.model.tenants.MembershipRentTerms
-import net.neednot.renttracker.model.tenants.MembershipSettings
-import net.neednot.renttracker.model.tenants.MembershipTenants
 import net.neednot.renttracker.model.tenants.Payment
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import net.neednot.renttracker.model.shared.MembershipRole as ConvexMembershipRole
 import net.neednot.renttracker.model.tenants.DebtKind as ConvexDebtKind
 import net.neednot.renttracker.model.tenants.LedgerRowKind as ConvexLedgerRowKind
-import net.neednot.renttracker.model.tenants.MembershipRole as ConvexMembershipRole
 import net.neednot.renttracker.model.tenants.PaymentMethod as ConvexPaymentMethod
 
 class TenantScopeMappingTest {
@@ -118,13 +118,19 @@ class TenantScopeMappingTest {
             ).toEntity()
 
         assertEquals(MembershipRole.Member, entity.role)
-        assertEquals(AccessLevel.AddEdit, entity.debts)
-        assertEquals(AccessLevel.Read, entity.members)
-        assertEquals(AccessLevel.Full, entity.payments)
-        assertEquals(AccessLevel.Read, entity.rentTerms)
-        assertEquals(SettingsAccessLevel.Read, entity.settings)
-        assertEquals(AccessLevel.AddEdit, entity.tenants)
-        assertEquals(true, entity.editOthers)
+        assertEquals(
+            PermissionSet(
+                tenants = AccessLevel.AddEdit,
+                rentTerms = AccessLevel.Read,
+                payments = AccessLevel.Full,
+                debts = AccessLevel.AddEdit,
+                members = AccessLevel.Read,
+                settings = SettingsAccessLevel.Read,
+                editOthers = true,
+            ),
+            entity.permissions,
+        )
+        assertEquals(1, entity.version)
     }
 
     private fun payment(

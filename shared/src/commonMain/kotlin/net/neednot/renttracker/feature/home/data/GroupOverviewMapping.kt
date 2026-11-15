@@ -6,7 +6,8 @@ import net.neednot.renttracker.feature.home.domain.GroupOverview
 
 internal fun List<GroupEntity>.toGroupOverviews(summaries: List<GroupSummaryEntity>): List<GroupOverview> {
     val summaryByGroupId = summaries.associateBy { it.groupId }
-    return mapNotNull { group -> summaryByGroupId[group.id]?.let { summary -> group.toGroupOverview(summary) } }
+    return filter { it.archivedAt == null }
+        .mapNotNull { group -> summaryByGroupId[group.id]?.let { summary -> group.toGroupOverview(summary) } }
 }
 
 private fun GroupEntity.toGroupOverview(summary: GroupSummaryEntity): GroupOverview =

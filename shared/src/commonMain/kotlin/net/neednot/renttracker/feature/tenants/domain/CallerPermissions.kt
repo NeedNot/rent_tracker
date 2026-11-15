@@ -8,6 +8,7 @@ data class CallerPermissions(
     val payments: AccessLevel,
     val debts: AccessLevel,
     val editOthers: Boolean,
+    val canMoveTenants: Boolean,
 ) {
     val canLogPayments: Boolean get() = isOwner || payments >= AccessLevel.AddEdit
 

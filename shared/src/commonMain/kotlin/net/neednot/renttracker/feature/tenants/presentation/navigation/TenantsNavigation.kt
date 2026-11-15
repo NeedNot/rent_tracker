@@ -9,10 +9,12 @@ import net.neednot.renttracker.core.navigation.EditChargeRoute
 import net.neednot.renttracker.core.navigation.EditPaymentRoute
 import net.neednot.renttracker.core.navigation.LedgerRoute
 import net.neednot.renttracker.core.navigation.LogPaymentRoute
+import net.neednot.renttracker.core.navigation.MoveTenantRoute
 import net.neednot.renttracker.core.navigation.RentTermEditorRoute
 import net.neednot.renttracker.core.navigation.TenantEditorRoute
 import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.feature.tenants.presentation.screens.LedgerScreen
+import net.neednot.renttracker.feature.tenants.presentation.screens.MoveTenantScreen
 import net.neednot.renttracker.feature.tenants.presentation.screens.RentTermEditorScreen
 import net.neednot.renttracker.feature.tenants.presentation.screens.TenantEditorScreen
 import net.neednot.renttracker.feature.tenants.presentation.screens.TenantScreen
@@ -35,6 +37,13 @@ fun NavGraphBuilder.tenantsGraph(navController: NavController) {
             },
             onViewLedgerClicked = { navController.navigate(LedgerRoute(route.tenantId)) },
             onEditEntryClicked = { target -> navController.navigateToEdit(route.tenantId, target) },
+            onMoveClicked = { navController.navigate(MoveTenantRoute(route.tenantId)) },
+        )
+    }
+    composable<MoveTenantRoute> { entry ->
+        MoveTenantScreen(
+            route = entry.toRoute<MoveTenantRoute>(),
+            onClosed = { navController.popBackStack() },
         )
     }
     composable<LedgerRoute> { entry ->

@@ -42,7 +42,25 @@ class TenantScopeStoreTest {
             assertEquals(listOf(row), database.ledgerRowDao().observeByTenantId("t1").first())
             assertEquals(listOf(account), database.accountNameDao().observeAll().first())
             assertEquals(listOf(account), database.accountNameDao().observeByIds(listOf("a1", "other")).first())
-            assertEquals(membership, database.membershipDao().observeByGroupId("g1").first())
+            assertEquals(membership, database.membershipDao().observeCaller("g1").first())
+        }
+
+    @Test
+    fun aTenantResultKeepsTheOtherMembersOfTheGroup() =
+        runTest {
+            val otherMember = membershipEntity("m2", "g1", MembershipRole.Member, accountId = "sam")
+            database.membershipDao().upsert(listOf(otherMember))
+
+            replaceTenant("t1", memberships = listOf(membershipEntity("m1", "g1")))
+
+            assertEquals(
+                listOf("m1", "m2"),
+                database
+                    .membershipDao()
+                    .observeByGroupId("g1")
+                    .first()
+                    .map { it.id },
+            )
         }
 
     @Test
@@ -89,10 +107,18 @@ class TenantScopeStoreTest {
                     .map { it.key },
             )
             assertEquals(
-                "m2",
+                listOf("m2"),
                 database
                     .membershipDao()
                     .observeByGroupId("g1")
+                    .first()
+                    .map { it.id },
+            )
+            assertEquals(
+                "m2",
+                database
+                    .membershipDao()
+                    .observeCaller("g1")
                     .first()
                     ?.id,
             )

@@ -136,7 +136,7 @@ class CalendarStoreTest {
                     debts = emptyList(),
                     ledgerRows = emptyList(),
                     accountNames = emptyList(),
-                    memberships = emptyList(),
+                    callerMemberships = emptyList(),
                     allocations = allocations,
                     calendarMonths = months,
                 ),

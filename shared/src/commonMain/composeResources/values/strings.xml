@@ -15,6 +15,24 @@
     </plurals>
     <string name="home_late_count">%1$d late</string>
     <string name="home_archived_owed">Archived tenants owe %1$s</string>
+    <string name="home_invitations_heading">Invitations</string>
+    <string name="home_invitation_as_viewer">%1$s invited you as Viewer</string>
+    <string name="home_invitation_as_bookkeeper">%1$s invited you as Bookkeeper</string>
+    <string name="home_invitation_as_manager">%1$s invited you as Manager</string>
+    <string name="home_invitation_as_custom">%1$s invited you with custom access</string>
+    <string name="home_invitation_description">Invitation to %1$s</string>
+    <string name="home_invitation_accept">Accept</string>
+    <string name="home_invitation_decline">Decline</string>
+    <string name="home_decline_title">Decline invite to %1$s?</string>
+    <string name="home_decline_message">%1$s would need to invite you again to give you access.</string>
+    <string name="home_archived_groups_row">Archived groups (%1$d)</string>
+    <string name="archived_groups_title">Archived groups</string>
+    <string name="archived_groups_empty">No archived groups</string>
+    <string name="archived_groups_subtitle">Only you can see these</string>
+    <plurals name="archived_groups_summary">
+        <item quantity="one">%1$d tenant · archived %2$s</item>
+        <item quantity="other">%1$d tenants · archived %2$s</item>
+    </plurals>
     <string name="home_empty_title">No groups yet</string>
     <string name="home_empty_body">A group holds the tenants of one property. Create your first group to start tracking rent.</string>
     <string name="home_loading">Loading your groups</string>
@@ -46,6 +64,8 @@
     <string name="group_empty_body">Add a tenant to start tracking their rent.</string>
     <string name="group_loading">Loading tenants</string>
     <string name="group_error_not_found">This group no longer exists.</string>
+    <string name="group_error_no_access">You don't have access to this group.</string>
+    <string name="lost_access_removed">You no longer have access to %1$s.</string>
     <string name="group_error_offline">No connection. Check your internet and try again.</string>
     <string name="group_error_unexpected">Something went wrong. Please try again.</string>
     <string name="archived_tenants_title">Archived tenants</string>
@@ -53,6 +73,21 @@
     <string name="tenant_back">Back</string>
     <string name="tenant_more_options">More options</string>
     <string name="tenant_menu_edit_details">Edit details</string>
+    <string name="tenant_menu_move">Move</string>
+    <string name="move_tenant_title">Move %1$s</string>
+    <string name="move_tenant_title_generic">Move tenant</string>
+    <string name="move_tenant_next">Next</string>
+    <string name="move_tenant_intro">Groups where you can move tenants in.</string>
+    <string name="move_empty_title">No group to move to</string>
+    <string name="move_empty_body">You can only move a tenant into a group where you have Full control on Tenants.</string>
+    <string name="move_empty_back">Back to %1$s</string>
+    <string name="move_confirm_title">Move %1$s to %2$s?</string>
+    <string name="move_confirm_lose_access">Members of %1$s lose access to this tenant's ledger.</string>
+    <string name="move_confirm_gain_access">Members of %1$s gain access.</string>
+    <string name="move_confirm_settings_by_date">Months are recalculated with %1$s's settings: By date payment order, %2$d-day grace period.</string>
+    <string name="move_confirm_settings_rent_first">Months are recalculated with %1$s's settings: Rent first payment order, %2$d-day grace period.</string>
+    <string name="move_confirm_history">The full history moves with the tenant.</string>
+    <string name="move_confirm_move">Move</string>
     <string name="tenant_menu_archive">Archive tenant</string>
     <string name="tenant_menu_restore">Restore tenant</string>
     <string name="tenant_loading">Loading tenant</string>

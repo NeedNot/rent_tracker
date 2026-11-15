@@ -3,6 +3,7 @@ package net.neednot.renttracker.feature.group.di
 import net.neednot.renttracker.feature.group.data.GroupRepositoryImpl
 import net.neednot.renttracker.feature.group.domain.GroupRepository
 import net.neednot.renttracker.feature.group.presentation.viewmodel.ArchivedTenantsViewModel
+import net.neednot.renttracker.feature.group.presentation.viewmodel.GroupSettingsViewModel
 import net.neednot.renttracker.feature.group.presentation.viewmodel.GroupViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -15,6 +16,7 @@ val groupModule =
                 asOfClock = get(),
                 database = get(),
                 screenResultStore = get(),
+                groupAccessWatcher = get(),
                 telemetry = get(),
             )
         }
@@ -22,6 +24,9 @@ val groupModule =
             GroupViewModel(groupId = parameters.get(), groupRepository = get(), messageDispatcher = get())
         }
         viewModel { parameters ->
-            ArchivedTenantsViewModel(groupId = parameters.get(), groupRepository = get(), messageDispatcher = get())
+            GroupSettingsViewModel(groupId = parameters.get(), groupRepository = get())
+        }
+        viewModel { parameters ->
+            ArchivedTenantsViewModel(groupId = parameters.get(), groupRepository = get())
         }
     }

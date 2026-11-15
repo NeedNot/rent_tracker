@@ -254,7 +254,7 @@ class TenantCalendarRepositoryTest {
                     debts = debts,
                     ledgerRows = emptyList(),
                     accountNames = listOf(AccountNameEntity("sam", "Sam Rivera")),
-                    memberships = listOf(membershipEntity("m1", "g1")),
+                    callerMemberships = listOf(membershipEntity("m1", "g1")),
                     allocations = allocations,
                     calendarMonths = months,
                 ),

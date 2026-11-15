@@ -1,0 +1,57 @@
+<resources>
+    <string name="group_more_options">More options: Members, Settings</string>
+    <string name="group_menu_members">Members</string>
+    <string name="group_menu_settings">Settings</string>
+    <string name="group_menu_archive">Archive group</string>
+    <string name="group_menu_leave">Leave group</string>
+    <string name="group_view_only">View only</string>
+    <string name="group_archive_title">Archive %1$s?</string>
+    <plurals name="group_archive_tenant_count">
+        <item quantity="one">%1$d tenant</item>
+        <item quantity="other">%1$d tenants</item>
+    </plurals>
+    <string name="group_archive_message">The group disappears for every member. Nothing is deleted, and you can unarchive it from Home.</string>
+    <string name="group_archive_confirm">Archive</string>
+    <string name="group_leave_title">Leave %1$s?</string>
+    <string name="group_leave_message">You\'ll lose access right away. Payments and charges you logged stay in the ledger, attributed to you.</string>
+    <string name="group_leave_stay">Stay</string>
+    <string name="group_leave_confirm">Leave group</string>
+    <string name="group_leave_owner_title">Transfer ownership before leaving</string>
+    <string name="group_leave_owner_message">You own %1$s. Make another member the owner first, then you can leave.</string>
+    <string name="group_leave_owner_transfer">Transfer ownership</string>
+    <string name="group_archived_subtitle">Archived group</string>
+    <string name="group_archived_banner">Archived %1$s. Hidden from every member and read-only until you unarchive it.</string>
+    <string name="group_unarchive">Unarchive</string>
+
+    <string name="group_settings_title">Group settings</string>
+    <string name="group_settings_loading">Loading settings</string>
+    <string name="group_settings_name">Name</string>
+    <string name="group_settings_name_placeholder">e.g. 1st Street</string>
+    <string name="group_settings_time_zone">Time zone</string>
+    <string name="group_settings_time_zone_hint">Due dates and lateness use this time zone.</string>
+    <string name="group_settings_payment_order">Payment order</string>
+    <string name="group_settings_payment_order_rent_first">Rent first</string>
+    <string name="group_settings_payment_order_by_date">By date</string>
+    <string name="group_settings_payment_order_hint">Rent first pays rent before late fees and other charges. By date pays the oldest charge first.</string>
+    <string name="group_settings_grace_days">Grace period (days)</string>
+    <string name="group_settings_grace_days_hint">0 to 15 days after the due date.</string>
+    <string name="group_settings_late_fee">Suggested late fee · optional</string>
+    <string name="group_settings_late_fee_hint">Leave empty to suggest 5% of that month\'s rent.</string>
+    <string name="group_settings_error_grace_days">Enter a number from 0 to 15.</string>
+    <string name="group_settings_error_late_fee">Enter at least $0.01, or leave it empty.</string>
+    <string name="group_settings_conflict_named">%1$s changed these settings while you were editing. The form now shows %2$s\'s saved values. Make your change again, then save.</string>
+    <string name="group_settings_conflict_unnamed">These settings changed while you were editing. The form now shows the saved values. Make your change again, then save.</string>
+    <plurals name="group_settings_grace_days_value">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="group_settings_late_fee_default">5% of that month\'s rent</string>
+    <string name="group_settings_read_only">View only</string>
+    <string name="time_zone_eastern">Eastern Time (New York)</string>
+    <string name="time_zone_central">Central Time (Chicago)</string>
+    <string name="time_zone_mountain">Mountain Time (Denver)</string>
+    <string name="time_zone_arizona">Mountain Time - Arizona (Phoenix)</string>
+    <string name="time_zone_pacific">Pacific Time (Los Angeles)</string>
+    <string name="time_zone_alaska">Alaska Time (Anchorage)</string>
+    <string name="time_zone_hawaii">Hawaii Time (Honolulu)</string>
+</resources>

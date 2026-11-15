@@ -14,7 +14,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -31,7 +30,6 @@ import net.neednot.renttracker.feature.group.presentation.components.TenantListC
 import net.neednot.renttracker.feature.group.presentation.uistate.ArchivedTenantRowUiState
 import net.neednot.renttracker.feature.group.presentation.uistate.ArchivedTenantsUiState
 import net.neednot.renttracker.feature.group.presentation.viewmodel.ArchivedTenantsViewModel
-import net.neednot.renttracker.feature.group.presentation.viewmodel.GroupEvent
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.archived_tenants_empty
 import net.neednot.renttracker.resources.archived_tenants_title
@@ -46,18 +44,10 @@ fun ArchivedTenantsScreen(
     groupId: String,
     onBackClicked: () -> Unit,
     onTenantClicked: (tenantId: String) -> Unit,
-    onGroupGone: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ArchivedTenantsViewModel = koinViewModel { parametersOf(groupId) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            when (event) {
-                GroupEvent.GroupGone -> onGroupGone()
-            }
-        }
-    }
     ArchivedTenantsContent(
         uiState = uiState,
         onBackClicked = onBackClicked,

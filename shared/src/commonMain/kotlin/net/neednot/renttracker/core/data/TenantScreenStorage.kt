@@ -19,7 +19,7 @@ suspend fun ScreenResultStore.replaceTenant(
                 debts = result.debts.map { it.toEntity() },
                 ledgerRows = result.ledgerRows.map { it.toEntity() },
                 accountNames = result.accounts.map { it.toEntity() },
-                memberships = result.memberships.map { it.toEntity() },
+                callerMemberships = result.memberships.map { it.toEntity() },
                 allocations = result.allocations.map { it.toEntity() },
                 calendarMonths = result.calendarMonths.map { it.toEntity() },
             ),

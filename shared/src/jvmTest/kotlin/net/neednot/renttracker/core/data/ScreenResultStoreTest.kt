@@ -30,7 +30,7 @@ class ScreenResultStoreTest {
             val groups = listOf(groupEntity("g1", creationTime = 1), groupEntity("g2", creationTime = 2))
             val summaries = listOf(groupSummaryEntity("g1", totalOwedCents = 390_000), groupSummaryEntity("g2"))
 
-            store.replaceHome(groups, summaries)
+            store.replaceHome(groups, summaries, invitations = emptyList())
 
             assertEquals(groups, database.groupDao().observeAll().first())
             assertEquals(summaries, database.groupSummaryDao().observeAll().first())
@@ -42,9 +42,14 @@ class ScreenResultStoreTest {
             store.replaceHome(
                 groups = listOf(groupEntity("g1"), groupEntity("g2")),
                 groupSummaries = listOf(groupSummaryEntity("g1"), groupSummaryEntity("g2")),
+                invitations = emptyList(),
             )
 
-            store.replaceHome(groups = listOf(groupEntity("g2")), groupSummaries = listOf(groupSummaryEntity("g2")))
+            store.replaceHome(
+                groups = listOf(groupEntity("g2")),
+                groupSummaries = listOf(groupSummaryEntity("g2")),
+                invitations = emptyList(),
+            )
 
             assertEquals(
                 listOf("g2"),
@@ -67,11 +72,16 @@ class ScreenResultStoreTest {
     @Test
     fun aHomeResultUpdatesAGroupItAlreadyHas() =
         runTest {
-            store.replaceHome(listOf(groupEntity("g1", name = "1st Street")), listOf(groupSummaryEntity("g1")))
+            store.replaceHome(
+                listOf(groupEntity("g1", name = "1st Street")),
+                listOf(groupSummaryEntity("g1")),
+                emptyList(),
+            )
 
             store.replaceHome(
                 groups = listOf(groupEntity("g1", name = "First Street")),
                 groupSummaries = listOf(groupSummaryEntity("g1", totalOwedCents = 120_000)),
+                invitations = emptyList(),
             )
 
             assertEquals(
@@ -95,9 +105,9 @@ class ScreenResultStoreTest {
     @Test
     fun anEmptyHomeResultClearsEveryGroup() =
         runTest {
-            store.replaceHome(listOf(groupEntity("g1")), listOf(groupSummaryEntity("g1")))
+            store.replaceHome(listOf(groupEntity("g1")), listOf(groupSummaryEntity("g1")), emptyList())
 
-            store.replaceHome(groups = emptyList(), groupSummaries = emptyList())
+            store.replaceHome(groups = emptyList(), groupSummaries = emptyList(), invitations = emptyList())
 
             assertEquals(emptyList(), database.groupDao().observeAll().first())
             assertEquals(emptyList(), database.groupSummaryDao().observeAll().first())
@@ -177,10 +187,14 @@ class ScreenResultStoreTest {
     ) {
         store.replaceGroup(
             groupId = groupId,
-            groups = listOf(groupEntity(groupId)),
-            tenants = tenantIds.map { tenantEntity(it, groupId = groupId) },
-            tenantSummaries = tenantIds.map { tenantSummaryEntity(it) },
-            groupSummaries = listOf(groupSummaryEntity(groupId)),
+            scope =
+                GroupScopeEntities(
+                    groups = listOf(groupEntity(groupId)),
+                    tenants = tenantIds.map { tenantEntity(it, groupId = groupId) },
+                    tenantSummaries = tenantIds.map { tenantSummaryEntity(it) },
+                    groupSummaries = listOf(groupSummaryEntity(groupId)),
+                    callerMemberships = emptyList(),
+                ),
         )
     }
 
@@ -200,7 +214,7 @@ class ScreenResultStoreTest {
                     debts = emptyList(),
                     ledgerRows = emptyList(),
                     accountNames = emptyList(),
-                    memberships = emptyList(),
+                    callerMemberships = emptyList(),
                     allocations = emptyList(),
                     calendarMonths = emptyList(),
                 ),

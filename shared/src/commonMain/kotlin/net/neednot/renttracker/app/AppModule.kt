@@ -1,9 +1,16 @@
 package net.neednot.renttracker.app
 
-import org.koin.core.module.dsl.viewModelOf
+import net.neednot.renttracker.core.data.GroupAccessWatcher
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule =
     module {
-        viewModelOf(::AppViewModel)
+        viewModel {
+            AppViewModel(
+                authRepository = get(),
+                lostGroupAccess = get<GroupAccessWatcher>().losses,
+                messageDispatcher = get(),
+            )
+        }
     }

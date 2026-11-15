@@ -27,9 +27,9 @@ internal class DebtBackendCalls(
         args: A,
         argsSerializer: KSerializer<A>,
         resultSerializer: KSerializer<T>,
+        watch: (Flow<Result<T, BackendError>>) -> Flow<Result<T, BackendError>> = { it },
     ): Flow<Result<T, DebtError>> =
-        backend
-            .subscribe(name, ConvexJson.encodeArgs(argsSerializer, args), resultSerializer)
+        watch(backend.subscribe(name, ConvexJson.encodeArgs(argsSerializer, args), resultSerializer))
             .map { result -> result.toDebtResult() }
 
     suspend fun <A, T> mutate(

@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.MainDispatcherTest
+import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.home.domain.FakeHomeRepository
 import net.neednot.renttracker.feature.home.domain.GroupOverview
@@ -30,7 +31,8 @@ import kotlin.test.assertEquals
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest : MainDispatcherTest() {
     private val repository = FakeHomeRepository()
-    private val viewModel by lazy { HomeViewModel(repository) }
+    private val messages = RecordingMessageDispatcher()
+    private val viewModel by lazy { HomeViewModel(repository, messages) }
 
     private val firstStreet =
         GroupOverview(
@@ -66,7 +68,7 @@ class HomeViewModelTest : MainDispatcherTest() {
             viewModel.uiState.test {
                 skipItems(1)
 
-                repository.groups.value = Synced(emptyList(), SyncStatus.Synced)
+                repository.showGroups(emptyList(), SyncStatus.Synced)
 
                 assertEquals(HomeUiState.Empty, awaitItem())
             }
@@ -78,7 +80,7 @@ class HomeViewModelTest : MainDispatcherTest() {
             viewModel.uiState.test {
                 skipItems(1)
 
-                repository.groups.value = Synced(listOf(firstStreet), SyncStatus.Synced)
+                repository.showGroups(listOf(firstStreet), SyncStatus.Synced)
 
                 val expected =
                     GroupCardUiState(
@@ -100,7 +102,7 @@ class HomeViewModelTest : MainDispatcherTest() {
             viewModel.uiState.test {
                 skipItems(1)
 
-                repository.groups.value = Synced(listOf(mapleCourt), SyncStatus.Synced)
+                repository.showGroups(listOf(mapleCourt), SyncStatus.Synced)
 
                 val expected =
                     GroupCardUiState(
@@ -119,7 +121,7 @@ class HomeViewModelTest : MainDispatcherTest() {
     @Test
     fun cachedGroupsShowWhileTheServerIsStillAnswering() =
         runTest {
-            repository.groups.value = Synced(listOf(mapleCourt), SyncStatus.Syncing)
+            repository.showGroups(listOf(mapleCourt), SyncStatus.Syncing)
 
             viewModel.uiState.test {
                 skipItems(1)
@@ -134,7 +136,7 @@ class HomeViewModelTest : MainDispatcherTest() {
             viewModel.uiState.test {
                 skipItems(1)
 
-                repository.groups.value = Synced(emptyList(), SyncStatus.Failed(HomeError.Unexpected("boom")))
+                repository.showGroups(emptyList(), SyncStatus.Failed(HomeError.Unexpected("boom")))
 
                 assertEquals(HomeUiState.Error(UiText.Resource(Res.string.home_error_unexpected)), awaitItem())
             }
@@ -146,7 +148,7 @@ class HomeViewModelTest : MainDispatcherTest() {
             viewModel.uiState.test {
                 skipItems(1)
 
-                repository.groups.value = Synced(listOf(mapleCourt), SyncStatus.Failed(HomeError.Offline))
+                repository.showGroups(listOf(mapleCourt), SyncStatus.Failed(HomeError.Offline))
 
                 val content = awaitItem() as HomeUiState.Content
                 assertEquals(listOf("g2"), content.groups.map { it.groupId })
@@ -159,13 +161,13 @@ class HomeViewModelTest : MainDispatcherTest() {
         runTest {
             val screen = launch { viewModel.uiState.collect {} }
             runCurrent()
-            assertEquals(1, repository.groups.subscriptionCount.value)
+            assertEquals(1, repository.home.subscriptionCount.value)
 
             screen.cancel()
             advanceTimeBy(4_999)
-            assertEquals(1, repository.groups.subscriptionCount.value)
+            assertEquals(1, repository.home.subscriptionCount.value)
 
             advanceTimeBy(2)
-            assertEquals(0, repository.groups.subscriptionCount.value)
+            assertEquals(0, repository.home.subscriptionCount.value)
         }
 }

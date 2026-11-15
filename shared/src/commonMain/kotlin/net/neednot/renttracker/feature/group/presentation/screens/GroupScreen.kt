@@ -33,12 +33,19 @@ import net.neednot.renttracker.core.designsystem.components.TenantChipState
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
+import net.neednot.renttracker.feature.group.presentation.components.ArchivedBanner
 import net.neednot.renttracker.feature.group.presentation.components.ArchivedTenantsLink
 import net.neednot.renttracker.feature.group.presentation.components.CenteredMessage
+import net.neednot.renttracker.feature.group.presentation.components.GroupDialog
+import net.neednot.renttracker.feature.group.presentation.components.GroupMenu
+import net.neednot.renttracker.feature.group.presentation.components.GroupTitle
 import net.neednot.renttracker.feature.group.presentation.components.LoadingIndicator
 import net.neednot.renttracker.feature.group.presentation.components.SyncErrorText
 import net.neednot.renttracker.feature.group.presentation.components.TenantListCard
 import net.neednot.renttracker.feature.group.presentation.components.TenantRow
+import net.neednot.renttracker.feature.group.presentation.uistate.GroupChromeUiState
+import net.neednot.renttracker.feature.group.presentation.uistate.GroupDialogUiState
+import net.neednot.renttracker.feature.group.presentation.uistate.GroupMenuItem
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupUiState
 import net.neednot.renttracker.feature.group.presentation.uistate.TenantRowUiState
 import net.neednot.renttracker.feature.group.presentation.viewmodel.GroupEvent
@@ -60,7 +67,10 @@ fun GroupScreen(
     onTenantClicked: (tenantId: String) -> Unit,
     onAddTenantClicked: () -> Unit,
     onArchivedClicked: () -> Unit,
-    onGroupGone: () -> Unit,
+    onMembersClicked: () -> Unit,
+    onSettingsClicked: () -> Unit,
+    onTransferOwnershipClicked: () -> Unit,
+    onReturnHome: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: GroupViewModel = koinViewModel { parametersOf(groupId) },
 ) {
@@ -68,16 +78,37 @@ fun GroupScreen(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                GroupEvent.GroupGone -> onGroupGone()
+                GroupEvent.ReturnHome -> onReturnHome()
+                GroupEvent.OpenTransferOwnership -> onTransferOwnershipClicked()
             }
         }
     }
     GroupContent(
         uiState = uiState,
-        onBackClicked = onBackClicked,
-        onTenantClicked = onTenantClicked,
-        onAddTenantClicked = onAddTenantClicked,
-        onArchivedClicked = onArchivedClicked,
+        actions =
+            GroupActions(
+                onBackClicked = onBackClicked,
+                onTenantClicked = onTenantClicked,
+                onAddTenantClicked = onAddTenantClicked,
+                onArchivedClicked = onArchivedClicked,
+                onMenuItemClicked = { item ->
+                    when (item) {
+                        GroupMenuItem.Members -> onMembersClicked()
+                        GroupMenuItem.Settings -> onSettingsClicked()
+                        GroupMenuItem.Archive -> viewModel.onArchiveClicked()
+                        GroupMenuItem.Leave -> viewModel.onLeaveClicked()
+                    }
+                },
+                onUnarchiveClicked = viewModel::onUnarchiveClicked,
+                onDialogConfirmed = { dialog ->
+                    when (dialog) {
+                        is GroupDialogUiState.Archive -> viewModel.onArchiveConfirmed()
+                        is GroupDialogUiState.Leave -> viewModel.onLeaveConfirmed()
+                        is GroupDialogUiState.LeaveOwner -> viewModel.onTransferOwnershipClicked()
+                    }
+                },
+                onDialogDismissed = viewModel::onDialogDismissed,
+            ),
         modifier = modifier,
     )
 }
@@ -86,29 +117,40 @@ fun GroupScreen(
 @Composable
 private fun GroupContent(
     uiState: GroupUiState,
-    onBackClicked: () -> Unit,
-    onTenantClicked: (tenantId: String) -> Unit,
-    onAddTenantClicked: () -> Unit,
-    onArchivedClicked: () -> Unit,
+    actions: GroupActions,
     modifier: Modifier = Modifier,
 ) {
+    val chrome = uiState.chrome()
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(uiState.groupName()) },
+                title = {
+                    GroupTitle(
+                        name = uiState.groupName(),
+                        isViewOnly = chrome?.isViewOnly == true,
+                        isArchived = chrome?.archivedBanner != null,
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBackClicked) {
+                    IconButton(onClick = actions.onBackClicked) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(Res.string.group_back),
                         )
                     }
                 },
+                actions = {
+                    if (chrome != null && chrome.menuItems.isNotEmpty()) {
+                        GroupMenu(items = chrome.menuItems, onItemClicked = actions.onMenuItemClicked)
+                    }
+                },
             )
         },
         floatingActionButton = {
-            if (uiState is GroupUiState.Content) AddTenantButton(onClick = onAddTenantClicked)
+            if (uiState is GroupUiState.Content && chrome?.canAddTenants == true) {
+                AddTenantButton(onClick = actions.onAddTenantClicked)
+            }
         },
     ) { contentPadding ->
         when (uiState) {
@@ -124,25 +166,30 @@ private fun GroupContent(
             }
 
             is GroupUiState.Empty -> {
-                NoTenants(
-                    archived = uiState.archived,
-                    onAddTenantClicked = onAddTenantClicked,
-                    onArchivedClicked = onArchivedClicked,
-                    contentPadding = contentPadding,
-                )
+                NoTenants(empty = uiState, actions = actions, contentPadding = contentPadding)
             }
 
             is GroupUiState.Content -> {
-                TenantList(
-                    content = uiState,
-                    onTenantClicked = onTenantClicked,
-                    onArchivedClicked = onArchivedClicked,
-                    contentPadding = contentPadding,
-                )
+                TenantList(content = uiState, actions = actions, contentPadding = contentPadding)
             }
         }
     }
+    chrome?.dialog?.let { dialog ->
+        GroupDialog(
+            dialog = dialog,
+            isWorking = chrome.isWorking,
+            onConfirmed = { actions.onDialogConfirmed(dialog) },
+            onDismissed = actions.onDialogDismissed,
+        )
+    }
 }
+
+private fun GroupUiState.chrome(): GroupChromeUiState? =
+    when (this) {
+        is GroupUiState.Content -> chrome
+        is GroupUiState.Empty -> chrome
+        GroupUiState.Loading, is GroupUiState.Error -> null
+    }
 
 private fun GroupUiState.groupName(): String =
     when (this) {
@@ -163,8 +210,7 @@ private fun AddTenantButton(onClick: () -> Unit) {
 @Composable
 private fun TenantList(
     content: GroupUiState.Content,
-    onTenantClicked: (tenantId: String) -> Unit,
-    onArchivedClicked: () -> Unit,
+    actions: GroupActions,
     contentPadding: PaddingValues,
 ) {
     LazyColumn(
@@ -175,15 +221,24 @@ private fun TenantList(
         content.syncError?.let { error ->
             item(key = "syncError") { SyncErrorText(error) }
         }
+        content.chrome.archivedBanner?.let { banner ->
+            item(key = "archivedBanner") {
+                ArchivedBanner(
+                    text = banner,
+                    onUnarchiveClicked = actions.onUnarchiveClicked,
+                    isWorking = content.chrome.isWorking,
+                )
+            }
+        }
         item(key = "summary") {
             GroupSummary(balance = content.balance, tenantCounts = content.tenantCounts)
         }
         content.archived?.let { archived ->
-            item(key = "archived") { ArchivedTenantsLink(archived = archived, onClick = onArchivedClicked) }
+            item(key = "archived") { ArchivedTenantsLink(archived = archived, onClick = actions.onArchivedClicked) }
         }
         item(key = "tenants") {
             TenantListCard(tenants = content.tenants) { tenant ->
-                TenantRow(tenant = tenant, onClick = { onTenantClicked(tenant.tenantId) })
+                TenantRow(tenant = tenant, onClick = { actions.onTenantClicked(tenant.tenantId) })
             }
         }
     }
@@ -212,25 +267,37 @@ private fun GroupSummary(
 
 @Composable
 private fun NoTenants(
-    archived: UiText?,
-    onAddTenantClicked: () -> Unit,
-    onArchivedClicked: () -> Unit,
+    empty: GroupUiState.Empty,
+    actions: GroupActions,
     contentPadding: PaddingValues,
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
-        archived?.let {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        empty.chrome.archivedBanner?.let { banner ->
+            ArchivedBanner(
+                text = banner,
+                onUnarchiveClicked = actions.onUnarchiveClicked,
+                isWorking = empty.chrome.isWorking,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        empty.archived?.let {
             ArchivedTenantsLink(
                 archived = it,
-                onClick = onArchivedClicked,
+                onClick = actions.onArchivedClicked,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
         CenteredMessage(
             title = stringResource(Res.string.group_empty_title),
-            body = stringResource(Res.string.group_empty_body),
+            body = if (empty.chrome.canAddTenants) stringResource(Res.string.group_empty_body) else null,
         ) {
-            Button(onClick = onAddTenantClicked, modifier = Modifier.padding(top = 8.dp)) {
-                Text(stringResource(Res.string.group_add_tenant))
+            if (empty.chrome.canAddTenants) {
+                Button(onClick = actions.onAddTenantClicked, modifier = Modifier.padding(top = 8.dp)) {
+                    Text(stringResource(Res.string.group_add_tenant))
+                }
             }
         }
     }
@@ -264,11 +331,13 @@ private fun GroupContentPreview() {
                                 chipState = TenantChipState.PaidUp,
                             ),
                         ),
+                    chrome =
+                        GroupChromeUiState(
+                            canAddTenants = true,
+                            menuItems = listOf(GroupMenuItem.Members, GroupMenuItem.Settings, GroupMenuItem.Archive),
+                        ),
                 ),
-            onBackClicked = {},
-            onTenantClicked = {},
-            onAddTenantClicked = {},
-            onArchivedClicked = {},
+            actions = GroupActions(),
         )
     }
 }

@@ -15,6 +15,7 @@ val paymentsModule =
                 asOfClock = get(),
                 database = get(),
                 screenResultStore = get(),
+                groupAccessWatcher = get(),
                 telemetry = get(),
             )
         }

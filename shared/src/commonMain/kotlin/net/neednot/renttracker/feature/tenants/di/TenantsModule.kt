@@ -1,17 +1,21 @@
 package net.neednot.renttracker.feature.tenants.di
 
 import net.neednot.renttracker.core.navigation.LedgerRoute
+import net.neednot.renttracker.core.navigation.MoveTenantRoute
 import net.neednot.renttracker.core.navigation.RentTermEditorRoute
 import net.neednot.renttracker.core.navigation.TenantEditorRoute
 import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.feature.tenants.data.LedgerEntryRepositoryImpl
+import net.neednot.renttracker.feature.tenants.data.MoveTenantRepositoryImpl
 import net.neednot.renttracker.feature.tenants.data.TenantCalendarRepositoryImpl
 import net.neednot.renttracker.feature.tenants.data.TenantRepositoryImpl
 import net.neednot.renttracker.feature.tenants.domain.LedgerEntryRepository
+import net.neednot.renttracker.feature.tenants.domain.MoveTenantRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantCalendarRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantRepository
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.LedgerEntryViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.LedgerViewModel
+import net.neednot.renttracker.feature.tenants.presentation.viewmodel.MoveTenantViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.RentTermEditorViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.TenantEditorViewModel
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.TenantViewModel
@@ -26,9 +30,11 @@ val tenantsModule =
                 asOfClock = get(),
                 database = get(),
                 screenResultStore = get(),
+                groupAccessWatcher = get(),
                 telemetry = get(),
             )
         }
+        single<MoveTenantRepository> { MoveTenantRepositoryImpl(backend = get(), asOfClock = get(), telemetry = get()) }
         single<TenantCalendarRepository> {
             TenantCalendarRepositoryImpl(
                 backend = get(),
@@ -44,6 +50,14 @@ val tenantsModule =
                 tenantId = route.tenantId,
                 tenantRepository = get(),
                 calendarRepository = get(),
+            )
+        }
+        viewModel { (route: MoveTenantRoute) ->
+            MoveTenantViewModel(
+                tenantId = route.tenantId,
+                tenantRepository = get(),
+                moveRepository = get(),
+                messageDispatcher = get(),
             )
         }
         viewModel { (route: TenantEditorRoute) ->

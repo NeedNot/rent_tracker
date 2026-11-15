@@ -1,5 +1,6 @@
 package net.neednot.renttracker.feature.group.presentation.viewmodel
 
+import kotlinx.datetime.TimeZone
 import net.neednot.renttracker.core.designsystem.components.TenantChipState
 import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.designsystem.format.formatMonthDay
@@ -23,24 +24,47 @@ import net.neednot.renttracker.resources.group_tenant_count_late
 import net.neednot.renttracker.resources.group_tenant_count_none_late
 import net.neednot.renttracker.resources.group_tenant_due
 
-internal fun Synced<GroupDetails?, GroupError>.toGroupUiState(): GroupUiState {
+internal fun Synced<GroupDetails?, GroupError>.toGroupUiState(
+    overlay: GroupOverlay,
+    timeZone: TimeZone,
+): GroupUiState {
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
     val group = value
     return when {
-        group != null && group.activeTenants.isNotEmpty() -> group.toContent(syncError)
-        syncError != null -> GroupUiState.Error(syncError)
-        group == null || status == SyncStatus.Syncing -> GroupUiState.Loading
-        else -> GroupUiState.Empty(groupName = group.name, archived = group.archivedText())
+        group != null && group.activeTenants.isNotEmpty() -> {
+            group.toContent(syncError, overlay, timeZone)
+        }
+
+        syncError != null -> {
+            GroupUiState.Error(syncError)
+        }
+
+        group == null || status == SyncStatus.Syncing -> {
+            GroupUiState.Loading
+        }
+
+        else -> {
+            GroupUiState.Empty(
+                groupName = group.name,
+                archived = group.archivedText(),
+                chrome = group.toChrome(overlay, timeZone),
+            )
+        }
     }
 }
 
-private fun GroupDetails.toContent(syncError: UiText?): GroupUiState.Content =
+private fun GroupDetails.toContent(
+    syncError: UiText?,
+    overlay: GroupOverlay,
+    timeZone: TimeZone,
+): GroupUiState.Content =
     GroupUiState.Content(
         groupName = name,
         balance = if (totalOwedCents == 0L) UiText.Resource(Res.string.balance_paid_up) else owesText(totalOwedCents),
         tenantCounts = tenantCountsText(),
         archived = archivedText(),
         tenants = activeTenants.map { it.toRowUiState() },
+        chrome = toChrome(overlay, timeZone),
         syncError = syncError,
     )
 

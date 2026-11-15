@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.datetime.LocalDate
 import net.neednot.renttracker.core.backend.Backend
 import net.neednot.renttracker.core.data.AsOfClock
+import net.neednot.renttracker.core.data.GroupAccessWatcher
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
 import net.neednot.renttracker.core.data.replaceTenant
@@ -35,6 +36,7 @@ class PaymentRepositoryImpl(
     private val asOfClock: AsOfClock,
     private val database: RentTrackerDatabase,
     private val screenResultStore: ScreenResultStore,
+    private val groupAccessWatcher: GroupAccessWatcher,
     telemetry: Telemetry,
 ) : PaymentRepository {
     private val calls = PaymentBackendCalls(backend, telemetry)
@@ -53,6 +55,7 @@ class PaymentRepositoryImpl(
                         args = TenantsScreenArgs(asOf = asOf, tenantId = tenantId),
                         argsSerializer = TenantsScreenArgs.serializer(),
                         resultSerializer = TenantsScreenResult.serializer(),
+                        watch = { results -> groupAccessWatcher.watchTenant(tenantId, results) },
                     )
                 },
             store = { result -> screenResultStore.replaceTenant(tenantId, result) },

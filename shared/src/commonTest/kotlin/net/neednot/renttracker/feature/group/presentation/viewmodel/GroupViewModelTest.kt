@@ -7,10 +7,12 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import net.neednot.renttracker.core.designsystem.components.TenantChipState
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.MainDispatcherTest
+import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.UiText
@@ -20,6 +22,8 @@ import net.neednot.renttracker.feature.group.domain.GroupTenantState
 import net.neednot.renttracker.feature.group.domain.TenantBalance
 import net.neednot.renttracker.feature.group.domain.groupDetails
 import net.neednot.renttracker.feature.group.domain.groupTenant
+import net.neednot.renttracker.feature.group.presentation.uistate.GroupChromeUiState
+import net.neednot.renttracker.feature.group.presentation.uistate.GroupMenuItem
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupUiState
 import net.neednot.renttracker.feature.group.presentation.uistate.TenantRowUiState
 import net.neednot.renttracker.resources.Res
@@ -42,8 +46,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupViewModelTest : MainDispatcherTest() {
     private val repository = FakeGroupRepository()
-    private val messageDispatcher = RecordingMessageDispatcher()
-    private val viewModel by lazy { GroupViewModel("g1", repository, messageDispatcher) }
+    private val viewModel by lazy { GroupViewModel("g1", repository, RecordingMessageDispatcher(), TimeZone.UTC) }
 
     private val lateTenant =
         groupTenant(
@@ -239,6 +242,16 @@ class GroupViewModelTest : MainDispatcherTest() {
                     GroupUiState.Empty(
                         groupName = "1st Street",
                         archived = UiText.Resource(Res.string.group_archived, listOf(1)),
+                        chrome =
+                            GroupChromeUiState(
+                                canAddTenants = true,
+                                menuItems =
+                                    listOf(
+                                        GroupMenuItem.Members,
+                                        GroupMenuItem.Settings,
+                                        GroupMenuItem.Archive,
+                                    ),
+                            ),
                     ),
                     awaitItem(),
                 )
@@ -281,36 +294,6 @@ class GroupViewModelTest : MainDispatcherTest() {
                 assertEquals(listOf("t2"), content.tenants.map { it.tenantId })
                 assertEquals(UiText.Resource(Res.string.group_error_offline), content.syncError)
             }
-        }
-
-    @Test
-    fun aGroupThatIsGoneShowsAMessageAndLeaves() =
-        runTest {
-            backgroundScope.launch { viewModel.uiState.collect {} }
-
-            viewModel.events.test {
-                repository.group.value = Synced(null, SyncStatus.Failed(GroupError.NotFound))
-
-                assertEquals(GroupEvent.GroupGone, awaitItem())
-            }
-            assertEquals(
-                listOf(UiMessage(UiText.Resource(Res.string.group_error_not_found), UiMessageVariant.Error)),
-                messageDispatcher.shown,
-            )
-        }
-
-    @Test
-    fun otherFailuresShowNoMessageAndStayOnTheGroup() =
-        runTest {
-            backgroundScope.launch { viewModel.uiState.collect {} }
-
-            viewModel.events.test {
-                repository.group.value = Synced(null, SyncStatus.Failed(GroupError.Offline))
-                runCurrent()
-
-                expectNoEvents()
-            }
-            assertTrue(messageDispatcher.shown.isEmpty())
         }
 
     @Test
