@@ -5,9 +5,11 @@ import net.neednot.renttracker.core.designsystem.components.TenantChipState
 import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.designsystem.format.formatMonthDay
 import net.neednot.renttracker.core.designsystem.format.owesText
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.ui.offlineBannerText
 import net.neednot.renttracker.feature.group.domain.GroupDetails
 import net.neednot.renttracker.feature.group.domain.GroupError
 import net.neednot.renttracker.feature.group.domain.GroupTenant
@@ -27,27 +29,30 @@ import net.neednot.renttracker.resources.group_tenant_due
 internal fun Synced<GroupDetails?, GroupError>.toGroupUiState(
     overlay: GroupOverlay,
     timeZone: TimeZone,
+    freshness: Freshness,
 ): GroupUiState {
+    val offlineBanner = freshness.offlineBannerText()
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
     val group = value
     return when {
         group != null && group.activeTenants.isNotEmpty() -> {
-            group.toContent(syncError, overlay, timeZone)
+            group.toContent(syncError, overlay, timeZone, freshness)
         }
 
         syncError != null -> {
-            GroupUiState.Error(syncError)
+            GroupUiState.Error(syncError, offlineBanner)
         }
 
         group == null || status == SyncStatus.Syncing -> {
-            GroupUiState.Loading
+            GroupUiState.Loading(offlineBanner)
         }
 
         else -> {
             GroupUiState.Empty(
                 groupName = group.name,
                 archived = group.archivedText(),
-                chrome = group.toChrome(overlay, timeZone),
+                chrome = group.toChrome(overlay, timeZone, freshness),
+                offlineBanner = offlineBanner,
             )
         }
     }
@@ -57,6 +62,7 @@ private fun GroupDetails.toContent(
     syncError: UiText?,
     overlay: GroupOverlay,
     timeZone: TimeZone,
+    freshness: Freshness,
 ): GroupUiState.Content =
     GroupUiState.Content(
         groupName = name,
@@ -64,8 +70,9 @@ private fun GroupDetails.toContent(
         tenantCounts = tenantCountsText(),
         archived = archivedText(),
         tenants = activeTenants.map { it.toRowUiState() },
-        chrome = toChrome(overlay, timeZone),
+        chrome = toChrome(overlay, timeZone, freshness),
         syncError = syncError,
+        offlineBanner = freshness.offlineBannerText(),
     )
 
 private fun GroupDetails.tenantCountsText(): UiText {

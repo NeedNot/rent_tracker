@@ -10,6 +10,7 @@ data class PaymentsLogArgs(
     val clientId: String,
     val confirmed: Boolean? = null,
     val dateReceived: String,
+    val expectedGroupId: String? = null,
     val lateFee: PaymentsLogLateFee? = null,
     val method: PaymentsLogMethod? = null,
     val note: String? = null,

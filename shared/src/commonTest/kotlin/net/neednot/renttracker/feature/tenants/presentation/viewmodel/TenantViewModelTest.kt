@@ -17,7 +17,9 @@ import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.feature.tenants.domain.FakePendingPaymentRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantCalendarRepository
+import net.neednot.renttracker.feature.tenants.domain.FakeTenantFreshnessRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantRepository
 import net.neednot.renttracker.feature.tenants.domain.LateFeeSuggestion
 import net.neednot.renttracker.feature.tenants.domain.OwedBreakdown
@@ -70,12 +72,15 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TenantViewModelTest : MainDispatcherTest() {
+    private val freshness = FakeTenantFreshnessRepository()
     private val repository = FakeTenantRepository()
     private val viewModel by lazy {
         TenantViewModel(
             tenantId = "t1",
             tenantRepository = repository,
             calendarRepository = FakeTenantCalendarRepository(),
+            freshnessRepository = freshness,
+            pendingPaymentRepository = FakePendingPaymentRepository(),
             timeZone = TimeZone.UTC,
         )
     }

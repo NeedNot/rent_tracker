@@ -1,9 +1,10 @@
-package net.neednot.renttracker.feature.payments.data
+package net.neednot.renttracker.core.data
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class DuplicateMatchDetails(
+data class DuplicateMatchDetails(
+    val id: String,
     val kind: DuplicateKindDetails,
     val date: String,
     val amountCents: Long,

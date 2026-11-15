@@ -26,8 +26,10 @@ import androidx.room.RoomDatabase
         InviteEntity::class,
         HomeInvitationEntity::class,
         AccountProfileEntity::class,
+        PendingDuplicateMatchEntity::class,
+        CacheTimeEntity::class,
     ],
-    version = 6,
+    version = 7,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -77,6 +79,8 @@ abstract class RentTrackerDatabase : RoomDatabase() {
     abstract fun homeInvitationDao(): HomeInvitationDao
 
     abstract fun groupCacheDao(): GroupCacheDao
+
+    abstract fun cacheTimeDao(): CacheTimeDao
 
     abstract fun accountProfileDao(): AccountProfileDao
 

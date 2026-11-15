@@ -7,6 +7,9 @@ import kotlinx.serialization.json.JsonElement
 import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.ConvexJson
 import net.neednot.renttracker.core.backend.validationField
+import net.neednot.renttracker.core.data.DuplicateKindDetails
+import net.neednot.renttracker.core.data.DuplicateMatchDetails
+import net.neednot.renttracker.core.data.NeedsConfirmationDetails
 import net.neednot.renttracker.core.data.PaymentMethod
 import net.neednot.renttracker.feature.payments.domain.DuplicateKind
 import net.neednot.renttracker.feature.payments.domain.DuplicateMatch

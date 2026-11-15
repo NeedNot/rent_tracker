@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pending_chip_pending">Pending — not synced</string>
+    <string name="pending_chip_needs_confirmation">Needs confirmation</string>
+    <string name="pending_chip_rejected">Rejected</string>
+    <string name="pending_row_saved_on_phone">Saved on this phone</string>
+    <string name="pending_row_possible_duplicate">Possible duplicate</string>
+    <string name="pending_row_tenant_changed">Tenant changed</string>
+    <string name="pending_row_not_saved">Not saved</string>
+    <string name="pending_ledger_note">Rows not yet on the server never change the running balance.</string>
+    <plurals name="pending_banner_waiting">
+        <item quantity="one">%1$d payment waiting to sync</item>
+        <item quantity="other">%1$d payments waiting to sync</item>
+    </plurals>
+    <string name="pending_banner_waiting_subtitle">Saved on this phone. It\'s sent when you\'re back online.</string>
+    <plurals name="pending_banner_attention">
+        <item quantity="one">%1$d payment needs your attention</item>
+        <item quantity="other">%1$d payments need your attention</item>
+    </plurals>
+    <string name="pending_banner_review">Review</string>
+    <string name="pending_sheet_title">Payment · %1$s</string>
+    <string name="pending_sheet_not_sent">Not sent yet. It doesn\'t count toward the balance until the server accepts it.</string>
+    <string name="pending_action_cancel">Cancel</string>
+    <string name="pending_action_save_anyway">Save anyway</string>
+    <string name="pending_action_send_anyway">Send anyway</string>
+    <string name="pending_action_dismiss">Dismiss</string>
+    <string name="pending_cancel_title">Cancel this payment?</string>
+    <string name="pending_cancel_message">This payment hasn\'t been sent and will be removed from this phone.</string>
+    <string name="pending_removed">Payment removed from this phone.</string>
+    <string name="pending_duplicate_title">Possible duplicate: save anyway?</string>
+    <string name="pending_duplicate_intro">%1$s already has a payment of the same amount within 3 days:</string>
+    <string name="pending_part_late_fee">Late fee</string>
+    <string name="pending_part_you">you</string>
+    <string name="pending_changed_title">This tenant was updated while you were offline</string>
+    <string name="pending_changed_intro">Check these changes before sending:</string>
+    <string name="pending_changed_balance_label">Balance</string>
+    <string name="pending_changed_balance">was %1$s, now %2$s</string>
+    <string name="pending_changed_new_entry_label">New entry</string>
+</resources>

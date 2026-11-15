@@ -24,6 +24,7 @@ class AccountViewModel(
 ) : ViewModel() {
     private val nameEditing = EditNameFlow(viewModelScope, accountRepository, ::showError)
     private val isDeleteDialogShown = MutableStateFlow(false)
+    private val signOutFlow = SignOutFlow(viewModelScope, accountRepository, ::showError)
     private var currentName = ""
     private var isRequestingDeletion = false
 
@@ -32,9 +33,10 @@ class AccountViewModel(
             accountRepository.observeProfile(),
             nameEditing.dialog,
             isDeleteDialogShown,
-        ) { profile, nameDialog, deleteDialogShown ->
+            signOutFlow.unsyncedPayments,
+        ) { profile, nameDialog, deleteDialogShown, unsynced ->
             currentName = profile.value?.displayName.orEmpty()
-            profile.toAccountUiState(timeZone, nameDialog, deleteDialogShown)
+            profile.toAccountUiState(timeZone, nameDialog, deleteDialogShown, unsynced)
         }.stateIn(viewModelScope, WhileScreenIsVisible, AccountUiState.Loading)
 
     fun onEditNameClicked() {
@@ -72,9 +74,11 @@ class AccountViewModel(
     }
 
     fun onSignOutClicked() {
-        viewModelScope.launch {
-            accountRepository.signOut().onErr(::showError)
-        }
+        signOutFlow.request()
+    }
+
+    fun onSignOutWarningAnswered(answer: SignOutWarningAnswer) {
+        signOutFlow.answer(answer)
     }
 
     private fun showError(error: AccountError) {

@@ -1,10 +1,10 @@
-package net.neednot.renttracker.feature.payments.data
+package net.neednot.renttracker.core.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class PaymentMethodDetails {
+enum class PaymentMethodDetails {
     @SerialName("cash")
     Cash,
 

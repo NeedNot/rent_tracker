@@ -29,7 +29,7 @@ internal fun MonthDetailSources.toMonthDetail(): MonthDetail {
     return MonthDetail(
         month = calendarMonth.toCalendarMonth(),
         payments = monthPayments(),
-        lateFee = lateFee(PersonResolver(ledger.accountNames, permissions)),
+        lateFee = lateFee(PersonResolver(ledger.accountNames, permissions?.accountId)),
         paymentOrder = group.paymentOrder,
         canAddCharge = !isArchived && permissions?.canAddCharges == true,
     )

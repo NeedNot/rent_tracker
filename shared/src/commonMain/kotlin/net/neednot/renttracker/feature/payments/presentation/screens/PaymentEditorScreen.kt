@@ -29,15 +29,18 @@ import net.neednot.renttracker.core.designsystem.components.DateField
 import net.neednot.renttracker.core.designsystem.components.FormTextField
 import net.neednot.renttracker.core.designsystem.components.InfoNotice
 import net.neednot.renttracker.core.designsystem.components.MoneyField
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
 import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.payments.presentation.components.DuplicateDialog
 import net.neednot.renttracker.feature.payments.presentation.components.LateFeeOfferBox
+import net.neednot.renttracker.feature.payments.presentation.components.OfflinePaymentNote
 import net.neednot.renttracker.feature.payments.presentation.components.PaymentEditorTopBar
 import net.neednot.renttracker.feature.payments.presentation.components.PaymentHeaderCard
 import net.neednot.renttracker.feature.payments.presentation.components.PaymentMethodChips
+import net.neednot.renttracker.feature.payments.presentation.components.SyncAlertsDialog
 import net.neednot.renttracker.feature.payments.presentation.uistate.LateFeeOfferUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.MonthChangesUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentEditorField
@@ -46,6 +49,7 @@ import net.neednot.renttracker.feature.payments.presentation.uistate.PaymentHead
 import net.neednot.renttracker.feature.payments.presentation.viewmodel.PaymentEditorEvent
 import net.neednot.renttracker.feature.payments.presentation.viewmodel.PaymentEditorTarget
 import net.neednot.renttracker.feature.payments.presentation.viewmodel.PaymentEditorViewModel
+import net.neednot.renttracker.feature.payments.presentation.viewmodel.SyncAlertsAnswer
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.payment_editor_amount
 import net.neednot.renttracker.resources.payment_editor_date
@@ -84,6 +88,7 @@ fun PaymentEditorScreen(
         onSaveClicked = viewModel::onSaveClicked,
         onDuplicateConfirmed = viewModel::onDuplicateConfirmed,
         onDuplicateDismissed = viewModel::onDuplicateDismissed,
+        onSyncAlertsAnswered = viewModel::onSyncAlertsAnswered,
         onCloseClicked = onClosed,
         modifier = modifier,
     )
@@ -99,6 +104,7 @@ private fun PaymentEditorContent(
     onSaveClicked: () -> Unit,
     onDuplicateConfirmed: () -> Unit,
     onDuplicateDismissed: () -> Unit,
+    onSyncAlertsAnswered: (SyncAlertsAnswer) -> Unit,
     onCloseClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -115,34 +121,59 @@ private fun PaymentEditorContent(
             )
         },
     ) { contentPadding ->
-        if (uiState.isLoading) {
-            val description = stringResource(Res.string.payment_editor_loading)
-            Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
-            }
-        } else {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                        .imePadding()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                PaymentFields(
-                    uiState = uiState,
-                    onFieldChanged = onFieldChanged,
-                    onDateChanged = onDateChanged,
-                    onMethodClicked = onMethodClicked,
-                    onLateFeeToggled = onLateFeeToggled,
-                )
-            }
+        Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
+            uiState.offlineBanner?.let { banner -> OfflineBanner(banner.asString()) }
+            PaymentEditorBody(
+                uiState = uiState,
+                onFieldChanged = onFieldChanged,
+                onDateChanged = onDateChanged,
+                onMethodClicked = onMethodClicked,
+                onLateFeeToggled = onLateFeeToggled,
+            )
         }
     }
     uiState.duplicate?.let { dialog ->
         DuplicateDialog(dialog = dialog, onConfirmed = onDuplicateConfirmed, onDismissed = onDuplicateDismissed)
+    }
+    if (uiState.isSyncAlertsExplainerShown) {
+        SyncAlertsDialog(
+            onAllowed = { onSyncAlertsAnswered(SyncAlertsAnswer.Allow) },
+            onDeclined = { onSyncAlertsAnswered(SyncAlertsAnswer.NotNow) },
+        )
+    }
+}
+
+@Composable
+private fun PaymentEditorBody(
+    uiState: PaymentEditorUiState,
+    onFieldChanged: (PaymentEditorField, String) -> Unit,
+    onDateChanged: (LocalDate) -> Unit,
+    onMethodClicked: (PaymentMethod) -> Unit,
+    onLateFeeToggled: (Boolean) -> Unit,
+) {
+    if (uiState.isLoading) {
+        val description = stringResource(Res.string.payment_editor_loading)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
+        }
+    } else {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            PaymentFields(
+                uiState = uiState,
+                onFieldChanged = onFieldChanged,
+                onDateChanged = onDateChanged,
+                onMethodClicked = onMethodClicked,
+                onLateFeeToggled = onLateFeeToggled,
+            )
+        }
     }
 }
 
@@ -156,6 +187,7 @@ private fun PaymentFields(
 ) {
     val isEnabled = !uiState.isSaving
     uiState.conflictBanner?.let { banner -> WarningNotice(banner.asString()) }
+    if (uiState.isOffline && uiState.isNewPayment) OfflinePaymentNote()
     uiState.header?.let { header -> PaymentHeaderCard(header) }
     MoneyField(
         label = stringResource(Res.string.payment_editor_amount),
@@ -185,7 +217,7 @@ private fun PaymentFields(
         enabled = isEnabled,
     )
     val today = uiState.today
-    uiState.lateFeeOffer?.let { offer ->
+    uiState.offeredLateFee?.let { offer ->
         if (today != null) {
             LateFeeOfferBox(
                 offer = offer,
@@ -197,7 +229,7 @@ private fun PaymentFields(
             )
         }
     }
-    uiState.monthChanges?.let { changes -> MonthChangesNotice(changes) }
+    uiState.shownMonthChanges?.let { changes -> MonthChangesNotice(changes) }
     uiState.error?.let { error ->
         Text(
             text = error.asString(),
@@ -257,6 +289,7 @@ private fun PaymentEditorContentPreview() {
             onSaveClicked = {},
             onDuplicateConfirmed = {},
             onDuplicateDismissed = {},
+            onSyncAlertsAnswered = {},
             onCloseClicked = {},
         )
     }

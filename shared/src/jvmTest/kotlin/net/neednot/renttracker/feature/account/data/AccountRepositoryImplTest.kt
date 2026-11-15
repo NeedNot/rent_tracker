@@ -18,8 +18,13 @@ import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.FakeBackend
 import net.neednot.renttracker.core.data.AccountProfileEntity
 import net.neednot.renttracker.core.data.AccountProfileSync
+import net.neednot.renttracker.core.data.PendingPaymentQueue
+import net.neednot.renttracker.core.data.PendingPaymentReader
+import net.neednot.renttracker.core.data.PendingPaymentStatus
+import net.neednot.renttracker.core.data.RecordingSyncScheduler
 import net.neednot.renttracker.core.data.RentTrackerDatabase
 import net.neednot.renttracker.core.data.ScreenResultStore
+import net.neednot.renttracker.core.data.pendingPaymentEntity
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.telemetry.NoOpTelemetry
 import net.neednot.renttracker.feature.account.domain.AccountError
@@ -45,6 +50,8 @@ class AccountRepositoryImplTest {
             backend = backend,
             authSession = authSession,
             accountProfileSync = AccountProfileSync(backend, database, ScreenResultStore(database)),
+            pendingPaymentQueue = PendingPaymentQueue(database, RecordingSyncScheduler()),
+            pendingPaymentReader = PendingPaymentReader(database),
             telemetry = NoOpTelemetry(),
         )
 
@@ -219,6 +226,27 @@ class AccountRepositoryImplTest {
             repository.signOut()
 
             assertEquals(emptyList(), allProfiles())
+        }
+
+    @Test
+    fun signingOutDiscardsPaymentsThatHaveNotSynced() =
+        runTest {
+            database.pendingPaymentDao().insert(pendingPaymentEntity("c1", "t1"))
+
+            repository.signOut()
+
+            assertEquals(0, repository.observeUnsyncedPaymentCount().first())
+        }
+
+    @Test
+    fun countsEveryPaymentThatHasNotSyncedWhateverItsStatus() =
+        runTest {
+            database.pendingPaymentDao().insert(pendingPaymentEntity("c1", "t1"))
+            database.pendingPaymentDao().insert(
+                pendingPaymentEntity("c2", "t1", sequence = 2).copy(status = PendingPaymentStatus.Rejected),
+            )
+
+            assertEquals(2, repository.observeUnsyncedPaymentCount().first())
         }
 
     @Test

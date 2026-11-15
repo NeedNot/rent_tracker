@@ -27,12 +27,16 @@ internal fun PaymentHeaderCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = header.tenantName, style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = header.groupName,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Text(text = header.balance.asString(), style = MaterialTheme.typography.titleLarge)
+            header.groupName?.let { groupName ->
+                Text(
+                    text = groupName,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            header.balance?.let { balance ->
+                Text(text = balance.asString(), style = MaterialTheme.typography.titleLarge)
+            }
         }
     }
 }

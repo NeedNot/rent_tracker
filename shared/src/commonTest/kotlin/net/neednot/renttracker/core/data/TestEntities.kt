@@ -235,3 +235,27 @@ fun allocationEntity(
     debtId = null,
     amountCents = amountCents,
 )
+
+fun pendingPaymentEntity(
+    clientId: String,
+    tenantId: String,
+    sequence: Long = 1,
+    groupId: String = "g1",
+) = PendingPaymentEntity(
+    clientId = clientId,
+    sequence = sequence,
+    groupId = groupId,
+    tenantId = tenantId,
+    tenantName = "Tenant $tenantId",
+    amountCents = 150_000,
+    dateReceived = "2026-03-02",
+    method = PaymentMethod.Check,
+    note = null,
+    status = PendingPaymentStatus.Pending,
+    confirmationReason = null,
+    rejectionReason = null,
+    rejectionMessage = null,
+    duplicateConfirmed = false,
+    tenantFingerprint = "",
+    balanceCentsWhenLogged = null,
+)

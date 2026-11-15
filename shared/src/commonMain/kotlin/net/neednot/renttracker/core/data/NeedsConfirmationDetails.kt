@@ -1,8 +1,8 @@
-package net.neednot.renttracker.feature.payments.data
+package net.neednot.renttracker.core.data
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class NeedsConfirmationDetails(
+data class NeedsConfirmationDetails(
     val matches: List<DuplicateMatchDetails>,
 )

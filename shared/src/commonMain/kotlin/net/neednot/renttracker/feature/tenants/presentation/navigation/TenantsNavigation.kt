@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import net.neednot.renttracker.core.navigation.AddChargeRoute
 import net.neednot.renttracker.core.navigation.EditChargeRoute
 import net.neednot.renttracker.core.navigation.EditPaymentRoute
+import net.neednot.renttracker.core.navigation.EditPendingPaymentRoute
 import net.neednot.renttracker.core.navigation.LedgerRoute
 import net.neednot.renttracker.core.navigation.LogPaymentRoute
 import net.neednot.renttracker.core.navigation.MoveTenantRoute
@@ -38,6 +39,9 @@ fun NavGraphBuilder.tenantsGraph(navController: NavController) {
             onViewLedgerClicked = { navController.navigate(LedgerRoute(route.tenantId)) },
             onEditEntryClicked = { target -> navController.navigateToEdit(route.tenantId, target) },
             onMoveClicked = { navController.navigate(MoveTenantRoute(route.tenantId)) },
+            onEditPendingPaymentClicked = { clientId ->
+                navController.navigate(EditPendingPaymentRoute(route.tenantId, clientId))
+            },
         )
     }
     composable<MoveTenantRoute> { entry ->
@@ -53,6 +57,9 @@ fun NavGraphBuilder.tenantsGraph(navController: NavController) {
             onBackClicked = { navController.popBackStack() },
             onLogPaymentClicked = { navController.navigate(LogPaymentRoute(route.tenantId)) },
             onEditEntryClicked = { target -> navController.navigateToEdit(route.tenantId, target) },
+            onEditPendingPaymentClicked = { clientId ->
+                navController.navigate(EditPendingPaymentRoute(route.tenantId, clientId))
+            },
         )
     }
     composable<TenantEditorRoute> { entry ->

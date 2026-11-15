@@ -2,9 +2,11 @@ package net.neednot.renttracker.core.data
 
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
+import kotlin.time.Clock
 
 class ScreenResultStore(
     private val database: RentTrackerDatabase,
+    private val clock: Clock = Clock.System,
 ) {
     private val groupDao = database.groupDao()
     private val groupSummaryDao = database.groupSummaryDao()
@@ -24,6 +26,7 @@ class ScreenResultStore(
     private val homeInvitationDao = database.homeInvitationDao()
     private val groupCacheDao = database.groupCacheDao()
     private val accountProfileDao = database.accountProfileDao()
+    private val cacheTimeDao = database.cacheTimeDao()
 
     suspend fun replaceHome(
         groups: List<GroupEntity>,
@@ -37,6 +40,7 @@ class ScreenResultStore(
         groupSummaryDao.deleteAllExcept(groupIds)
         homeInvitationDao.upsert(invitations)
         homeInvitationDao.deleteAllExcept(invitations.map { it.inviteId })
+        markSynced(CacheScope.HOME)
     }
 
     suspend fun replaceGroup(
@@ -51,6 +55,7 @@ class ScreenResultStore(
         tenantDao.upsert(scope.tenants)
         tenantSummaryDao.upsert(scope.tenantSummaries)
         storeCallerMemberships(scope.callerMemberships)
+        markSynced(CacheScope.group(groupId))
     }
 
     suspend fun replaceTenant(
@@ -79,6 +84,7 @@ class ScreenResultStore(
             calendarMonthDao.deleteYear(tenantId, year)
         }
         calendarMonthDao.upsert(scope.calendarMonths)
+        markSynced(CacheScope.tenant(tenantId))
     }
 
     suspend fun replaceCalendarYear(
@@ -88,6 +94,7 @@ class ScreenResultStore(
     ) = inOneTransaction {
         calendarMonthDao.deleteYear(tenantId, year)
         calendarMonthDao.upsert(calendarMonths)
+        markSynced(CacheScope.calendarYear(tenantId, year))
     }
 
     suspend fun replaceMembers(
@@ -101,12 +108,14 @@ class ScreenResultStore(
         memberProfileDao.upsert(memberProfiles)
         inviteDao.deleteInGroupExcept(groupId, invites.map { it.id })
         inviteDao.upsert(invites)
+        markSynced(CacheScope.members(groupId))
     }
 
     suspend fun replaceAccountProfile(profile: AccountProfileEntity) =
         inOneTransaction {
             accountProfileDao.deleteAll()
             accountProfileDao.upsert(profile)
+            markSynced(CacheScope.ACCOUNT)
         }
 
     suspend fun clearGroup(groupId: String) =
@@ -118,6 +127,8 @@ class ScreenResultStore(
                 deleteLedgerRows(groupId)
                 deleteAllocations(groupId)
                 deleteCalendarMonths(groupId)
+                deleteTenantCacheTimes(groupId)
+                deleteGroupCacheTimes(CacheScope.group(groupId), CacheScope.members(groupId))
                 deleteTenantSummaries(groupId)
                 deleteTenants(groupId)
                 deleteMemberships(groupId)
@@ -134,6 +145,10 @@ class ScreenResultStore(
             membershipDao.deleteOtherMembershipsOfAccount(caller.groupId, caller.accountId, caller.id)
         }
         membershipDao.upsert(callerMemberships)
+    }
+
+    private suspend fun markSynced(scope: String) {
+        cacheTimeDao.upsert(CacheTimeEntity(scope, clock.now().toEpochMilliseconds()))
     }
 
     private suspend fun inOneTransaction(write: suspend () -> Unit) {

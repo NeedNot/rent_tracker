@@ -10,4 +10,5 @@ data class LedgerSheetUiState(
     val fields: List<LedgerFieldUiState>,
     val actions: List<LedgerSheetAction>,
     val editTarget: EntryEditTarget,
+    val isViewOnly: Boolean = actions.isEmpty(),
 )

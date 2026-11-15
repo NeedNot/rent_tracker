@@ -12,6 +12,7 @@ import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.home.domain.FakeHomeAccountRepository
+import net.neednot.renttracker.feature.home.domain.FakeHomeOfflineRepository
 import net.neednot.renttracker.feature.home.domain.FakeHomeRepository
 import net.neednot.renttracker.feature.home.domain.GroupOverview
 import net.neednot.renttracker.feature.home.domain.HomeError
@@ -34,7 +35,14 @@ class HomeViewModelTest : MainDispatcherTest() {
     private val repository = FakeHomeRepository()
     private val accountRepository = FakeHomeAccountRepository()
     private val messages = RecordingMessageDispatcher()
-    private val viewModel by lazy { HomeViewModel(repository, accountRepository, messages) }
+    private val viewModel by lazy {
+        HomeViewModel(
+            repository,
+            FakeHomeOfflineRepository(),
+            accountRepository,
+            messages,
+        )
+    }
 
     private val firstStreet =
         GroupOverview(

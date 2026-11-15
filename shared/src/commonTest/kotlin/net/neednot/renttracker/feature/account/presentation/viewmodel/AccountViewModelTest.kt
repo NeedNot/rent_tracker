@@ -334,6 +334,65 @@ class AccountViewModelTest : MainDispatcherTest() {
         }
 
     @Test
+    fun signingOutWithUnsyncedPaymentsAsksFirstAndDoesNotSignOut() =
+        runTest {
+            repository.showProfile()
+            repository.unsyncedPaymentCount.value = 2
+
+            viewModel.uiState.test {
+                skipItems(1)
+                awaitItem()
+
+                viewModel.onSignOutClicked()
+                runCurrent()
+
+                assertEquals(2, awaitContent().unsyncedPaymentsOnSignOut)
+                assertEquals(0, repository.signOutCount)
+            }
+        }
+
+    @Test
+    fun stayingSignedInClosesTheWarningWithoutSigningOut() =
+        runTest {
+            repository.showProfile()
+            repository.unsyncedPaymentCount.value = 1
+
+            viewModel.uiState.test {
+                skipItems(1)
+                awaitItem()
+                viewModel.onSignOutClicked()
+                runCurrent()
+                awaitItem()
+
+                viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.StaySignedIn)
+
+                assertEquals(null, awaitContent().unsyncedPaymentsOnSignOut)
+                assertEquals(0, repository.signOutCount)
+            }
+        }
+
+    @Test
+    fun signingOutAnywayEndsTheSessionAndClosesTheWarning() =
+        runTest {
+            repository.showProfile()
+            repository.unsyncedPaymentCount.value = 3
+
+            viewModel.uiState.test {
+                skipItems(1)
+                awaitItem()
+                viewModel.onSignOutClicked()
+                runCurrent()
+                awaitItem()
+
+                viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.SignOutAnyway)
+                runCurrent()
+
+                assertEquals(null, awaitContent().unsyncedPaymentsOnSignOut)
+                assertEquals(1, repository.signOutCount)
+            }
+        }
+
+    @Test
     fun aFailedSignOutShowsASnackbar() =
         runTest {
             repository.showProfile()

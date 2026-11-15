@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import net.neednot.renttracker.core.auth.AuthSessionState
 import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.LostGroupAccess
+import net.neednot.renttracker.core.data.PendingPaymentLink
 import net.neednot.renttracker.core.ui.MessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
@@ -22,6 +23,8 @@ import net.neednot.renttracker.resources.lost_access_removed
 class AppViewModel(
     authRepository: AuthRepository,
     lostGroupAccess: Flow<LostGroupAccess>,
+    syncPendingPaymentsWhileOnline: suspend () -> Unit,
+    pendingPaymentLinks: Flow<PendingPaymentLink>,
     private val messageDispatcher: MessageDispatcher,
 ) : ViewModel() {
     val sessionState: StateFlow<AuthSessionState> = authRepository.sessionState
@@ -30,6 +33,12 @@ class AppViewModel(
     val events: Flow<AppEvent> = eventChannel.receiveAsFlow()
 
     init {
+        viewModelScope.launch { syncPendingPaymentsWhileOnline() }
+        viewModelScope.launch {
+            pendingPaymentLinks.collect { link ->
+                eventChannel.send(AppEvent.OpenPendingPayment(link.tenantId, link.clientId))
+            }
+        }
         viewModelScope.launch {
             lostGroupAccess.collect { loss ->
                 messageDispatcher.show(loss.message())

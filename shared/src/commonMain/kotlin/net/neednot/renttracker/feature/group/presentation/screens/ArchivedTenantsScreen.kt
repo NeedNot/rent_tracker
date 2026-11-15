@@ -1,6 +1,7 @@
 package net.neednot.renttracker.feature.group.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
@@ -80,32 +82,33 @@ private fun ArchivedTenantsContent(
             )
         },
     ) { contentPadding ->
-        when (uiState) {
-            ArchivedTenantsUiState.Loading -> {
-                LoadingIndicator(
-                    description = stringResource(Res.string.group_loading),
-                    modifier = Modifier.padding(contentPadding),
-                )
-            }
+        Column(modifier = Modifier.padding(contentPadding)) {
+            uiState.offlineBanner?.let { OfflineBanner(text = it.asString()) }
+            ArchivedTenantsBody(uiState = uiState, onTenantClicked = onTenantClicked)
+        }
+    }
+}
 
-            ArchivedTenantsUiState.Empty -> {
-                CenteredMessage(
-                    title = stringResource(Res.string.archived_tenants_empty),
-                    modifier = Modifier.padding(contentPadding),
-                )
-            }
+@Composable
+private fun ArchivedTenantsBody(
+    uiState: ArchivedTenantsUiState,
+    onTenantClicked: (tenantId: String) -> Unit,
+) {
+    when (uiState) {
+        is ArchivedTenantsUiState.Loading -> {
+            LoadingIndicator(description = stringResource(Res.string.group_loading))
+        }
 
-            is ArchivedTenantsUiState.Error -> {
-                CenteredMessage(title = uiState.message.asString(), modifier = Modifier.padding(contentPadding))
-            }
+        is ArchivedTenantsUiState.Empty -> {
+            CenteredMessage(title = stringResource(Res.string.archived_tenants_empty))
+        }
 
-            is ArchivedTenantsUiState.Content -> {
-                ArchivedTenantList(
-                    content = uiState,
-                    onTenantClicked = onTenantClicked,
-                    contentPadding = contentPadding,
-                )
-            }
+        is ArchivedTenantsUiState.Error -> {
+            CenteredMessage(title = uiState.message.asString())
+        }
+
+        is ArchivedTenantsUiState.Content -> {
+            ArchivedTenantList(content = uiState, onTenantClicked = onTenantClicked)
         }
     }
 }
@@ -114,10 +117,9 @@ private fun ArchivedTenantsContent(
 private fun ArchivedTenantList(
     content: ArchivedTenantsUiState.Content,
     onTenantClicked: (tenantId: String) -> Unit,
-    contentPadding: PaddingValues,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(contentPadding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

@@ -1,5 +1,6 @@
 package net.neednot.renttracker.feature.payments.data
 
+import net.neednot.renttracker.core.data.PendingPaymentDetails
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
 import net.neednot.renttracker.feature.payments.domain.PaymentDraft
@@ -36,5 +37,13 @@ internal fun PaymentDraft.toEditArgs(
         amountCents = amountCents,
         dateReceived = dateReceived.toString(),
         method = method?.let { PaymentsEditMethod.valueOf(it.name) },
+        note = note,
+    )
+
+internal fun PaymentDraft.toPendingDetails(): PendingPaymentDetails =
+    PendingPaymentDetails(
+        amountCents = amountCents,
+        dateReceived = dateReceived.toString(),
+        method = method,
         note = note,
     )

@@ -25,6 +25,7 @@ import net.neednot.renttracker.core.auth.AuthSessionState
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.core.navigation.SignInGraphRoute
+import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.core.ui.AppSnackbarHost
 import net.neednot.renttracker.feature.account.presentation.navigation.accountGraph
 import net.neednot.renttracker.feature.auth.presentation.navigation.authGraph
@@ -76,7 +77,15 @@ private fun RootNavHost(
     LaunchedEffect(events) {
         events.collect { event ->
             when (event) {
-                AppEvent.ReturnHome -> navController.popBackStack<HomeRoute>(inclusive = false)
+                AppEvent.ReturnHome -> {
+                    navController.popBackStack<HomeRoute>(inclusive = false)
+                }
+
+                is AppEvent.OpenPendingPayment -> {
+                    navController.navigate(TenantRoute(event.tenantId, pendingClientId = event.clientId)) {
+                        launchSingleTop = true
+                    }
+                }
             }
         }
     }

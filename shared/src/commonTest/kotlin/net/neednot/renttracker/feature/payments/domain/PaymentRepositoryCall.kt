@@ -17,6 +17,11 @@ sealed interface PaymentRepositoryCall {
         val draft: PaymentDraft,
     ) : PaymentRepositoryCall
 
+    data class EditPending(
+        val clientId: String,
+        val draft: PaymentDraft,
+    ) : PaymentRepositoryCall
+
     data class Preview(
         val tenantId: String,
         val paymentId: String,

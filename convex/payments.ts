@@ -20,7 +20,7 @@ import { paymentInput, validPaymentInput } from "./paymentInput";
 import { withProposedPayment } from "./paymentPreview";
 import { tenantLedgerInput } from "./tenantLedgerAdapter";
 import { loadTenantLedgerRows } from "./tenantLedgerRows";
-import { loadTenantScope, requireActiveTenant, type TenantScope } from "./tenantScope";
+import { loadTenantScope, requireActiveTenant, requireTenantInExpectedGroup, type TenantScope } from "./tenantScope";
 
 interface PaymentScope extends TenantScope {
   payment: Doc<"payments">;
@@ -33,6 +33,7 @@ const paymentVersionArgs = { paymentId: v.id("payments"), expectedVersion: v.num
 export const log = mutation({
   args: {
     tenantId: v.id("tenants"),
+    expectedGroupId: v.optional(v.id("groups")),
     clientId: v.string(),
     ...paymentInput.fields,
     lateFee: v.optional(v.object({ amountCents: v.number(), forMonth: v.string() })),
@@ -41,11 +42,14 @@ export const log = mutation({
   returns: v.object({ paymentId: v.id("payments"), lateFeeId: v.optional(v.id("debts")) }),
   handler: async (ctx, args) => {
     const { tenant, group } = await loadTenantScope(ctx, args.tenantId);
+    const earlier = await paymentWithClientId(ctx, args.clientId);
+    if (earlier === null) {
+      await requireTenantInExpectedGroup(ctx, tenant, args.expectedGroupId);
+    }
     const { accountId } = await requirePermission(ctx, group._id, "payments", "addEdit");
     if (args.lateFee !== undefined) {
       await requirePermission(ctx, group._id, "debts", "addEdit");
     }
-    const earlier = await paymentWithClientId(ctx, args.clientId);
     if (earlier !== null) {
       requireRetryOfSameTenant(earlier, tenant._id);
       return { paymentId: earlier._id, lateFeeId: await earlierLateFeeId(ctx, args.clientId) };

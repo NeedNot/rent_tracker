@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Rent Tracker</string>
+    <string name="sync_problem_channel">Payment sync</string>
+    <plurals name="sync_problem_title">
+        <item quantity="one">%1$d payment needs your attention — %2$s</item>
+        <item quantity="other">%1$d payments need your attention — %2$s</item>
+    </plurals>
 </resources>

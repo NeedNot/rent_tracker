@@ -4,7 +4,9 @@ import net.neednot.renttracker.core.data.CalendarMonthState
 import net.neednot.renttracker.core.data.PaymentOrder
 import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.designsystem.format.formatMonthDay
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.ui.offlineBannerText
 import net.neednot.renttracker.feature.tenants.domain.CalendarMonth
 import net.neednot.renttracker.feature.tenants.domain.MonthDetail
 import net.neednot.renttracker.feature.tenants.domain.MonthLateFee
@@ -33,7 +35,7 @@ import net.neednot.renttracker.resources.calendar_total_owed
 import net.neednot.renttracker.resources.calendar_total_owed_on_rent
 import net.neednot.renttracker.resources.ledger_may_not_apply
 
-internal fun MonthDetail.toUiState(): MonthDetailUiState =
+internal fun MonthDetail.toUiState(freshness: Freshness): MonthDetailUiState =
     MonthDetailUiState(
         title = fullMonthAndYear(month.month),
         state = month.state.toCalendarState(),
@@ -43,8 +45,9 @@ internal fun MonthDetail.toUiState(): MonthDetailUiState =
         payments = payments.map { it.toUiState(month) },
         coverageNote = month.coverageNote(),
         totals = totals(),
-        lateNotice = lateNotice(),
+        lateNotice = lateNotice()?.offeringFeeWhen(freshness),
         lateFee = lateFee?.toUiState(month, paymentOrder),
+        offlineBanner = freshness.offlineBannerText(),
     )
 
 private fun CalendarMonth.rentLabel(): UiText =
@@ -88,6 +91,12 @@ private fun MonthDetail.lateNotice(): MonthLateNoticeUiState? {
         addFee = if (canAddCharge) AddFeeUiState(month.month.toString(), month.suggestedLateFeeCents) else null,
     )
 }
+
+private fun MonthLateNoticeUiState.offeringFeeWhen(freshness: Freshness): MonthLateNoticeUiState =
+    when (freshness) {
+        Freshness.Online -> this
+        is Freshness.Offline -> copy(addFee = null)
+    }
 
 private fun CalendarMonth.lateMessage(): UiText {
     val graceEnd = graceEnd?.let(::formatMonthDay)

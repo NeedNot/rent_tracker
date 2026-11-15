@@ -25,7 +25,11 @@ class FakeAccountRepository : AccountRepository {
         profile.value = Synced(AccountProfile(displayName, "sam@example.com", deletionRequestedAt), SyncStatus.Synced)
     }
 
+    val unsyncedPaymentCount = MutableStateFlow(0)
+
     override fun observeProfile() = profile
+
+    override fun observeUnsyncedPaymentCount() = unsyncedPaymentCount
 
     override suspend fun editName(displayName: String): Result<Unit, AccountError> {
         editedNames += displayName

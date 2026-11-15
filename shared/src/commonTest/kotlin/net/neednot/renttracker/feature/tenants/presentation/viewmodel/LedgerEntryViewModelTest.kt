@@ -10,6 +10,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.PaymentMethod
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
@@ -17,6 +18,7 @@ import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.tenants.domain.ChargeKind
 import net.neednot.renttracker.feature.tenants.domain.EntryStatus
 import net.neednot.renttracker.feature.tenants.domain.FakeLedgerEntryRepository
+import net.neednot.renttracker.feature.tenants.domain.FakeTenantFreshnessRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantRepository
 import net.neednot.renttracker.feature.tenants.domain.LedgerEntry
 import net.neednot.renttracker.feature.tenants.domain.Person
@@ -57,8 +59,11 @@ import kotlin.time.Instant
 class LedgerEntryViewModelTest : MainDispatcherTest() {
     private val repository = FakeTenantRepository()
     private val ledgerEntries = FakeLedgerEntryRepository()
+    private val freshness = FakeTenantFreshnessRepository()
     private val messages = RecordingMessageDispatcher()
-    private val viewModel by lazy { LedgerEntryViewModel("t1", repository, ledgerEntries, messages, TimeZone.UTC) }
+    private val viewModel by lazy {
+        LedgerEntryViewModel("t1", repository, freshness, ledgerEntries, messages, TimeZone.UTC)
+    }
 
     private val cancelled = EntryStatus.Cancelled("Entered twice", Person.You, Instant.parse("2026-03-05T12:00:00Z"))
     private val bounced = EntryStatus.Bounced(Person.You, Instant.parse("2026-02-19T12:00:00Z"))
@@ -83,6 +88,19 @@ class LedgerEntryViewModelTest : MainDispatcherTest() {
                 listOf(LedgerSheetAction.Edit, LedgerSheetAction.MarkBounced, LedgerSheetAction.CancelPayment),
                 state().sheet?.actions,
             )
+        }
+
+    @Test
+    fun offlineTheSheetOffersNoActionsAndIsNotMarkedViewOnly() =
+        runTest {
+            freshness.ledger.value = Freshness.Offline(null)
+            val state = showLedger()
+
+            viewModel.onEntryClicked("payment:p2")
+            runCurrent()
+
+            assertEquals(emptyList(), state().sheet?.actions)
+            assertEquals(false, state().sheet?.isViewOnly)
         }
 
     @Test

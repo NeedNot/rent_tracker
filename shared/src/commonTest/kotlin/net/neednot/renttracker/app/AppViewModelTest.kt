@@ -2,12 +2,14 @@ package net.neednot.renttracker.app
 
 import app.cash.turbine.test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import net.neednot.renttracker.core.auth.AuthSessionState
 import net.neednot.renttracker.core.data.AccessLossReason
 import net.neednot.renttracker.core.data.LostGroupAccess
+import net.neednot.renttracker.core.data.PendingPaymentLink
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
@@ -19,13 +21,51 @@ import net.neednot.renttracker.resources.group_error_not_found
 import net.neednot.renttracker.resources.lost_access_removed
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppViewModelTest : MainDispatcherTest() {
     private val repository = FakeAuthRepository()
     private val lostGroupAccess = MutableSharedFlow<LostGroupAccess>()
     private val messageDispatcher = RecordingMessageDispatcher()
-    private val viewModel by lazy { AppViewModel(repository, lostGroupAccess, messageDispatcher) }
+    private val pendingPaymentLinks = MutableSharedFlow<PendingPaymentLink>()
+    private var pendingSyncRunning = false
+    private val viewModel by lazy {
+        AppViewModel(
+            repository,
+            lostGroupAccess,
+            ::syncPendingPaymentsWhileOnline,
+            pendingPaymentLinks,
+            messageDispatcher,
+        )
+    }
+
+    private suspend fun syncPendingPaymentsWhileOnline() {
+        pendingSyncRunning = true
+        awaitCancellation()
+    }
+
+    @Test
+    fun aSyncNotificationOpensThePendingPaymentOfItsTenant() =
+        runTest {
+            val events = viewModel.events
+            runCurrent()
+
+            events.test {
+                pendingPaymentLinks.emit(PendingPaymentLink("t1", "c1"))
+
+                assertEquals(AppEvent.OpenPendingPayment("t1", "c1"), awaitItem())
+            }
+        }
+
+    @Test
+    fun syncsPendingPaymentsWhileTheAppIsOpen() =
+        runTest {
+            viewModel
+            runCurrent()
+
+            assertTrue(pendingSyncRunning)
+        }
 
     @Test
     fun followsTheSessionFromLoadingToSignedInToSignedOut() =

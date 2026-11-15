@@ -5,9 +5,11 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import dev.convex.android.AuthState
+import dev.convex.android.ClientException
 import dev.convex.android.ConvexClientWithAuth
 import dev.convex.android.ConvexError
 import dev.convex.android.InternalError
+import dev.convex.android.MobileConvexClient
 import dev.convex.android.ServerError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,21 +39,21 @@ import net.neednot.renttracker.core.backend.BackendError
 import net.neednot.renttracker.core.backend.ConvexJson
 import net.neednot.renttracker.core.telemetry.Severity
 import net.neednot.renttracker.core.telemetry.Telemetry
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 class ConvexBackend(
     deploymentUrl: String,
     private val context: Context,
     private val authSession: AuthSession,
     private val telemetry: Telemetry,
+    nativeClientFactory: NativeConvexClientFactory = ::MobileConvexClient,
 ) : Backend {
     init {
         require(deploymentUrl.isNotBlank()) { "convex.url is missing from local.properties" }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val client = ConvexClientWithAuth(deploymentUrl, SessionJwtProvider(authSession))
+    private val client =
+        ConvexClientWithAuth(deploymentUrl, SessionJwtProvider(authSession), ffiClientFactory = nativeClientFactory)
 
     override val authState: StateFlow<BackendAuthState> =
         combine(authSession.state, client.authState, ::backendAuthState)
@@ -68,7 +71,14 @@ class ConvexBackend(
     ): Flow<Result<T, BackendError>> =
         client
             .subscribe<JsonElement>(name, ConvexJson.toClientArgs(args))
-            .map { update ->
+            .retryWhen { cause, attempt ->
+                val unreachable = cause is ClientException
+                if (unreachable) {
+                    telemetry.log(TAG, "Convex subscription to $name failed: ${cause.message}", Severity.Warning)
+                    delay(convexRetryDelay(attempt))
+                }
+                unreachable
+            }.map { update ->
                 update.fold(
                     onSuccess = { value -> decode(resultSerializer, value) },
                     onFailure = { error -> Err(error.toBackendError()) },
@@ -115,7 +125,7 @@ class ConvexBackend(
                 AuthSessionState.Loading -> Unit
 
                 // Not cancellable, so the next person to sign in never inherits the previous person's token.
-                AuthSessionState.SignedOut -> withContext(NonCancellable) { client.logout(context) }
+                AuthSessionState.SignedOut -> withContext(NonCancellable) { forgetConvexToken() }
 
                 is AuthSessionState.SignedIn -> keepConvexSignedIn()
             }
@@ -123,21 +133,38 @@ class ConvexBackend(
     }
 
     private suspend fun keepConvexSignedIn() {
-        var retryDelay = Duration.ZERO
+        var failures = 0L
         presentJwt()
         client.authState.collect { convex ->
-            if (convex is AuthState.Authenticated) retryDelay = Duration.ZERO
+            if (convex is AuthState.Authenticated) failures = 0
             if (convex is AuthState.Unauthenticated) {
-                retryDelay = (retryDelay * 2).coerceIn(FIRST_RETRY_DELAY, LONGEST_RETRY_DELAY)
-                delay(retryDelay)
+                delay(convexRetryDelay(failures++))
                 presentJwt()
             }
         }
     }
 
+    // The native client throws instead of failing when it has never reached the server, as on an offline launch.
     private suspend fun presentJwt() {
-        client.loginFromCache().onFailure { error ->
-            telemetry.log(TAG, "Convex sign-in failed: ${error.message}", Severity.Warning)
+        var attempt = 0L
+        while (true) {
+            try {
+                client.loginFromCache().onFailure { error ->
+                    telemetry.log(TAG, "Convex sign-in failed: ${error.message}", Severity.Warning)
+                }
+                return
+            } catch (error: ClientException) {
+                telemetry.log(TAG, "Convex unreachable during sign-in: ${error.message}", Severity.Warning)
+                delay(convexRetryDelay(attempt++))
+            }
+        }
+    }
+
+    private suspend fun forgetConvexToken() {
+        try {
+            client.logout(context)
+        } catch (error: ClientException) {
+            telemetry.log(TAG, "Convex unreachable during sign-out: ${error.message}", Severity.Warning)
         }
     }
 
@@ -167,16 +194,7 @@ class ConvexBackend(
             Err(BackendError.Internal("Could not decode result: ${error.message}"))
         }
 
-    private fun Throwable.toBackendError(): BackendError =
-        when (this) {
-            is ConvexError -> ConvexJson.parseError(data)
-            is ServerError -> BackendError.Server(message.orEmpty())
-            else -> BackendError.Internal(message ?: toString())
-        }
-
     private companion object {
         const val TAG = "ConvexBackend"
-        val FIRST_RETRY_DELAY = 2.seconds
-        val LONGEST_RETRY_DELAY = 60.seconds
     }
 }

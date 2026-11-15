@@ -5,4 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TenantRoute(
     val tenantId: String,
+    val pendingClientId: String? = null,
 )

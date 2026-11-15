@@ -16,6 +16,7 @@ import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.feature.group.domain.FakeGroupFreshnessRepository
 import net.neednot.renttracker.feature.group.domain.FakeGroupRepository
 import net.neednot.renttracker.feature.group.domain.GroupError
 import net.neednot.renttracker.feature.group.domain.GroupTenantState
@@ -46,7 +47,10 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupViewModelTest : MainDispatcherTest() {
     private val repository = FakeGroupRepository()
-    private val viewModel by lazy { GroupViewModel("g1", repository, RecordingMessageDispatcher(), TimeZone.UTC) }
+    private val freshnessRepository = FakeGroupFreshnessRepository()
+    private val viewModel by lazy {
+        GroupViewModel("g1", repository, freshnessRepository, RecordingMessageDispatcher(), TimeZone.UTC)
+    }
 
     private val lateTenant =
         groupTenant(
@@ -64,7 +68,7 @@ class GroupViewModelTest : MainDispatcherTest() {
     fun showsLoadingUntilTheGroupArrives() =
         runTest {
             viewModel.uiState.test {
-                assertEquals(GroupUiState.Loading, awaitItem())
+                assertEquals(GroupUiState.Loading(), awaitItem())
             }
             assertEquals(listOf("g1"), repository.observedGroupIds)
         }
@@ -264,7 +268,7 @@ class GroupViewModelTest : MainDispatcherTest() {
             repository.group.value = Synced(groupDetails(), SyncStatus.Syncing)
 
             viewModel.uiState.test {
-                assertEquals(GroupUiState.Loading, awaitItem())
+                assertEquals(GroupUiState.Loading(), awaitItem())
                 expectNoEvents()
             }
         }

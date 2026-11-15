@@ -33,7 +33,7 @@ private class LedgerEntryMapper(
 ) {
     private val paymentsById = sources.payments.associateBy { it.id }
     private val debtsById = sources.debts.associateBy { it.id }
-    private val people = PersonResolver(sources.accountNames, permissions)
+    private val people = PersonResolver(sources.accountNames, permissions?.accountId)
 
     fun entryOf(row: LedgerRowEntity): LedgerEntry? =
         when (row.kind) {

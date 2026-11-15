@@ -12,13 +12,16 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.PaymentMethod
 import net.neednot.renttracker.core.ui.MainDispatcherTest
+import net.neednot.renttracker.core.ui.RecordingMessageDispatcher
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.payments.domain.DuplicateKind
 import net.neednot.renttracker.feature.payments.domain.DuplicateMatch
 import net.neednot.renttracker.feature.payments.domain.DuplicatePolicy
 import net.neednot.renttracker.feature.payments.domain.FakePaymentRepository
+import net.neednot.renttracker.feature.payments.domain.FakePaymentSyncAlerts
 import net.neednot.renttracker.feature.payments.domain.LateFeeDraft
 import net.neednot.renttracker.feature.payments.domain.LateFeeSuggestion
+import net.neednot.renttracker.feature.payments.domain.LoggedPayment
 import net.neednot.renttracker.feature.payments.domain.MonthState
 import net.neednot.renttracker.feature.payments.domain.MonthStateChange
 import net.neednot.renttracker.feature.payments.domain.PaymentDraft
@@ -65,7 +68,15 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
     private val repository = FakePaymentRepository()
 
     private fun TestScope.openEditor(paymentId: String? = null): PaymentEditorViewModel {
-        val editor = PaymentEditorViewModel(tenantId = "t1", paymentId = paymentId, paymentRepository = repository)
+        val editor =
+            PaymentEditorViewModel(
+                tenantId = "t1",
+                paymentId = paymentId,
+                pendingClientId = null,
+                paymentRepository = repository,
+                syncAlerts = FakePaymentSyncAlerts(),
+                messageDispatcher = RecordingMessageDispatcher(),
+            )
         runCurrent()
         return editor
     }
@@ -561,7 +572,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
             runCurrent()
             repository.logResult =
                 com.github.michaelbull.result
-                    .Ok("p9")
+                    .Ok(LoggedPayment.Saved("p9"))
 
             editor.events.test {
                 editor.onDuplicateConfirmed()

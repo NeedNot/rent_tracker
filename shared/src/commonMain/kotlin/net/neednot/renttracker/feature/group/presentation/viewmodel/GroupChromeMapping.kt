@@ -6,6 +6,7 @@ import net.neednot.renttracker.core.access.CallerAccess
 import net.neednot.renttracker.core.data.AccessLevel
 import net.neednot.renttracker.core.designsystem.format.formatDate
 import net.neednot.renttracker.core.designsystem.format.owesText
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.group.domain.GroupDetails
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupChromeUiState
@@ -19,15 +20,19 @@ import net.neednot.renttracker.resources.group_archived_banner
 internal fun GroupDetails.toChrome(
     overlay: GroupOverlay,
     timeZone: TimeZone,
-): GroupChromeUiState =
-    GroupChromeUiState(
+    freshness: Freshness,
+): GroupChromeUiState {
+    val isOnline = freshness == Freshness.Online
+    return GroupChromeUiState(
         isViewOnly = access.isViewOnly,
-        canAddTenants = access.canAddTenants(),
-        menuItems = access.menuItems(),
+        canAddTenants = isOnline && access.canAddTenants(),
+        canUnarchive = isOnline,
+        menuItems = if (isOnline) access.menuItems() else emptyList(),
         archivedBanner = archivedBanner(timeZone),
         dialog = overlay.dialog?.toUiState(this),
         isWorking = overlay.isWorking,
     )
+}
 
 private fun CallerAccess.canAddTenants(): Boolean = !groupArchived && permissions.tenants >= AccessLevel.AddEdit
 
