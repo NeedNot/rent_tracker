@@ -12,12 +12,15 @@ import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.CalendarMonthState
 import net.neednot.renttracker.core.data.PaymentOrder
 import net.neednot.renttracker.core.designsystem.components.CalendarState
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.tenants.domain.AllocationTarget
 import net.neednot.renttracker.feature.tenants.domain.CalendarMonth
 import net.neednot.renttracker.feature.tenants.domain.ChargeKind
+import net.neednot.renttracker.feature.tenants.domain.FakePendingPaymentRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantCalendarRepository
+import net.neednot.renttracker.feature.tenants.domain.FakeTenantFreshnessRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantRepository
 import net.neednot.renttracker.feature.tenants.domain.MonthLateFee
 import net.neednot.renttracker.feature.tenants.domain.MonthPayment
@@ -48,14 +51,17 @@ import net.neednot.renttracker.resources.calendar_state_partial
 import net.neednot.renttracker.resources.calendar_total_owed
 import net.neednot.renttracker.resources.calendar_total_owed_on_rent
 import net.neednot.renttracker.resources.ledger_may_not_apply
+import net.neednot.renttracker.resources.offline_banner_minutes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TenantCalendarViewModelTest : MainDispatcherTest() {
+    private val freshness = FakeTenantFreshnessRepository()
     private val tenants = FakeTenantRepository()
     private val repository = FakeTenantCalendarRepository()
     private val viewModel by lazy {
@@ -63,6 +69,8 @@ class TenantCalendarViewModelTest : MainDispatcherTest() {
             tenantId = "t1",
             tenantRepository = tenants,
             calendarRepository = repository,
+            freshnessRepository = freshness,
+            pendingPaymentRepository = FakePendingPaymentRepository(),
             timeZone = TimeZone.UTC,
         )
     }
@@ -207,6 +215,26 @@ class TenantCalendarViewModelTest : MainDispatcherTest() {
                 UiText.Resource(Res.string.calendar_late_paid_some, listOf("$1,000.00", "Mar 6")),
                 notice.message,
             )
+        }
+
+    @Test
+    fun offlineTheMonthDetailShowsTheInsetBannerAndNoAddFee() =
+        runTest {
+            freshness.monthDetail.value = Freshness.Offline(40.minutes)
+            openDetail(lateMonthWithoutFee(), canAddCharge = true)
+
+            val detail = assertNotNull(currentContent().monthDetail)
+
+            assertEquals(UiText.Resource(Res.string.offline_banner_minutes, listOf(40L)), detail.offlineBanner)
+            assertNull(detail.lateNotice?.addFee)
+        }
+
+    @Test
+    fun onlineTheMonthDetailHasNoOfflineBanner() =
+        runTest {
+            openDetail(lateMonthWithoutFee())
+
+            assertNull(currentContent().monthDetail?.offlineBanner)
         }
 
     @Test

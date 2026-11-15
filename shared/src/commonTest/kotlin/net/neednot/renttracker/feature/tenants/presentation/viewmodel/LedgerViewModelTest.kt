@@ -17,6 +17,8 @@ import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.tenants.domain.ChargeKind
 import net.neednot.renttracker.feature.tenants.domain.EntryEdit
 import net.neednot.renttracker.feature.tenants.domain.EntryStatus
+import net.neednot.renttracker.feature.tenants.domain.FakePendingPaymentRepository
+import net.neednot.renttracker.feature.tenants.domain.FakeTenantFreshnessRepository
 import net.neednot.renttracker.feature.tenants.domain.FakeTenantRepository
 import net.neednot.renttracker.feature.tenants.domain.LedgerBalance
 import net.neednot.renttracker.feature.tenants.domain.LedgerEntry
@@ -31,6 +33,7 @@ import net.neednot.renttracker.feature.tenants.domain.synced
 import net.neednot.renttracker.feature.tenants.domain.tenantBalance
 import net.neednot.renttracker.feature.tenants.domain.tenantOverview
 import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryChip
+import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerItemUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerRowUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerUiState
 import net.neednot.renttracker.resources.Res
@@ -56,13 +59,16 @@ import net.neednot.renttracker.resources.ledger_rent_title
 import net.neednot.renttracker.resources.tenant_error_offline
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LedgerViewModelTest : MainDispatcherTest() {
     private val repository = FakeTenantRepository()
-    private val viewModel by lazy { LedgerViewModel("t1", repository, TimeZone.UTC) }
+    private val viewModel by lazy {
+        LedgerViewModel("t1", repository, FakeTenantFreshnessRepository(), FakePendingPaymentRepository(), TimeZone.UTC)
+    }
 
     @Test
     fun showsLoadingUntilTheTenantArrives() =
@@ -180,7 +186,14 @@ class LedgerViewModelTest : MainDispatcherTest() {
     @Test
     fun theLoggedDayIsTheDayInThePhonesTimeZone() =
         runTest {
-            val chicago = LedgerViewModel("t1", repository, TimeZone.of("America/Chicago"))
+            val chicago =
+                LedgerViewModel(
+                    "t1",
+                    repository,
+                    FakeTenantFreshnessRepository(),
+                    FakePendingPaymentRepository(),
+                    TimeZone.of("America/Chicago"),
+                )
             val entry = paymentEntry(date = LocalDate(2026, 3, 2), loggedAt = Instant.parse("2026-03-03T02:00:00Z"))
             repository.tenant.value = synced(tenantOverview(ledger = listOf(entry)))
             runCurrent()
@@ -189,11 +202,7 @@ class LedgerViewModelTest : MainDispatcherTest() {
 
             assertEquals(
                 listOf(UiText.Resource(Res.string.ledger_payment_logged_you, listOf("Mar 2"))),
-                content.sections
-                    .single()
-                    .rows
-                    .single()
-                    .details,
+                content.onlyEntryRow().details,
             )
         }
 
@@ -359,11 +368,10 @@ class LedgerViewModelTest : MainDispatcherTest() {
         }
 
     private suspend fun TestScope.rowOf(entry: LedgerEntry): LedgerRowUiState =
-        contentOf(tenantOverview(ledger = listOf(entry)))
-            .sections
-            .single()
-            .rows
-            .single()
+        contentOf(tenantOverview(ledger = listOf(entry))).onlyEntryRow()
+
+    private fun LedgerUiState.Content.onlyEntryRow(): LedgerRowUiState =
+        assertIs<LedgerItemUiState.Entry>(sections.single().rows.single()).row
 
     private suspend fun TestScope.contentOf(overview: TenantOverview): LedgerUiState.Content {
         repository.tenant.value = synced(overview)

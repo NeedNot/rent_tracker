@@ -32,11 +32,15 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
 import net.neednot.renttracker.core.navigation.LedgerRoute
+import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerEntryHost
-import net.neednot.renttracker.feature.tenants.presentation.components.LedgerRow
+import net.neednot.renttracker.feature.tenants.presentation.components.LedgerItem
+import net.neednot.renttracker.feature.tenants.presentation.components.LedgerItemActions
+import net.neednot.renttracker.feature.tenants.presentation.components.PendingPaymentHost
 import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryEditTarget
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerUiState
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.LedgerViewModel
@@ -57,24 +61,29 @@ fun LedgerScreen(
     onBackClicked: () -> Unit,
     onLogPaymentClicked: () -> Unit,
     onEditEntryClicked: (EntryEditTarget) -> Unit,
+    onEditPendingPaymentClicked: (clientId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LedgerViewModel = koinViewModel { parametersOf(route) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    LedgerEntryHost(
-        tenantId = route.tenantId,
-        onEditClicked = onEditEntryClicked,
-        content = { onRowClicked, onRestoreClicked ->
-            LedgerContent(
-                uiState = uiState,
-                onBackClicked = onBackClicked,
-                onLogPaymentClicked = onLogPaymentClicked,
-                onRowClicked = onRowClicked,
-                onRestoreClicked = onRestoreClicked,
-                modifier = modifier,
-            )
-        },
-    )
+    PendingPaymentHost(
+        route = TenantRoute(route.tenantId),
+        onEditClicked = onEditPendingPaymentClicked,
+    ) { onPendingClicked ->
+        LedgerEntryHost(
+            tenantId = route.tenantId,
+            onEditClicked = onEditEntryClicked,
+            content = { onRowClicked, onRestoreClicked ->
+                LedgerContent(
+                    uiState = uiState,
+                    onBackClicked = onBackClicked,
+                    onLogPaymentClicked = onLogPaymentClicked,
+                    itemActions = LedgerItemActions(onRowClicked, onRestoreClicked, onPendingClicked),
+                    modifier = modifier,
+                )
+            },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,24 +92,26 @@ private fun LedgerContent(
     uiState: LedgerUiState,
     onBackClicked: () -> Unit,
     onLogPaymentClicked: () -> Unit,
-    onRowClicked: (key: String) -> Unit,
-    onRestoreClicked: (key: String) -> Unit,
+    itemActions: LedgerItemActions,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { LedgerTitle(uiState as? LedgerUiState.Content) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.tenant_back),
-                        )
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    title = { LedgerTitle(uiState as? LedgerUiState.Content) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClicked) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(Res.string.tenant_back),
+                            )
+                        }
+                    },
+                )
+                (uiState as? LedgerUiState.Content)?.offlineBanner?.let { OfflineBanner(it.asString()) }
+            }
         },
     ) { contentPadding ->
         when (uiState) {
@@ -113,7 +124,7 @@ private fun LedgerContent(
             }
 
             is LedgerUiState.Content -> {
-                LedgerBody(uiState, onLogPaymentClicked, onRowClicked, onRestoreClicked, contentPadding)
+                LedgerBody(uiState, onLogPaymentClicked, itemActions, contentPadding)
             }
         }
     }
@@ -137,8 +148,7 @@ private fun LedgerTitle(content: LedgerUiState.Content?) {
 private fun LedgerBody(
     content: LedgerUiState.Content,
     onLogPaymentClicked: () -> Unit,
-    onRowClicked: (key: String) -> Unit,
-    onRestoreClicked: (key: String) -> Unit,
+    itemActions: LedgerItemActions,
     contentPadding: PaddingValues,
 ) {
     if (content.emptyMessage != null) {
@@ -173,13 +183,19 @@ private fun LedgerBody(
                     style = MaterialTheme.typography.titleSmall,
                 )
             }
-            items(section.rows, key = { it.key }) { row ->
-                LedgerRow(
-                    row = row,
-                    onClicked = { onRowClicked(row.key) },
-                    onRestoreClicked = { onRestoreClicked(row.key) },
-                )
+            items(section.rows, key = { it.key }) { item ->
+                LedgerItem(item = item, actions = itemActions)
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            }
+        }
+        content.pendingNote?.let { note ->
+            item {
+                Text(
+                    text = note.asString(),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
     }

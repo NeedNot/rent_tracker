@@ -11,6 +11,8 @@ sealed interface LedgerUiState {
         val sections: List<LedgerSectionUiState>,
         val emptyMessage: UiText?,
         val canLogPayment: Boolean,
+        val offlineBanner: UiText? = null,
+        val pendingNote: UiText? = null,
         val syncError: UiText? = null,
     ) : LedgerUiState
 

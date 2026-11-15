@@ -67,12 +67,9 @@ internal fun LedgerEntrySheet(
         }
         Text(text = sheet.amount, style = MaterialTheme.typography.headlineMedium)
         sheet.fields.forEach { field -> SheetField(field) }
-        if (sheet.actions.isEmpty()) {
-            ViewOnlyRow()
-        } else {
-            sheet.actions.forEach { action ->
-                SheetActionButton(action = action, enabled = !isWorking, onClicked = { onActionClicked(action) })
-            }
+        if (sheet.isViewOnly) ViewOnlyRow()
+        sheet.actions.forEach { action ->
+            SheetActionButton(action = action, enabled = !isWorking, onClicked = { onActionClicked(action) })
         }
     }
 }

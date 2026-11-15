@@ -11,21 +11,25 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.ui.MessageDispatcher
 import net.neednot.renttracker.core.ui.UiMessage
 import net.neednot.renttracker.core.ui.UiMessageVariant
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
 import net.neednot.renttracker.feature.tenants.domain.LedgerEntry
 import net.neednot.renttracker.feature.tenants.domain.LedgerEntryRepository
+import net.neednot.renttracker.feature.tenants.domain.TenantFreshnessRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.domain.TenantRepository
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerDialogUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerEntryUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerSheetAction
+import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerSheetUiState
 
 class LedgerEntryViewModel(
     tenantId: String,
     tenantRepository: TenantRepository,
+    freshnessRepository: TenantFreshnessRepository,
     private val ledgerEntryRepository: LedgerEntryRepository,
     private val messageDispatcher: MessageDispatcher,
     private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -43,15 +47,17 @@ class LedgerEntryViewModel(
     val uiState: StateFlow<LedgerEntryUiState> =
         combine(
             tenantRepository.observeTenant(tenantId).onEach { shownOverview = it.value },
+            freshnessRepository.observeLedgerFreshness(tenantId),
             selectedKey,
             dialog,
             isWorking,
-        ) { synced, key, currentDialog, working ->
+        ) { synced, freshness, key, currentDialog, working ->
             val sheet =
                 synced.value
                     ?.ledger
                     ?.firstOrNull { it.key == key }
                     ?.toSheetUiState(timeZone)
+                    ?.withActionsWhen(freshness)
             LedgerEntryUiState(sheet = sheet, dialog = currentDialog.takeIf { sheet != null }, isWorking = working)
         }.stateIn(viewModelScope, WhileScreenIsVisible, LedgerEntryUiState(null, null, false))
 
@@ -109,6 +115,12 @@ class LedgerEntryViewModel(
                 }.onErr { error -> messageDispatcher.show(UiMessage(error.text(), UiMessageVariant.Error)) }
         }
     }
+
+    private fun LedgerSheetUiState.withActionsWhen(freshness: Freshness): LedgerSheetUiState =
+        when (freshness) {
+            Freshness.Online -> this
+            is Freshness.Offline -> copy(actions = emptyList(), isViewOnly = false)
+        }
 
     private fun selectedEntry(): LedgerEntry? = shownOverview?.ledger?.firstOrNull { it.key == selectedKey.value }
 }

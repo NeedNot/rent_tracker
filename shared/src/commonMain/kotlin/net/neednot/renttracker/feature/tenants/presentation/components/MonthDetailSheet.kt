@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.designsystem.components.CalendarStateChip
+import net.neednot.renttracker.core.designsystem.components.InsetOfflineBanner
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.uistate.AddFeeUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.BalanceLineUiState
@@ -54,6 +55,7 @@ internal fun MonthDetailSheet(
                 .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        detail.offlineBanner?.let { InsetOfflineBanner(it.asString()) }
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

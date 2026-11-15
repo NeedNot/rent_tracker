@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -23,9 +22,11 @@ import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.WhileScreenIsVisible
+import net.neednot.renttracker.feature.tenants.domain.PendingPaymentRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantCalendar
 import net.neednot.renttracker.feature.tenants.domain.TenantCalendarRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantError
+import net.neednot.renttracker.feature.tenants.domain.TenantFreshnessRepository
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.domain.TenantRepository
 import net.neednot.renttracker.feature.tenants.presentation.uistate.MonthDetailUiState
@@ -43,6 +44,8 @@ class TenantViewModel(
     private val tenantId: String,
     private val tenantRepository: TenantRepository,
     private val calendarRepository: TenantCalendarRepository,
+    private val freshnessRepository: TenantFreshnessRepository,
+    pendingPaymentRepository: PendingPaymentRepository,
     private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : ViewModel() {
     private val statusChange = MutableStateFlow(TenantStatusChangeUiState())
@@ -57,14 +60,22 @@ class TenantViewModel(
 
     private val monthDetail: Flow<MonthDetailUiState?> =
         openedMonth.flatMapLatest { month ->
-            if (month ==
-                null
-            ) {
+            if (month == null) {
                 flowOf(null)
             } else {
-                calendarRepository.observeMonthDetail(tenantId, month).map { it?.toUiState() }
+                combine(
+                    calendarRepository.observeMonthDetail(tenantId, month),
+                    freshnessRepository.observeMonthDetailFreshness(tenantId, month),
+                ) { detail, freshness -> detail?.toUiState(freshness) }
             }
         }
+
+    private val offlineSources: Flow<OfflineSources> =
+        combine(
+            pendingPaymentRepository.observePendingPayments(tenantId),
+            freshnessRepository.observeTenantFreshness(tenantId),
+            ::OfflineSources,
+        )
 
     val uiState: StateFlow<TenantUiState> =
         combine(
@@ -72,8 +83,12 @@ class TenantViewModel(
             statusChange,
             calendar,
             monthDetail,
-        ) { synced, change, calendarState, detail ->
-            synced.toTenantUiState(change, timeZone, calendarState, detail)
+            offlineSources,
+        ) { synced, change, calendarState, detail, offline ->
+            synced.toTenantUiState(
+                TenantScreenParts(change, calendarState, detail, offline.pendingPayments, offline.freshness),
+                timeZone,
+            )
         }.stateIn(viewModelScope, WhileScreenIsVisible, TenantUiState.Loading)
 
     fun onPreviousYearClicked() {

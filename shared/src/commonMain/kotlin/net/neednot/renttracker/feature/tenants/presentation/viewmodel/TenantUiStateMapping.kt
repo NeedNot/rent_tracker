@@ -6,23 +6,22 @@ import kotlinx.datetime.yearMonth
 import net.neednot.renttracker.core.designsystem.format.formatDate
 import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.designsystem.format.formatMonth
+import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.UiText
+import net.neednot.renttracker.core.ui.offlineBannerText
 import net.neednot.renttracker.feature.tenants.domain.LateFeeSuggestion
 import net.neednot.renttracker.feature.tenants.domain.OwedBreakdown
 import net.neednot.renttracker.feature.tenants.domain.RentTerm
 import net.neednot.renttracker.feature.tenants.domain.TenantBalance
-import net.neednot.renttracker.feature.tenants.domain.TenantCalendar
 import net.neednot.renttracker.feature.tenants.domain.TenantError
 import net.neednot.renttracker.feature.tenants.domain.TenantOverview
 import net.neednot.renttracker.feature.tenants.presentation.uistate.BalanceLineUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
-import net.neednot.renttracker.feature.tenants.presentation.uistate.MonthDetailUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantBalanceUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantDetailsUiState
-import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantStatusChangeUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantUiState
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.ledger_line_late_fees
@@ -43,15 +42,13 @@ import net.neednot.renttracker.resources.tenant_rent_term_summary
 private const val LEDGER_PREVIEW_SIZE = 3
 
 internal fun Synced<TenantOverview?, TenantError>.toTenantUiState(
-    statusChange: TenantStatusChangeUiState,
+    parts: TenantScreenParts,
     timeZone: TimeZone,
-    calendar: Synced<TenantCalendar, TenantError>?,
-    monthDetail: MonthDetailUiState?,
 ): TenantUiState {
     val syncError = (status as? SyncStatus.Failed)?.error?.text()
     val overview = value
     return when {
-        overview != null -> overview.toContent(syncError, statusChange, timeZone, calendar, monthDetail)
+        overview != null -> overview.toContent(syncError, parts, timeZone)
         syncError != null -> TenantUiState.Error(syncError)
         status == SyncStatus.Syncing -> TenantUiState.Loading
         else -> TenantUiState.Error(UiText.Resource(Res.string.tenant_error_not_found))
@@ -60,12 +57,11 @@ internal fun Synced<TenantOverview?, TenantError>.toTenantUiState(
 
 private fun TenantOverview.toContent(
     syncError: UiText?,
-    statusChange: TenantStatusChangeUiState,
+    parts: TenantScreenParts,
     timeZone: TimeZone,
-    calendar: Synced<TenantCalendar, TenantError>?,
-    monthDetail: MonthDetailUiState?,
-): TenantUiState.Content =
-    TenantUiState.Content(
+): TenantUiState.Content {
+    val isOnline = parts.freshness == Freshness.Online
+    return TenantUiState.Content(
         name = tenant.details.name,
         groupId = tenant.groupId,
         groupName = group.name,
@@ -73,16 +69,22 @@ private fun TenantOverview.toContent(
         balance = balance?.toUiState(),
         rentTerms = rentTermRows(),
         details = detailsUiState(),
-        ledgerPreview = ledger.take(LEDGER_PREVIEW_SIZE).map { it.toRowUiState(timeZone) },
+        ledgerPreview =
+            ledgerItems(ledger.take(LEDGER_PREVIEW_SIZE), parts.pendingPayments, parts.freshness, timeZone),
         canLogPayment = !tenant.isArchived && permissions?.canLogPayments == true,
-        canAddCharge = !tenant.isArchived && permissions?.canAddCharges == true,
+        canAddCharge = isOnline && !tenant.isArchived && permissions?.canAddCharges == true,
         canMove = !tenant.isArchived && permissions?.canMoveTenants == true,
-        lateFeeSuggestion = lateFeeSuggestion?.toUiState(),
-        calendar = calendar?.toCalendarUiState(firstYear = tenant.details.moveIn.year),
-        monthDetail = monthDetail,
+        hasMenu = isOnline,
+        canEditDetails = isOnline && !tenant.isArchived,
+        lateFeeSuggestion = lateFeeSuggestion?.takeIf { isOnline }?.toUiState(),
+        calendar = parts.calendar?.toCalendarUiState(firstYear = tenant.details.moveIn.year),
+        monthDetail = parts.monthDetail,
+        offlineBanner = parts.freshness.offlineBannerText(),
+        pendingBanner = parts.pendingPayments.toBannerUiState(),
         syncError = syncError,
-        statusChange = statusChange,
+        statusChange = parts.statusChange,
     )
+}
 
 private fun TenantBalance.toUiState(): TenantBalanceUiState =
     TenantBalanceUiState(

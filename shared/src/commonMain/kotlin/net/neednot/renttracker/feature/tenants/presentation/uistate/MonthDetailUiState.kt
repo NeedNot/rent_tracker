@@ -14,4 +14,5 @@ data class MonthDetailUiState(
     val totals: List<BalanceLineUiState>,
     val lateNotice: MonthLateNoticeUiState?,
     val lateFee: MonthLateFeeUiState?,
+    val offlineBanner: UiText? = null,
 )

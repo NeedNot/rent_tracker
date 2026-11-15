@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.designsystem.components.SectionCard
-import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerRowUiState
+import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerItemUiState
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.ledger_heading
 import net.neednot.renttracker.resources.ledger_preview_empty
@@ -22,14 +22,13 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun LedgerPreviewCard(
-    rows: List<LedgerRowUiState>,
-    onRowClicked: (key: String) -> Unit,
-    onRestoreClicked: (key: String) -> Unit,
+    items: List<LedgerItemUiState>,
+    actions: LedgerItemActions,
     onViewFullLedgerClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SectionCard(heading = stringResource(Res.string.ledger_heading), modifier = modifier) {
-        if (rows.isEmpty()) {
+        if (items.isEmpty()) {
             Text(
                 text = stringResource(Res.string.ledger_preview_empty),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -37,13 +36,9 @@ internal fun LedgerPreviewCard(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
-        rows.forEachIndexed { index, row ->
+        items.forEachIndexed { index, item ->
             if (index > 0) HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-            LedgerRow(
-                row = row,
-                onClicked = { onRowClicked(row.key) },
-                onRestoreClicked = { onRestoreClicked(row.key) },
-            )
+            LedgerItem(item = item, actions = actions)
         }
         TextButton(
             onClick = onViewFullLedgerClicked,

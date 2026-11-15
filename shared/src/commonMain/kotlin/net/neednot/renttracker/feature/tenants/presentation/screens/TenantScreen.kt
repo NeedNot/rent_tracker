@@ -12,12 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,9 +27,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -41,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.data.TenantBalanceState
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.core.ui.UiText
@@ -51,10 +46,14 @@ import net.neednot.renttracker.feature.tenants.presentation.components.CalendarC
 import net.neednot.renttracker.feature.tenants.presentation.components.EntryActionButtons
 import net.neednot.renttracker.feature.tenants.presentation.components.LateFeeSnackbar
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerEntryHost
+import net.neednot.renttracker.feature.tenants.presentation.components.LedgerItemActions
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerPreviewCard
 import net.neednot.renttracker.feature.tenants.presentation.components.MonthDetailHost
+import net.neednot.renttracker.feature.tenants.presentation.components.PendingBanner
+import net.neednot.renttracker.feature.tenants.presentation.components.PendingPaymentHost
 import net.neednot.renttracker.feature.tenants.presentation.components.RentTermsCard
 import net.neednot.renttracker.feature.tenants.presentation.components.TenantDetailsCard
+import net.neednot.renttracker.feature.tenants.presentation.components.TenantMenu
 import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryEditTarget
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
@@ -71,11 +70,6 @@ import net.neednot.renttracker.resources.tenant_archive_title
 import net.neednot.renttracker.resources.tenant_archived_label
 import net.neednot.renttracker.resources.tenant_back
 import net.neednot.renttracker.resources.tenant_loading
-import net.neednot.renttracker.resources.tenant_menu_archive
-import net.neednot.renttracker.resources.tenant_menu_edit_details
-import net.neednot.renttracker.resources.tenant_menu_move
-import net.neednot.renttracker.resources.tenant_menu_restore
-import net.neednot.renttracker.resources.tenant_more_options
 import net.neednot.renttracker.resources.tenant_restore_confirm
 import net.neednot.renttracker.resources.tenant_restore_title
 import org.jetbrains.compose.resources.stringResource
@@ -94,47 +88,52 @@ fun TenantScreen(
     onViewLedgerClicked: () -> Unit,
     onEditEntryClicked: (EntryEditTarget) -> Unit,
     onMoveClicked: () -> Unit,
+    onEditPendingPaymentClicked: (clientId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TenantViewModel = koinViewModel { parametersOf(route) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    LedgerEntryHost(
-        tenantId = route.tenantId,
-        onEditClicked = onEditEntryClicked,
-        content = { onLedgerRowClicked, onLedgerRestoreClicked ->
-            TenantContent(
-                uiState = uiState,
-                onBackClicked = onBackClicked,
-                onEditDetailsClicked = onEditDetailsClicked,
-                onChangeRentClicked = onChangeRentClicked,
-                onRentTermClicked = onRentTermClicked,
-                onLogPaymentClicked = onLogPaymentClicked,
-                onAddChargeClicked = { onAddChargeClicked(null, null) },
-                onViewLedgerClicked = onViewLedgerClicked,
-                onLedgerRowClicked = onLedgerRowClicked,
-                onLedgerRestoreClicked = onLedgerRestoreClicked,
-                calendarActions =
-                    CalendarActions(
-                        onPreviousYearClicked = viewModel::onPreviousYearClicked,
-                        onNextYearClicked = viewModel::onNextYearClicked,
-                        onMonthClicked = viewModel::onMonthClicked,
-                        onMonthDetailDismissed = viewModel::onMonthDetailDismissed,
-                        onAddFeeClicked = { addFee ->
-                            viewModel.onMonthDetailDismissed()
-                            onAddChargeClicked(addFee.month, addFee.suggestedCents)
-                        },
-                    ),
-                onLateFeeAddClicked = { suggestion -> onAddChargeClicked(suggestion.month, suggestion.cents) },
-                onLateFeeDismissed = viewModel::onLateFeeDismissed,
-                onMoveClicked = onMoveClicked,
-                onArchiveClicked = viewModel::onArchiveClicked,
-                onRestoreClicked = viewModel::onRestoreClicked,
-                onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
-                onStatusChangeDismissed = viewModel::onStatusChangeDismissed,
-                modifier = modifier,
-            )
-        },
-    )
+    PendingPaymentHost(
+        route = route,
+        onEditClicked = onEditPendingPaymentClicked,
+    ) { onPendingClicked ->
+        LedgerEntryHost(
+            tenantId = route.tenantId,
+            onEditClicked = onEditEntryClicked,
+            content = { onLedgerRowClicked, onLedgerRestoreClicked ->
+                TenantContent(
+                    uiState = uiState,
+                    onBackClicked = onBackClicked,
+                    onEditDetailsClicked = onEditDetailsClicked,
+                    onChangeRentClicked = onChangeRentClicked,
+                    onRentTermClicked = onRentTermClicked,
+                    onLogPaymentClicked = onLogPaymentClicked,
+                    onAddChargeClicked = { onAddChargeClicked(null, null) },
+                    onViewLedgerClicked = onViewLedgerClicked,
+                    itemActions = LedgerItemActions(onLedgerRowClicked, onLedgerRestoreClicked, onPendingClicked),
+                    calendarActions =
+                        CalendarActions(
+                            onPreviousYearClicked = viewModel::onPreviousYearClicked,
+                            onNextYearClicked = viewModel::onNextYearClicked,
+                            onMonthClicked = viewModel::onMonthClicked,
+                            onMonthDetailDismissed = viewModel::onMonthDetailDismissed,
+                            onAddFeeClicked = { addFee ->
+                                viewModel.onMonthDetailDismissed()
+                                onAddChargeClicked(addFee.month, addFee.suggestedCents)
+                            },
+                        ),
+                    onLateFeeAddClicked = { suggestion -> onAddChargeClicked(suggestion.month, suggestion.cents) },
+                    onLateFeeDismissed = viewModel::onLateFeeDismissed,
+                    onMoveClicked = onMoveClicked,
+                    onArchiveClicked = viewModel::onArchiveClicked,
+                    onRestoreClicked = viewModel::onRestoreClicked,
+                    onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
+                    onStatusChangeDismissed = viewModel::onStatusChangeDismissed,
+                    modifier = modifier,
+                )
+            },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,8 +147,7 @@ private fun TenantContent(
     onLogPaymentClicked: () -> Unit,
     onAddChargeClicked: () -> Unit,
     onViewLedgerClicked: () -> Unit,
-    onLedgerRowClicked: (key: String) -> Unit,
-    onLedgerRestoreClicked: (key: String) -> Unit,
+    itemActions: LedgerItemActions,
     calendarActions: CalendarActions,
     onLateFeeAddClicked: (LateFeeSuggestionUiState) -> Unit,
     onLateFeeDismissed: () -> Unit,
@@ -164,29 +162,32 @@ private fun TenantContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { content?.let { TenantTitle(name = it.name, groupName = it.groupName) } },
-                navigationIcon = {
-                    IconButton(onClick = onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.tenant_back),
-                        )
-                    }
-                },
-                actions = {
-                    content?.let {
-                        TenantMenu(
-                            isArchived = it.isArchived,
-                            canMove = it.canMove,
-                            onEditDetailsClicked = { onEditDetailsClicked(it.groupId) },
-                            onMoveClicked = onMoveClicked,
-                            onArchiveClicked = onArchiveClicked,
-                            onRestoreClicked = onRestoreClicked,
-                        )
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    title = { content?.let { TenantTitle(name = it.name, groupName = it.groupName) } },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClicked) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(Res.string.tenant_back),
+                            )
+                        }
+                    },
+                    actions = {
+                        content?.takeIf { it.hasMenu }?.let {
+                            TenantMenu(
+                                isArchived = it.isArchived,
+                                canMove = it.canMove,
+                                onEditDetailsClicked = { onEditDetailsClicked(it.groupId) },
+                                onMoveClicked = onMoveClicked,
+                                onArchiveClicked = onArchiveClicked,
+                                onRestoreClicked = onRestoreClicked,
+                            )
+                        }
+                    },
+                )
+                content?.offlineBanner?.let { OfflineBanner(it.asString()) }
+            }
         },
         bottomBar = {
             content?.lateFeeSuggestion?.let { suggestion ->
@@ -216,8 +217,7 @@ private fun TenantContent(
                     onLogPaymentClicked = onLogPaymentClicked,
                     onAddChargeClicked = onAddChargeClicked,
                     onViewLedgerClicked = onViewLedgerClicked,
-                    onLedgerRowClicked = onLedgerRowClicked,
-                    onLedgerRestoreClicked = onLedgerRestoreClicked,
+                    itemActions = itemActions,
                     calendarActions = calendarActions,
                     contentPadding = contentPadding,
                 )
@@ -252,59 +252,6 @@ private fun TenantTitle(
 }
 
 @Composable
-private fun TenantMenu(
-    isArchived: Boolean,
-    canMove: Boolean,
-    onEditDetailsClicked: () -> Unit,
-    onMoveClicked: () -> Unit,
-    onArchiveClicked: () -> Unit,
-    onRestoreClicked: () -> Unit,
-) {
-    var isOpen by rememberSaveable { mutableStateOf(false) }
-    IconButton(onClick = { isOpen = true }) {
-        Icon(
-            imageVector = Icons.Filled.MoreVert,
-            contentDescription = stringResource(Res.string.tenant_more_options),
-        )
-    }
-    DropdownMenu(expanded = isOpen, onDismissRequest = { isOpen = false }) {
-        if (isArchived) {
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.tenant_menu_restore)) },
-                onClick = {
-                    isOpen = false
-                    onRestoreClicked()
-                },
-            )
-        } else {
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.tenant_menu_edit_details)) },
-                onClick = {
-                    isOpen = false
-                    onEditDetailsClicked()
-                },
-            )
-            if (canMove) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(Res.string.tenant_menu_move)) },
-                    onClick = {
-                        isOpen = false
-                        onMoveClicked()
-                    },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.tenant_menu_archive)) },
-                onClick = {
-                    isOpen = false
-                    onArchiveClicked()
-                },
-            )
-        }
-    }
-}
-
-@Composable
 private fun TenantSections(
     tenant: TenantUiState.Content,
     onEditDetailsClicked: () -> Unit,
@@ -313,8 +260,7 @@ private fun TenantSections(
     onLogPaymentClicked: () -> Unit,
     onAddChargeClicked: () -> Unit,
     onViewLedgerClicked: () -> Unit,
-    onLedgerRowClicked: (key: String) -> Unit,
-    onLedgerRestoreClicked: (key: String) -> Unit,
+    itemActions: LedgerItemActions,
     calendarActions: CalendarActions,
     contentPadding: PaddingValues,
 ) {
@@ -327,6 +273,9 @@ private fun TenantSections(
                 .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        tenant.pendingBanner?.let { banner ->
+            PendingBanner(banner = banner, onReviewClicked = itemActions.onPendingClicked)
+        }
         listOfNotNull(tenant.syncError, tenant.statusChange.error).forEach { error ->
             Text(
                 text = error.asString(),
@@ -351,20 +300,19 @@ private fun TenantSections(
             )
         }
         LedgerPreviewCard(
-            rows = tenant.ledgerPreview,
-            onRowClicked = onLedgerRowClicked,
-            onRestoreClicked = onLedgerRestoreClicked,
+            items = tenant.ledgerPreview,
+            actions = itemActions,
             onViewFullLedgerClicked = onViewLedgerClicked,
         )
         RentTermsCard(
             rentTerms = tenant.rentTerms,
-            isEditable = !tenant.isArchived,
+            isEditable = tenant.canEditDetails,
             onChangeRentClicked = onChangeRentClicked,
             onRentTermClicked = onRentTermClicked,
         )
         TenantDetailsCard(
             details = tenant.details,
-            isEditable = !tenant.isArchived,
+            isEditable = tenant.canEditDetails,
             onEditClicked = onEditDetailsClicked,
         )
     }
@@ -485,8 +433,7 @@ private fun TenantContentPreview() {
             onLogPaymentClicked = {},
             onAddChargeClicked = {},
             onViewLedgerClicked = {},
-            onLedgerRowClicked = {},
-            onLedgerRestoreClicked = {},
+            itemActions = LedgerItemActions.None,
             calendarActions = CalendarActions.None,
             onLateFeeAddClicked = {},
             onLateFeeDismissed = {},
