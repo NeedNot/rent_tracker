@@ -31,5 +31,7 @@ val coreDataModule =
         single { TenantRefresher(backend = get(), database = get(), screenResultStore = get(), asOfClock = get()) }
         single { PendingPaymentSender(backend = get(), database = get(), telemetry = get()) }
         single { PendingPaymentSync(refresher = get(), sender = get(), database = get()) }
+        single { FreshnessSource(connectivity = get(), database = get(), clock = Clock.System) }
+        single { PendingPaymentLinks() }
         single { PendingPaymentAutoSync(connectivity = get(), database = get(), sync = get()) }
     }

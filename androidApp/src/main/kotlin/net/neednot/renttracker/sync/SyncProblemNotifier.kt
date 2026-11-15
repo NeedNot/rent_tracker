@@ -48,8 +48,9 @@ class SyncProblemNotifier(
             context,
             payment.tenantId.hashCode(),
             Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .putExtra(EXTRA_TENANT_ID, payment.tenantId)
+                .addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP,
+                ).putExtra(EXTRA_TENANT_ID, payment.tenantId)
                 .putExtra(EXTRA_CLIENT_ID, payment.clientId),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

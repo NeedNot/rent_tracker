@@ -17,6 +17,7 @@ data class PendingPaymentEntity(
     val note: String?,
     val status: PendingPaymentStatus,
     val confirmationReason: PendingConfirmationReason?,
+    val rejectionReason: PendingRejectionReason?,
     val rejectionMessage: String?,
     val duplicateConfirmed: Boolean,
     val tenantFingerprint: String,

@@ -43,7 +43,7 @@ class PendingPaymentSender(
         when {
             isRetryable() -> PendingSendOutcome.RetryLater.also { telemetry.log(TAG, toString(), Severity.Warning) }
             this is BackendError.Convex && code == NEEDS_CONFIRMATION -> possibleDuplicate()
-            this is BackendError.Convex -> PendingSendOutcome.Rejected(message)
+            this is BackendError.Convex -> PendingSendOutcome.Rejected(rejectionReason(), message)
             else -> PendingSendOutcome.RetryLater
         }
 
@@ -51,10 +51,18 @@ class PendingPaymentSender(
         val matches = details?.matchesOrNull()
         if (matches == null) {
             telemetry.log(TAG, "NeedsConfirmation without matches: $message", Severity.Error)
-            return PendingSendOutcome.Rejected(message)
+            return PendingSendOutcome.Rejected(PendingRejectionReason.Other, message)
         }
         return PendingSendOutcome.PossibleDuplicate(matches)
     }
+
+    private fun BackendError.Convex.rejectionReason(): PendingRejectionReason =
+        when (code) {
+            PERMISSION_DENIED, NOT_FOUND -> PendingRejectionReason.NoPermission
+            TENANT_ARCHIVED -> PendingRejectionReason.TenantArchived
+            TENANT_MOVED -> PendingRejectionReason.TenantMoved
+            else -> PendingRejectionReason.Other
+        }
 
     private fun JsonElement.matchesOrNull(): List<DuplicateMatchDetails>? =
         try {
@@ -67,6 +75,10 @@ class PendingPaymentSender(
         const val TAG = "PendingPaymentSender"
         const val LOG_PAYMENT = "payments:log"
         const val NEEDS_CONFIRMATION = "NeedsConfirmation"
+        const val PERMISSION_DENIED = "PermissionDenied"
+        const val NOT_FOUND = "NotFound"
+        const val TENANT_ARCHIVED = "TenantArchived"
+        const val TENANT_MOVED = "TenantMoved"
 
         // The Convex client queues calls while it has no connection instead of failing them.
         val BACKEND_TIMEOUT = 20.seconds

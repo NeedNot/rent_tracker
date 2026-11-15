@@ -253,6 +253,7 @@ fun pendingPaymentEntity(
     note = null,
     status = PendingPaymentStatus.Pending,
     confirmationReason = null,
+    rejectionReason = null,
     rejectionMessage = null,
     duplicateConfirmed = false,
     tenantFingerprint = "",

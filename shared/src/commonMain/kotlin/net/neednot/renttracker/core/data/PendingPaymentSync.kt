@@ -52,7 +52,7 @@ class PendingPaymentSync(
             }
 
             is PendingSendOutcome.Rejected -> {
-                run.flag(markRejected(payment, outcome.message))
+                run.flag(markRejected(payment, outcome))
             }
 
             PendingSendOutcome.RetryLater -> {
@@ -103,11 +103,15 @@ class PendingPaymentSync(
 
     private suspend fun markRejected(
         payment: PendingPaymentEntity,
-        message: String,
+        rejection: PendingSendOutcome.Rejected,
     ): PendingPaymentEntity =
         payment
-            .copy(status = PendingPaymentStatus.Rejected, confirmationReason = null, rejectionMessage = message)
-            .also { dao.update(it) }
+            .copy(
+                status = PendingPaymentStatus.Rejected,
+                confirmationReason = null,
+                rejectionReason = rejection.reason,
+                rejectionMessage = rejection.message,
+            ).also { dao.update(it) }
 
     private class SyncRun {
         val refreshed = mutableMapOf<String, TenantRefresh>()

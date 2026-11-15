@@ -107,6 +107,7 @@ class PendingPaymentSyncTest {
 
             val rejected = checkNotNull(dao.byClientId("c1"))
             assertEquals(PendingPaymentStatus.Rejected, rejected.status)
+            assertEquals(PendingRejectionReason.TenantArchived, rejected.rejectionReason)
             assertEquals(ARCHIVED, rejected.rejectionMessage)
             assertEquals(listOf(rejected), report.needsAttention)
         }

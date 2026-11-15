@@ -15,7 +15,7 @@ object PendingPaymentsMigration : Migration(VERSION_WITHOUT_QUEUE, VERSION_WITH_
             "CREATE TABLE IF NOT EXISTS `pending_payments` (`clientId` TEXT NOT NULL, `sequence` INTEGER NOT NULL, " +
                 "`groupId` TEXT NOT NULL, `tenantId` TEXT NOT NULL, `tenantName` TEXT NOT NULL, " +
                 "`amountCents` INTEGER NOT NULL, `dateReceived` TEXT NOT NULL, `method` TEXT, `note` TEXT, " +
-                "`status` TEXT NOT NULL, `confirmationReason` TEXT, `rejectionMessage` TEXT, " +
+                "`status` TEXT NOT NULL, `confirmationReason` TEXT, `rejectionReason` TEXT, `rejectionMessage` TEXT, " +
                 "`duplicateConfirmed` INTEGER NOT NULL, `tenantFingerprint` TEXT NOT NULL, " +
                 "`balanceCentsWhenLogged` INTEGER, PRIMARY KEY(`clientId`))",
         )

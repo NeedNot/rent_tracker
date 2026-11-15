@@ -1,0 +1,7 @@
+<resources>
+    <string name="offline_banner">Offline</string>
+    <string name="offline_banner_just_now">Offline · last updated just now</string>
+    <string name="offline_banner_minutes">Offline · last updated %1$d min ago</string>
+    <string name="offline_banner_hours">Offline · last updated %1$dh ago</string>
+    <string name="offline_banner_days">Offline · last updated %1$dd ago</string>
+</resources>

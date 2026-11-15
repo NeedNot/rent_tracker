@@ -43,6 +43,7 @@ class PendingPaymentQueue(
                         note = details.note,
                         status = PendingPaymentStatus.Pending,
                         confirmationReason = null,
+                        rejectionReason = null,
                         rejectionMessage = null,
                         duplicateConfirmed = false,
                         tenantFingerprint = dao.tenantFingerprint(tenantId),

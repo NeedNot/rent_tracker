@@ -8,6 +8,7 @@ sealed interface PendingSendOutcome {
     ) : PendingSendOutcome
 
     data class Rejected(
+        val reason: PendingRejectionReason,
         val message: String,
     ) : PendingSendOutcome
 

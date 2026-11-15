@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 7,
-    "identityHash": "bc06fa85148937f3594f2ce6d045ff02",
+    "identityHash": "6fdd8fadcbd3dcd3c2adb8b127e38e7c",
     "entities": [
       {
         "tableName": "pending_payments",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `sequence` INTEGER NOT NULL, `groupId` TEXT NOT NULL, `tenantId` TEXT NOT NULL, `tenantName` TEXT NOT NULL, `amountCents` INTEGER NOT NULL, `dateReceived` TEXT NOT NULL, `method` TEXT, `note` TEXT, `status` TEXT NOT NULL, `confirmationReason` TEXT, `rejectionMessage` TEXT, `duplicateConfirmed` INTEGER NOT NULL, `tenantFingerprint` TEXT NOT NULL, `balanceCentsWhenLogged` INTEGER, PRIMARY KEY(`clientId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `sequence` INTEGER NOT NULL, `groupId` TEXT NOT NULL, `tenantId` TEXT NOT NULL, `tenantName` TEXT NOT NULL, `amountCents` INTEGER NOT NULL, `dateReceived` TEXT NOT NULL, `method` TEXT, `note` TEXT, `status` TEXT NOT NULL, `confirmationReason` TEXT, `rejectionReason` TEXT, `rejectionMessage` TEXT, `duplicateConfirmed` INTEGER NOT NULL, `tenantFingerprint` TEXT NOT NULL, `balanceCentsWhenLogged` INTEGER, PRIMARY KEY(`clientId`))",
         "fields": [
           {
             "fieldPath": "clientId",
@@ -69,6 +69,11 @@
           {
             "fieldPath": "confirmationReason",
             "columnName": "confirmationReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rejectionReason",
+            "columnName": "rejectionReason",
             "affinity": "TEXT"
           },
           {
@@ -1473,7 +1478,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bc06fa85148937f3594f2ce6d045ff02')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6fdd8fadcbd3dcd3c2adb8b127e38e7c')"
     ]
   }
 }
