@@ -317,7 +317,7 @@ class AccountViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun signingOutEndsTheSessionImmediately() =
+    fun signingOutWithNothingUnsyncedAsksToConfirmFirst() =
         runTest {
             repository.showProfile()
 
@@ -326,6 +326,12 @@ class AccountViewModelTest : MainDispatcherTest() {
                 awaitItem()
 
                 viewModel.onSignOutClicked()
+                runCurrent()
+
+                assertEquals(0, awaitContent().unsyncedPaymentsOnSignOut)
+                assertEquals(0, repository.signOutCount)
+
+                viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.SignOutAnyway)
                 runCurrent()
 
                 assertEquals(1, repository.signOutCount)
@@ -403,6 +409,8 @@ class AccountViewModelTest : MainDispatcherTest() {
                 awaitItem()
 
                 viewModel.onSignOutClicked()
+                runCurrent()
+                viewModel.onSignOutWarningAnswered(SignOutWarningAnswer.SignOutAnyway)
                 runCurrent()
 
                 assertEquals(

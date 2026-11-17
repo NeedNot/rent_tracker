@@ -27,6 +27,7 @@ internal fun RtListItem(
     tone: ActionTone = ActionTone.Default,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
+    leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -42,6 +43,7 @@ internal fun RtListItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         leadingIcon?.let { AppIcon(icon = it, contentDescription = null, tint = scheme.onSurfaceVariant) }
+        leading?.invoke()
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(
                 text = text,

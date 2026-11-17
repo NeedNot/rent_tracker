@@ -1,10 +1,9 @@
 package net.neednot.renttracker.feature.account.presentation.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import net.neednot.renttracker.core.designsystem.components.DialogButton
 import net.neednot.renttracker.core.designsystem.components.FormTextField
+import net.neednot.renttracker.core.designsystem.components.RtDialog
 import net.neednot.renttracker.feature.account.presentation.uistate.EditNameDialogUiState
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.account_edit_name_label
@@ -20,25 +19,30 @@ internal fun EditNameDialog(
     onSaved: () -> Unit,
     onDismissed: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissed,
-        title = { Text(stringResource(Res.string.account_edit_name_title)) },
-        text = {
-            FormTextField(
-                label = stringResource(Res.string.account_edit_name_label),
-                text = dialog.name,
-                onTextChanged = onNameChanged,
-                error = dialog.error,
+    RtDialog(
+        title = stringResource(Res.string.account_edit_name_title),
+        onDismissed = onDismissed,
+        confirmButton = {
+            DialogButton(
+                text = stringResource(Res.string.common_save),
+                onClick = onSaved,
+                isWorking = dialog.isSaving,
+            )
+        },
+        dismissButton = {
+            DialogButton(
+                text = stringResource(Res.string.common_cancel),
+                onClick = onDismissed,
                 enabled = !dialog.isSaving,
             )
         },
-        confirmButton = {
-            TextButton(onClick = onSaved, enabled = !dialog.isSaving) { Text(stringResource(Res.string.common_save)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissed, enabled = !dialog.isSaving) {
-                Text(stringResource(Res.string.common_cancel))
-            }
-        },
-    )
+    ) {
+        FormTextField(
+            label = stringResource(Res.string.account_edit_name_label),
+            text = dialog.name,
+            onTextChanged = onNameChanged,
+            error = dialog.error,
+            enabled = !dialog.isSaving,
+        )
+    }
 }

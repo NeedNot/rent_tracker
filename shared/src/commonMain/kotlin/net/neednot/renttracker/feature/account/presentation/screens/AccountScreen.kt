@@ -1,48 +1,51 @@
 package net.neednot.renttracker.feature.account.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.ActionTone
+import net.neednot.renttracker.core.designsystem.components.AppIcon
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.ErrorState
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
+import net.neednot.renttracker.core.designsystem.components.RtListCard
+import net.neednot.renttracker.core.designsystem.components.RtListItem
+import net.neednot.renttracker.core.designsystem.components.RtTopAppBar
+import net.neednot.renttracker.core.designsystem.components.SectionHeader
+import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
-import net.neednot.renttracker.feature.account.presentation.components.AccountActionsCard
-import net.neednot.renttracker.feature.account.presentation.components.AccountHeaderCard
+import net.neednot.renttracker.feature.account.presentation.components.AccountProfileCard
 import net.neednot.renttracker.feature.account.presentation.components.EditNameDialog
 import net.neednot.renttracker.feature.account.presentation.components.RequestDeletionDialog
-import net.neednot.renttracker.feature.account.presentation.components.SignOutPendingDialog
+import net.neednot.renttracker.feature.account.presentation.components.SignOutDialog
+import net.neednot.renttracker.feature.account.presentation.components.UnavailableSettings
 import net.neednot.renttracker.feature.account.presentation.uistate.AccountUiState
 import net.neednot.renttracker.feature.account.presentation.uistate.DeletionRowUiState
 import net.neednot.renttracker.feature.account.presentation.viewmodel.AccountViewModel
 import net.neednot.renttracker.feature.account.presentation.viewmodel.SignOutWarningAnswer
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.account_back
-import net.neednot.renttracker.resources.account_loading
+import net.neednot.renttracker.resources.account_deletion_requested
+import net.neednot.renttracker.resources.account_error_title
+import net.neednot.renttracker.resources.account_request_deletion
+import net.neednot.renttracker.resources.account_request_deletion_hint
+import net.neednot.renttracker.resources.account_sign_out
 import net.neednot.renttracker.resources.account_title
+import net.neednot.renttracker.resources.ic_chevron_right
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -82,117 +85,139 @@ fun AccountScreen(
     )
 }
 
-private class AccountActions(
-    val onBackClicked: () -> Unit,
-    val onSignOutClicked: () -> Unit,
-    val signOutWarning: SignOutWarningActions,
-    val editName: EditNameActions,
-    val deletion: DeletionActions,
-)
-
-private class SignOutWarningActions(
-    val onConfirmed: () -> Unit,
-    val onDismissed: () -> Unit,
-)
-
-private class EditNameActions(
-    val onClicked: () -> Unit,
-    val onChanged: (String) -> Unit,
-    val onSaved: () -> Unit,
-    val onDismissed: () -> Unit,
-)
-
-private class DeletionActions(
-    val onClicked: () -> Unit,
-    val onConfirmed: () -> Unit,
-    val onDismissed: () -> Unit,
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AccountContent(
+internal fun AccountContent(
     uiState: AccountUiState,
     actions: AccountActions,
     modifier: Modifier = Modifier,
 ) {
+    val content = uiState as? AccountUiState.Content
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.account_title)) },
-                navigationIcon = {
-                    IconButton(onClick = actions.onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.account_back),
-                        )
-                    }
-                },
+            RtTopAppBar(
+                title = stringResource(Res.string.account_title),
+                onNavigationClicked = actions.onBackClicked,
             )
         },
     ) { contentPadding ->
-        when (uiState) {
-            AccountUiState.Loading -> {
-                val description = stringResource(Res.string.account_loading)
-                Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
+        Column(modifier = Modifier.padding(contentPadding)) {
+            content?.offlineBanner?.let { OfflineBanner(text = it.asString()) }
+            when (uiState) {
+                AccountUiState.Loading -> {
+                    LoadingIndicator()
                 }
-            }
 
-            is AccountUiState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(contentPadding).padding(32.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
+                is AccountUiState.Error -> {
+                    ErrorState(
+                        title = stringResource(Res.string.account_error_title),
                         text = uiState.message.asString(),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
+                        onRetryClicked = UnimplementedAction,
                     )
                 }
-            }
 
-            is AccountUiState.Content -> {
-                AccountBody(content = uiState, actions = actions, modifier = Modifier.padding(contentPadding))
+                is AccountUiState.Content -> {
+                    AccountBody(content = uiState, actions = actions)
+                }
             }
         }
     }
+    content?.let { AccountDialogs(content = it, actions = actions) }
 }
 
 @Composable
 private fun AccountBody(
     content: AccountUiState.Content,
     actions: AccountActions,
-    modifier: Modifier = Modifier,
 ) {
+    val isOffline = content.offlineBanner != null
     Column(
         modifier =
-            modifier
+            Modifier
                 .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState(),
-                ).padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(ContentLayout.List.padding),
+        verticalArrangement = Arrangement.spacedBy(ContentLayout.List.spacing),
     ) {
-        content.syncError?.let { error ->
-            Text(
-                text = error.asString(),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-        AccountHeaderCard(
+        content.syncError?.let { Banner(text = it.asString(), kind = BannerKind.Error) }
+        AccountProfileCard(
             initials = content.initials,
             displayName = content.displayName,
             email = content.email,
-            onEditNameClicked = actions.editName.onClicked,
+            onEditNameClicked = actions.editName.onClicked.takeUnless { isOffline },
         )
-        AccountActionsCard(
-            deletion = content.deletion,
-            onSignOutClicked = actions.onSignOutClicked,
-            onRequestDeletionClicked = actions.deletion.onClicked,
-        )
+        UnavailableSettings()
+        SectionHeader(text = stringResource(Res.string.account_title))
+        RtListCard(items = listOfNotNull(AccountRow.SignOut, AccountRow.Deletion.takeUnless { isOffline })) { row ->
+            when (row) {
+                AccountRow.SignOut -> {
+                    ChevronItem(
+                        text = stringResource(Res.string.account_sign_out),
+                        onClick = actions.onSignOutClicked,
+                    )
+                }
+
+                AccountRow.Deletion -> {
+                    DeletionItem(deletion = content.deletion, onClick = actions.deletion.onClicked)
+                }
+            }
+        }
     }
+}
+
+private enum class AccountRow { SignOut, Deletion }
+
+@Composable
+private fun DeletionItem(
+    deletion: DeletionRowUiState,
+    onClick: () -> Unit,
+) {
+    when (deletion) {
+        DeletionRowUiState.Available -> {
+            ChevronItem(
+                text = stringResource(Res.string.account_request_deletion),
+                supportingText = stringResource(Res.string.account_request_deletion_hint),
+                tone = ActionTone.Destructive,
+                onClick = onClick,
+            )
+        }
+
+        is DeletionRowUiState.Requested -> {
+            RtListItem(
+                text = stringResource(Res.string.account_deletion_requested),
+                supportingText = deletion.supportingText.asString(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChevronItem(
+    text: String,
+    onClick: () -> Unit,
+    supportingText: String? = null,
+    tone: ActionTone = ActionTone.Default,
+) {
+    RtListItem(
+        text = text,
+        supportingText = supportingText,
+        tone = tone,
+        onClick = onClick,
+        trailing = {
+            AppIcon(
+                icon = Res.drawable.ic_chevron_right,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+    )
+}
+
+@Composable
+private fun AccountDialogs(
+    content: AccountUiState.Content,
+    actions: AccountActions,
+) {
     content.editNameDialog?.let { dialog ->
         EditNameDialog(
             dialog = dialog,
@@ -202,7 +227,7 @@ private fun AccountBody(
         )
     }
     content.unsyncedPaymentsOnSignOut?.let { count ->
-        SignOutPendingDialog(
+        SignOutDialog(
             unsyncedCount = count,
             onConfirmed = actions.signOutWarning.onConfirmed,
             onDismissed = actions.signOutWarning.onDismissed,
@@ -228,14 +253,7 @@ private fun AccountContentPreview() {
                     email = "sam@example.com",
                     deletion = DeletionRowUiState.Requested(UiText.Plain("Requested Nov 14. Our team will handle it.")),
                 ),
-            actions =
-                AccountActions(
-                    onBackClicked = {},
-                    onSignOutClicked = {},
-                    signOutWarning = SignOutWarningActions({}, {}),
-                    editName = EditNameActions({}, {}, {}, {}),
-                    deletion = DeletionActions({}, {}, {}),
-                ),
+            actions = AccountActions(),
         )
     }
 }

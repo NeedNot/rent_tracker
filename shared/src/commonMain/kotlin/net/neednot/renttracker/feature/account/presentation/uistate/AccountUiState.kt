@@ -14,6 +14,7 @@ sealed interface AccountUiState {
         val isDeleteDialogShown: Boolean = false,
         val unsyncedPaymentsOnSignOut: Int? = null,
         val syncError: UiText? = null,
+        val offlineBanner: UiText? = null,
     ) : AccountUiState
 
     data class Error(
