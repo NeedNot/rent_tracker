@@ -14,16 +14,24 @@ import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 
 private const val GOLDEN_DIRECTORY = "src/androidHostTest/screenshots"
 
+internal const val PHONE_QUALIFIERS = "w390dp-h844dp-xhdpi"
+
 internal fun ComposeContentTestRule.captureScreenshot(
+    name: String,
+    isDark: Boolean,
+    content: @Composable () -> Unit,
+) {
+    captureScreen(name, isDark) { Box(modifier = Modifier.padding(16.dp)) { content() } }
+}
+
+internal fun ComposeContentTestRule.captureScreen(
     name: String,
     isDark: Boolean,
     content: @Composable () -> Unit,
 ) {
     setContent {
         RentTrackerTheme(darkTheme = isDark) {
-            Surface(color = MaterialTheme.colorScheme.background) {
-                Box(modifier = Modifier.padding(16.dp)) { content() }
-            }
+            Surface(color = MaterialTheme.colorScheme.background, content = content)
         }
     }
     onRoot().captureRoboImage("$GOLDEN_DIRECTORY/$name-${if (isDark) "dark" else "light"}.png")

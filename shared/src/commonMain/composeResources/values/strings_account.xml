@@ -12,7 +12,7 @@
     <string name="account_edit_name_title">Edit name</string>
     <string name="account_edit_name_label">Name</string>
     <string name="account_delete_dialog_title">Request account deletion?</string>
-    <string name="account_delete_dialog_message">Our team will delete your account. Your name will show as \"Deleted user\" on past entries, and the money records stay with each group. This can\'t be undone from the app.</string>
+    <string name="account_delete_dialog_message">Our team will delete your account. Your name will show as \"Deleted user\" on past entries, and the money records stay with each group. This can't be undone from the app.</string>
     <string name="account_delete_dialog_confirm">Request deletion</string>
     <string name="account_error_name_length">Enter a name between 1 and 100 characters.</string>
     <string name="account_error_offline">No connection. Check your internet and try again.</string>

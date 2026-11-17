@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="payment_editor_offline_note">You\'re offline. This payment will be saved on this phone and sent when you\'re back online.</string>
-    <string name="payment_saved_on_phone">Saved on this phone. It will sync when you\'re online.</string>
+    <string name="payment_editor_offline_note">You're offline. This payment will be saved on this phone and sent when you're back online.</string>
+    <string name="payment_saved_on_phone">Saved on this phone. It will sync when you're online.</string>
     <string name="payment_sync_alerts_title">Turn on sync alerts?</string>
-    <string name="payment_sync_alerts_message">We\'ll let you know if a payment can\'t sync, so you can fix it before it\'s lost.</string>
+    <string name="payment_sync_alerts_message">We'll let you know if a payment can't sync, so you can fix it before it's lost.</string>
     <string name="payment_sync_alerts_permission_hint">Next, Android will ask for permission to send notifications.</string>
     <string name="payment_sync_alerts_not_now">Not now</string>
     <string name="payment_sync_alerts_allow">Allow</string>

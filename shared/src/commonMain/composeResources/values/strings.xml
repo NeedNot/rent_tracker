@@ -29,14 +29,14 @@
     <string name="archived_groups_title">Archived groups</string>
     <string name="archived_groups_empty">No archived groups</string>
     <string name="archived_groups_help">Archived groups are read-only. Only the owner sees them.</string>
-    <string name="archived_groups_error_title">Couldn\'t load archived groups</string>
+    <string name="archived_groups_error_title">Couldn't load archived groups</string>
     <plurals name="archived_groups_summary">
         <item quantity="one">Archived %2$s · %1$d tenant</item>
         <item quantity="other">Archived %2$s · %1$d tenants</item>
     </plurals>
     <string name="home_empty_title">No groups yet</string>
     <string name="home_empty_body">Create a group for a building or a set of units, then add its tenants.</string>
-    <string name="home_error_title">Couldn\'t load your groups</string>
+    <string name="home_error_title">Couldn't load your groups</string>
     <string name="home_search_placeholder">Search groups and tenants</string>
     <string name="home_error_offline">No connection. Check your internet and try again.</string>
     <string name="home_error_unexpected">Something went wrong on our side.</string>

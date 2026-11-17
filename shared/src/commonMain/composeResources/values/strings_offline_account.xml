@@ -2,8 +2,8 @@
 <resources>
     <string name="account_sign_out_pending_title">Sign out?</string>
     <plurals name="account_sign_out_pending_message">
-        <item quantity="one">%1$d payment hasn\'t synced yet and will be lost if you sign out.</item>
-        <item quantity="other">%1$d payments haven\'t synced yet and will be lost if you sign out.</item>
+        <item quantity="one">%1$d payment hasn't synced yet and will be lost if you sign out.</item>
+        <item quantity="other">%1$d payments haven't synced yet and will be lost if you sign out.</item>
     </plurals>
     <string name="account_sign_out_pending_stay">Stay signed in</string>
     <string name="account_sign_out_pending_confirm">Sign out anyway</string>

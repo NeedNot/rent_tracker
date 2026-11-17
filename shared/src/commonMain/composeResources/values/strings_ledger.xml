@@ -56,7 +56,7 @@
 
     <string name="ledger_sheet_payment">Payment</string>
     <string name="ledger_sheet_late_fee">Late fee</string>
-    <string name="ledger_sheet_not_counted">Doesn\'t count toward the balance</string>
+    <string name="ledger_sheet_not_counted">Doesn't count toward the balance</string>
     <string name="ledger_field_status">Status</string>
     <string name="ledger_field_date_received">Date received</string>
     <string name="ledger_field_method">Method</string>
@@ -90,7 +90,7 @@
     <string name="ledger_bounced_message_check">Mark the %1$s check for %2$s as bounced? It stays in the ledger but no longer counts toward the balance.</string>
     <string name="ledger_bounced_back">Back</string>
     <string name="ledger_fee_title">Add a bounced-check fee?</string>
-    <string name="ledger_fee_message">Optional. It\'s saved as a custom debt named "Bounced-check fee".</string>
+    <string name="ledger_fee_message">Optional. It's saved as a custom debt named "Bounced-check fee".</string>
     <string name="ledger_fee_amount_label">Fee amount</string>
     <string name="ledger_fee_skip">Skip</string>
     <string name="ledger_fee_add">Add fee</string>

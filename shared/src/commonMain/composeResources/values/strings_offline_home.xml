@@ -5,9 +5,9 @@
     <string name="home_rejected_payments_hint">Open to see what happened.</string>
     <string name="home_rejected_payment_rejected">Rejected</string>
     <string name="home_rejected_payment_dismiss">Dismiss</string>
-    <string name="home_rejected_payments_sheet_title">Payments that couldn\'t sync</string>
+    <string name="home_rejected_payments_sheet_title">Payments that couldn't sync</string>
     <plurals name="home_rejected_payments_summary">
-        <item quantity="one">%1$d payment couldn\'t sync</item>
-        <item quantity="other">%1$d payments couldn\'t sync</item>
+        <item quantity="one">%1$d payment couldn't sync</item>
+        <item quantity="other">%1$d payments couldn't sync</item>
     </plurals>
 </resources>

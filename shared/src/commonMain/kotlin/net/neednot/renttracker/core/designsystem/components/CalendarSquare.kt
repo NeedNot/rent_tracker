@@ -77,7 +77,7 @@ fun CalendarSquare(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                     ) {
                         AppIcon(icon = state.icon(), contentDescription = null, size = IconSize.Small)
-                        Text(text = stateLabel, maxLines = 1, style = MaterialTheme.typography.labelSmall)
+                        Text(text = stateLabel, style = MaterialTheme.typography.labelSmall)
                     }
                     owed?.let { Text(text = it, maxLines = 1, style = MaterialTheme.typography.labelSmall) }
                 }

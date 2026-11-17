@@ -99,7 +99,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeContent(
+internal fun HomeContent(
     uiState: HomeUiState,
     invitationActions: InvitationActions,
     rejectedPaymentActions: RejectedPaymentActions,
