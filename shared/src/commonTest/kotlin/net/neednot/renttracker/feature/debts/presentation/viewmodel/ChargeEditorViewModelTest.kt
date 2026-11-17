@@ -27,7 +27,6 @@ import net.neednot.renttracker.feature.debts.presentation.uistate.ChargeEditorFi
 import net.neednot.renttracker.feature.debts.presentation.uistate.DuplicateLateFeeUiState
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.balance_owes
-import net.neednot.renttracker.resources.charge_duplicate_intro
 import net.neednot.renttracker.resources.charge_duplicate_you
 import net.neednot.renttracker.resources.charge_editor_conflict_named
 import net.neednot.renttracker.resources.charge_editor_error_note_required
@@ -420,7 +419,7 @@ class ChargeEditorViewModelTest : MainDispatcherTest() {
             runCurrent()
 
             val dialog = checkNotNull(editor.uiState.value.duplicate)
-            assertEquals(UiText.Resource(Res.string.charge_duplicate_intro, listOf("March")), dialog.intro)
+            assertEquals("March", dialog.month)
             assertEquals(
                 listOf(DuplicateLateFeeUiState("Mar 8", UiText.Plain("Sam Rivera"), "$50.00")),
                 dialog.matches,

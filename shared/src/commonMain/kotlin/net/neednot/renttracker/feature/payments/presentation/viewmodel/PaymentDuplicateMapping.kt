@@ -9,20 +9,19 @@ import net.neednot.renttracker.feature.payments.domain.DuplicateMatch
 import net.neednot.renttracker.feature.payments.presentation.uistate.DuplicateDialogUiState
 import net.neednot.renttracker.feature.payments.presentation.uistate.DuplicateMatchUiState
 import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.payment_duplicate_fee
 import net.neednot.renttracker.resources.payment_duplicate_intro_both
 import net.neednot.renttracker.resources.payment_duplicate_intro_fee
 import net.neednot.renttracker.resources.payment_duplicate_intro_payment
 import net.neednot.renttracker.resources.payment_duplicate_intro_payments
 import net.neednot.renttracker.resources.payment_duplicate_kind_late_fee
 import net.neednot.renttracker.resources.payment_duplicate_kind_payment
-import net.neednot.renttracker.resources.payment_duplicate_question_both
-import net.neednot.renttracker.resources.payment_duplicate_question_one
+import net.neednot.renttracker.resources.payment_duplicate_paid
 import net.neednot.renttracker.resources.payment_duplicate_title_many
 import net.neednot.renttracker.resources.payment_duplicate_title_one
-import net.neednot.renttracker.resources.payment_duplicate_you
 
 internal fun List<DuplicateMatch>.toDialog(
-    callerAccountId: String?,
+    tenantName: String,
     lateFeeMonth: YearMonth?,
 ): DuplicateDialogUiState {
     val hasPayment = any { it.kind == DuplicateKind.Payment }
@@ -33,47 +32,39 @@ internal fun List<DuplicateMatch>.toDialog(
             UiText.Resource(
                 if (size > 1) Res.string.payment_duplicate_title_many else Res.string.payment_duplicate_title_one,
             ),
-        intro = introFor(hasPayment, hasLateFee, lateFeeMonth),
-        matches = map { it.toUiState(callerAccountId, lateFeeMonth, labelsKinds) },
-        question =
-            UiText.Resource(
-                if (labelsKinds) {
-                    Res.string.payment_duplicate_question_both
-                } else {
-                    Res.string.payment_duplicate_question_one
-                },
-            ),
+        intro = introFor(hasPayment, hasLateFee, tenantName, lateFeeMonth),
+        matches = map { it.toUiState(lateFeeMonth, labelsKinds) },
     )
 }
 
 private fun List<DuplicateMatch>.introFor(
     hasPayment: Boolean,
     hasLateFee: Boolean,
+    tenantName: String,
     lateFeeMonth: YearMonth?,
 ): UiText =
     when {
         hasPayment && hasLateFee -> {
-            UiText.Resource(Res.string.payment_duplicate_intro_both)
+            UiText.Resource(Res.string.payment_duplicate_intro_both, listOf(tenantName))
         }
 
         hasLateFee -> {
             UiText.Resource(
                 Res.string.payment_duplicate_intro_fee,
-                listOf(lateFeeMonth?.monthName().orEmpty()),
+                listOf(lateFeeMonth?.monthName().orEmpty(), tenantName),
             )
         }
 
         size > 1 -> {
-            UiText.Resource(Res.string.payment_duplicate_intro_payments)
+            UiText.Resource(Res.string.payment_duplicate_intro_payments, listOf(tenantName))
         }
 
         else -> {
-            UiText.Resource(Res.string.payment_duplicate_intro_payment)
+            UiText.Resource(Res.string.payment_duplicate_intro_payment, listOf(tenantName))
         }
     }
 
 private fun DuplicateMatch.toUiState(
-    callerAccountId: String?,
     lateFeeMonth: YearMonth?,
     labelsKind: Boolean,
 ): DuplicateMatchUiState =
@@ -81,15 +72,14 @@ private fun DuplicateMatch.toUiState(
         kind = if (labelsKind) kindLabel(lateFeeMonth) else null,
         date = formatMonthDay(date),
         method = method,
-        by =
-            if (callerAccountId != null &&
-                byAccountId == callerAccountId
-            ) {
-                UiText.Resource(Res.string.payment_duplicate_you)
-            } else {
-                UiText.Plain(byName)
-            },
-        amount = formatMoney(amountCents),
+        amount =
+            UiText.Resource(
+                when (kind) {
+                    DuplicateKind.Payment -> Res.string.payment_duplicate_paid
+                    DuplicateKind.LateFee -> Res.string.payment_duplicate_fee
+                },
+                listOf(formatMoney(amountCents)),
+            ),
     )
 
 private fun DuplicateMatch.kindLabel(lateFeeMonth: YearMonth?): UiText =

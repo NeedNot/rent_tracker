@@ -48,7 +48,6 @@ class PaymentEditorViewModel(
 
     private val clientId = Uuid.random().toString()
     private var expectedVersion: Long? = null
-    private var callerAccountId: String? = null
     private var hasTriedSaving = false
     private val previewer =
         PaymentChangePreviewer(viewModelScope, paymentRepository, tenantId, paymentId) { changes ->
@@ -153,7 +152,7 @@ class PaymentEditorViewModel(
                                 }
                             }
                         }.onErr { error ->
-                            mutableUiState.update { it.afterSaveFailure(error, callerAccountId) }
+                            mutableUiState.update { it.afterSaveFailure(error) }
                             if (error is PaymentError.EditConflict) {
                                 show(paymentRepository.entryFromServer(tenantId, paymentId))
                             }
@@ -168,7 +167,6 @@ class PaymentEditorViewModel(
     private fun show(snapshot: Synced<PaymentEntryOverview?, PaymentError>) {
         val overview = snapshot.value?.takeIf { paymentId == null || it.payment != null }
         expectedVersion = overview?.payment?.version
-        callerAccountId = overview?.callerAccountId
         mutableUiState.update {
             if (overview == null) {
                 it.copy(isLoading = false, error = it.error ?: snapshot.loadError().text())

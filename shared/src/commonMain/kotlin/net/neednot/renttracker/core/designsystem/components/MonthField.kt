@@ -34,8 +34,10 @@ import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.common_cancel
 import net.neednot.renttracker.resources.common_next_year
 import net.neednot.renttracker.resources.common_previous_year
+import net.neednot.renttracker.resources.ic_calendar_today
 import net.neednot.renttracker.resources.ic_chevron_left
 import net.neednot.renttracker.resources.ic_chevron_right
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val MONTHS_PER_ROW = 3
@@ -47,7 +49,9 @@ internal fun MonthField(
     onMonthChanged: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
     error: UiText? = null,
+    hint: String? = null,
     enabled: Boolean = true,
+    icon: DrawableResource = Res.drawable.ic_calendar_today,
 ) {
     var isPickerOpen by rememberSaveable { mutableStateOf(false) }
     PickerField(
@@ -56,7 +60,9 @@ internal fun MonthField(
         onOpenClicked = { isPickerOpen = true },
         modifier = modifier,
         error = error,
+        hint = hint,
         enabled = enabled,
+        icon = icon,
     )
     if (isPickerOpen) {
         MonthPickerDialog(

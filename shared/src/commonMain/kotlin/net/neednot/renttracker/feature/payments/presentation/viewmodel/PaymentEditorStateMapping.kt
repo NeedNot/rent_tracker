@@ -1,6 +1,7 @@
 package net.neednot.renttracker.feature.payments.presentation.viewmodel
 
 import net.neednot.renttracker.core.designsystem.format.formatDollarsInput
+import net.neednot.renttracker.core.designsystem.format.formatMoney
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.payments.domain.PaymentEntryOverview
 import net.neednot.renttracker.feature.payments.domain.PaymentError
@@ -52,5 +53,10 @@ private fun PaymentEntryOverview.toHeader(): PaymentHeaderUiState =
 
 private fun PaymentEntryOverview.lateFeeOffer(): LateFeeOfferUiState? =
     lateFeeSuggestion?.takeIf { canAddDebts }?.let {
-        LateFeeOfferUiState(month = it.forMonth, isChecked = false, amount = formatDollarsInput(it.amountCents))
+        LateFeeOfferUiState(
+            month = it.forMonth,
+            isChecked = false,
+            amount = formatDollarsInput(it.amountCents),
+            suggestedAmount = formatMoney(it.amountCents),
+        )
     }

@@ -21,6 +21,7 @@ internal fun FormTextField(
     placeholder: String? = null,
     enabled: Boolean = true,
     singleLine: Boolean = true,
+    minLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     prefix: String? = null,
 ) {
@@ -37,6 +38,7 @@ internal fun FormTextField(
         prefix = prefix,
         enabled = enabled,
         singleLine = singleLine,
+        minLines = minLines,
         keyboardOptions = keyboardOptions,
     )
 }

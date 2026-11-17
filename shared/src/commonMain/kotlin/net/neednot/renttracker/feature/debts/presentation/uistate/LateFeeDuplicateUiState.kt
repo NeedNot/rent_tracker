@@ -1,8 +1,6 @@
 package net.neednot.renttracker.feature.debts.presentation.uistate
 
-import net.neednot.renttracker.core.ui.UiText
-
 data class LateFeeDuplicateUiState(
-    val intro: UiText,
+    val month: String,
     val matches: List<DuplicateLateFeeUiState>,
 )

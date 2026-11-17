@@ -7,6 +7,5 @@ data class DuplicateMatchUiState(
     val kind: UiText?,
     val date: String,
     val method: PaymentMethod?,
-    val by: UiText,
-    val amount: String,
+    val amount: UiText,
 )
