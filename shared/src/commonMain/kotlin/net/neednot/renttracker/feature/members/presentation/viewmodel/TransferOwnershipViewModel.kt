@@ -33,15 +33,12 @@ class TransferOwnershipViewModel(
     private val eventChannel = Channel<TransferOwnershipEvent>(Channel.BUFFERED)
     val events: Flow<TransferOwnershipEvent> = eventChannel.receiveAsFlow()
 
-    fun onCandidateSelected(membershipId: String) {
-        choice.update { it.copy(selectedMembershipId = membershipId, error = null) }
-    }
-
-    fun onNextClicked() {
+    fun onCandidateClicked(membershipId: String) {
         val state = uiState.value
-        val candidate = state.candidates.firstOrNull { it.membershipId == state.selectedMembershipId } ?: return
+        val candidate = state.candidates.firstOrNull { it.membershipId == membershipId } ?: return
         choice.update {
             it.copy(
+                error = null,
                 confirm =
                     TransferConfirmUiState(
                         membershipId = candidate.membershipId,

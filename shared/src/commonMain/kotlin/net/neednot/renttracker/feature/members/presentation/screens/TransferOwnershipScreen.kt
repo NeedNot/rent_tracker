@@ -1,14 +1,11 @@
 package net.neednot.renttracker.feature.members.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -16,29 +13,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import net.neednot.renttracker.core.access.MemberPermissionLabel
+import net.neednot.renttracker.core.designsystem.components.AppIcon
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ButtonVariant
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.EmptyState
+import net.neednot.renttracker.core.designsystem.components.ErrorState
+import net.neednot.renttracker.core.designsystem.components.InitialsAvatar
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
+import net.neednot.renttracker.core.designsystem.components.RtButton
+import net.neednot.renttracker.core.designsystem.components.RtListCard
+import net.neednot.renttracker.core.designsystem.components.RtListRow
+import net.neednot.renttracker.core.designsystem.components.RtTopAppBar
+import net.neednot.renttracker.core.designsystem.components.TopBarNavigation
+import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.asString
-import net.neednot.renttracker.feature.members.presentation.components.MembersEditorTopBar
-import net.neednot.renttracker.feature.members.presentation.components.MembersListCard
-import net.neednot.renttracker.feature.members.presentation.components.TransferCandidateRow
 import net.neednot.renttracker.feature.members.presentation.components.TransferConfirmDialog
 import net.neednot.renttracker.feature.members.presentation.uistate.TransferCandidateUiState
 import net.neednot.renttracker.feature.members.presentation.uistate.TransferOwnershipUiState
 import net.neednot.renttracker.feature.members.presentation.viewmodel.TransferOwnershipEvent
 import net.neednot.renttracker.feature.members.presentation.viewmodel.TransferOwnershipViewModel
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.members_loading
+import net.neednot.renttracker.resources.ic_chevron_right
+import net.neednot.renttracker.resources.ic_group
+import net.neednot.renttracker.resources.members_error_title
+import net.neednot.renttracker.resources.members_invite_title
+import net.neednot.renttracker.resources.members_transfer_empty_body
+import net.neednot.renttracker.resources.members_transfer_empty_title
 import net.neednot.renttracker.resources.members_transfer_intro
-import net.neednot.renttracker.resources.members_transfer_next
 import net.neednot.renttracker.resources.members_transfer_ownership
-import net.neednot.renttracker.resources.members_transfer_working
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -46,6 +53,7 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun TransferOwnershipScreen(
     groupId: String,
+    onInviteClicked: () -> Unit,
     onClosed: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TransferOwnershipViewModel = koinViewModel { parametersOf(groupId) },
@@ -60,81 +68,132 @@ fun TransferOwnershipScreen(
     }
     TransferOwnershipContent(
         uiState = uiState,
-        onCandidateSelected = viewModel::onCandidateSelected,
-        onNextClicked = viewModel::onNextClicked,
-        onTransferConfirmed = viewModel::onTransferConfirmed,
-        onConfirmDismissed = viewModel::onConfirmDismissed,
-        onCloseClicked = onClosed,
+        actions =
+            TransferOwnershipActions(
+                onCandidateClicked = viewModel::onCandidateClicked,
+                onTransferConfirmed = viewModel::onTransferConfirmed,
+                onConfirmDismissed = viewModel::onConfirmDismissed,
+                onInviteClicked = onInviteClicked,
+                onCloseClicked = onClosed,
+            ),
         modifier = modifier,
     )
 }
 
 @Composable
-private fun TransferOwnershipContent(
+internal fun TransferOwnershipContent(
     uiState: TransferOwnershipUiState,
-    onCandidateSelected: (membershipId: String) -> Unit,
-    onNextClicked: () -> Unit,
-    onTransferConfirmed: () -> Unit,
-    onConfirmDismissed: () -> Unit,
-    onCloseClicked: () -> Unit,
+    actions: TransferOwnershipActions,
     modifier: Modifier = Modifier,
 ) {
-    val isWorking = uiState.confirm?.isWorking == true
     Scaffold(
         modifier = modifier,
         topBar = {
-            MembersEditorTopBar(
+            RtTopAppBar(
                 title = stringResource(Res.string.members_transfer_ownership),
-                actionLabel = stringResource(Res.string.members_transfer_next),
-                workingLabel = stringResource(Res.string.members_transfer_working),
-                isWorking = isWorking,
-                isActionEnabled = uiState.selectedMembershipId != null && !isWorking,
-                onActionClicked = onNextClicked,
-                onCloseClicked = onCloseClicked,
+                navigation = TopBarNavigation.Close,
+                onNavigationClicked = actions.onCloseClicked,
             )
         },
     ) { contentPadding ->
-        if (uiState.isLoading) {
-            val description = stringResource(Res.string.members_loading)
-            Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
+        val bodyModifier = Modifier.padding(contentPadding)
+        when {
+            uiState.isLoading -> {
+                LoadingIndicator(modifier = bodyModifier)
             }
-        } else {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                uiState.error?.let { error ->
-                    Text(
-                        text = error.asString(),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                Text(
-                    text = stringResource(Res.string.members_transfer_intro, uiState.groupName),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
+
+            uiState.candidates.isEmpty() && uiState.error != null -> {
+                ErrorState(
+                    title = stringResource(Res.string.members_error_title),
+                    text = uiState.error.asString(),
+                    onRetryClicked = UnimplementedAction,
+                    modifier = bodyModifier,
                 )
-                MembersListCard(items = uiState.candidates, modifier = Modifier.selectableGroup()) { candidate ->
-                    TransferCandidateRow(
-                        candidate = candidate,
-                        isSelected = candidate.membershipId == uiState.selectedMembershipId,
-                        onSelected = { onCandidateSelected(candidate.membershipId) },
-                        enabled = !isWorking,
-                    )
-                }
+            }
+
+            uiState.candidates.isEmpty() -> {
+                NoCandidates(groupName = uiState.groupName, actions = actions, modifier = bodyModifier)
+            }
+
+            else -> {
+                Candidates(uiState = uiState, actions = actions, modifier = bodyModifier)
             }
         }
     }
     uiState.confirm?.let { confirm ->
-        TransferConfirmDialog(confirm = confirm, onConfirmed = onTransferConfirmed, onDismissed = onConfirmDismissed)
+        TransferConfirmDialog(
+            confirm = confirm,
+            onConfirmed = actions.onTransferConfirmed,
+            onDismissed = actions.onConfirmDismissed,
+        )
     }
+}
+
+@Composable
+private fun Candidates(
+    uiState: TransferOwnershipUiState,
+    actions: TransferOwnershipActions,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(ContentLayout.List.padding),
+        verticalArrangement = Arrangement.spacedBy(ContentLayout.List.spacing),
+    ) {
+        uiState.error?.let { Banner(text = it.asString(), kind = BannerKind.Error) }
+        Text(
+            text = stringResource(Res.string.members_transfer_intro, uiState.groupName),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
+        RtListCard(items = uiState.candidates) { candidate ->
+            CandidateRow(candidate = candidate, onClick = { actions.onCandidateClicked(candidate.membershipId) })
+        }
+    }
+}
+
+@Composable
+private fun CandidateRow(
+    candidate: TransferCandidateUiState,
+    onClick: () -> Unit,
+) {
+    RtListRow(
+        title = candidate.name,
+        subtitle = candidate.email,
+        onClick = onClick,
+        leading = { InitialsAvatar(initials = candidate.initials) },
+        trailing = {
+            AppIcon(
+                icon = Res.drawable.ic_chevron_right,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+    )
+}
+
+@Composable
+private fun NoCandidates(
+    groupName: String,
+    actions: TransferOwnershipActions,
+    modifier: Modifier = Modifier,
+) {
+    EmptyState(
+        icon = Res.drawable.ic_group,
+        title = stringResource(Res.string.members_transfer_empty_title),
+        modifier = modifier,
+        text = stringResource(Res.string.members_transfer_empty_body, groupName),
+        action = {
+            RtButton(
+                text = stringResource(Res.string.members_invite_title),
+                onClick = actions.onInviteClicked,
+                variant = ButtonVariant.Outlined,
+            )
+        },
+    )
 }
 
 @Preview
@@ -148,16 +207,11 @@ private fun TransferOwnershipContentPreview() {
                     groupName = "1st Street",
                     candidates =
                         listOf(
-                            TransferCandidateUiState("m2", "SR", "Sam Rivera", MemberPermissionLabel.Manager),
-                            TransferCandidateUiState("m3", "KC", "Kevin Cho", MemberPermissionLabel.Custom),
+                            TransferCandidateUiState("m2", "SR", "Sam Rivera", "sam.rivera@example.com"),
+                            TransferCandidateUiState("m4", "ML", "Maria Lopez", "maria.lopez@example.com"),
                         ),
-                    selectedMembershipId = "m2",
                 ),
-            onCandidateSelected = {},
-            onNextClicked = {},
-            onTransferConfirmed = {},
-            onConfirmDismissed = {},
-            onCloseClicked = {},
+            actions = TransferOwnershipActions(),
         )
     }
 }

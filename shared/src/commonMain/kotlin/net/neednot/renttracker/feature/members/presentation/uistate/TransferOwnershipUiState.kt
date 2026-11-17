@@ -6,7 +6,6 @@ data class TransferOwnershipUiState(
     val isLoading: Boolean = true,
     val groupName: String = "",
     val candidates: List<TransferCandidateUiState> = emptyList(),
-    val selectedMembershipId: String? = null,
     val confirm: TransferConfirmUiState? = null,
     val error: UiText? = null,
 )

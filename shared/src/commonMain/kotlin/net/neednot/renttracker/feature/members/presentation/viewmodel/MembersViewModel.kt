@@ -35,9 +35,8 @@ class MembersViewModel(
             .stateIn(viewModelScope, WhileScreenIsVisible, MembersUiState.Loading)
 
     fun onRemoveClicked(membershipId: String) {
-        val shown = overview ?: return
-        val member = shown.member(membershipId) ?: return
-        removal.open(member, shown.groupName)
+        val member = overview?.member(membershipId) ?: return
+        removal.open(member)
     }
 
     fun onRemoveConfirmed() {

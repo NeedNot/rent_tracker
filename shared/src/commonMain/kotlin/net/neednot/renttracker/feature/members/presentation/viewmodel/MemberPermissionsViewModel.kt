@@ -46,7 +46,6 @@ class MemberPermissionsViewModel(
         RemoveMemberFlow(viewModelScope, membersRepository) { eventChannel.send(MemberPermissionsEvent.MemberRemoved) }
     private var access: CallerAccess? = null
     private var savedMember: Member? = null
-    private var groupName = ""
 
     init {
         removal.dialog
@@ -88,7 +87,7 @@ class MemberPermissionsViewModel(
 
     fun onRemoveClicked() {
         val member = savedMember ?: return
-        removal.open(member, groupName)
+        removal.open(member)
     }
 
     fun onRemoveConfirmed() {
@@ -101,7 +100,8 @@ class MemberPermissionsViewModel(
 
     private suspend fun onSaveFailed(error: MembersError) {
         if (error is MembersError.EditConflict) {
-            mutableUiState.update { it.copy(conflictBanner = membersConflictBanner(error.editedByName)) }
+            val memberName = savedMember?.displayName.orEmpty()
+            mutableUiState.update { it.copy(conflictBanner = membersConflictBanner(memberName)) }
             show(membersRepository.membersFromServer(groupId))
         } else {
             mutableUiState.update { it.copy(error = error.text()) }
@@ -122,9 +122,7 @@ class MemberPermissionsViewModel(
         val member = overview?.member(membershipId)
         if (overview == null || member == null) {
             val error =
-                if (overview ==
-                    null
-                ) {
+                if (overview == null) {
                     snapshot.loadErrorText()
                 } else {
                     UiText.Resource(Res.string.members_error_member_gone)
@@ -135,7 +133,6 @@ class MemberPermissionsViewModel(
         val callerAccess = overview.access
         access = callerAccess
         savedMember = member
-        groupName = overview.groupName
         mutableUiState.update {
             it.copy(
                 isLoading = false,

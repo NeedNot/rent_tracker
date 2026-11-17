@@ -20,16 +20,12 @@ internal class RemoveMemberFlow(
     private val mutableDialog = MutableStateFlow<RemoveMemberDialogUiState?>(null)
     val dialog: StateFlow<RemoveMemberDialogUiState?> = mutableDialog.asStateFlow()
 
-    fun open(
-        member: Member,
-        groupName: String,
-    ) {
+    fun open(member: Member) {
         mutableDialog.value =
             RemoveMemberDialogUiState(
                 membershipId = member.membershipId,
                 memberName = member.displayName,
                 memberFirstName = firstNameOf(member.displayName),
-                groupName = groupName,
             )
     }
 

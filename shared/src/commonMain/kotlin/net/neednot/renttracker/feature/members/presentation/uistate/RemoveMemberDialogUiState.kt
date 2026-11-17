@@ -6,7 +6,6 @@ data class RemoveMemberDialogUiState(
     val membershipId: String,
     val memberName: String,
     val memberFirstName: String,
-    val groupName: String,
     val isWorking: Boolean = false,
     val error: UiText? = null,
 )

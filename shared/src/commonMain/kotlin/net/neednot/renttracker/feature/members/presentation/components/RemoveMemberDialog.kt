@@ -1,19 +1,16 @@
 package net.neednot.renttracker.feature.members.presentation.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.ActionTone
+import net.neednot.renttracker.core.designsystem.components.DialogButton
+import net.neednot.renttracker.core.designsystem.components.RtDialog
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.members.presentation.uistate.RemoveMemberDialogUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.members_remove_confirm
-import net.neednot.renttracker.resources.members_remove_entries
-import net.neednot.renttracker.resources.members_remove_keep
+import net.neednot.renttracker.resources.common_cancel
+import net.neednot.renttracker.resources.members_remove
 import net.neednot.renttracker.resources.members_remove_message
 import net.neednot.renttracker.resources.members_remove_title
 import org.jetbrains.compose.resources.stringResource
@@ -24,25 +21,27 @@ internal fun RemoveMemberDialog(
     onConfirmed: () -> Unit,
     onDismissed: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissed,
+    RtDialog(
+        title = stringResource(Res.string.members_remove_title, dialog.memberName),
+        onDismissed = onDismissed,
         confirmButton = {
-            TextButton(onClick = onConfirmed, enabled = !dialog.isWorking) {
-                Text(stringResource(Res.string.members_remove_confirm), color = MaterialTheme.colorScheme.error)
-            }
+            DialogButton(
+                text = stringResource(Res.string.members_remove),
+                onClick = onConfirmed,
+                tone = ActionTone.Destructive,
+                enabled = !dialog.isWorking,
+                isWorking = dialog.isWorking,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismissed, enabled = !dialog.isWorking) {
-                Text(stringResource(Res.string.members_remove_keep))
-            }
+            DialogButton(
+                text = stringResource(Res.string.common_cancel),
+                onClick = onDismissed,
+                enabled = !dialog.isWorking,
+            )
         },
-        title = { Text(stringResource(Res.string.members_remove_title, dialog.memberName)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(Res.string.members_remove_message, dialog.memberFirstName, dialog.groupName))
-                Text(stringResource(Res.string.members_remove_entries))
-                dialog.error?.let { error -> Text(text = error.asString(), color = MaterialTheme.colorScheme.error) }
-            }
-        },
-    )
+    ) {
+        Text(stringResource(Res.string.members_remove_message, dialog.memberFirstName))
+        dialog.error?.let { Text(text = it.asString(), color = MaterialTheme.colorScheme.error) }
+    }
 }

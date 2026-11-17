@@ -39,8 +39,10 @@ fun NavGraphBuilder.membersGraph(navController: NavController) {
         )
     }
     composable<TransferOwnershipRoute> { entry ->
+        val groupId = entry.toRoute<TransferOwnershipRoute>().groupId
         TransferOwnershipScreen(
-            groupId = entry.toRoute<TransferOwnershipRoute>().groupId,
+            groupId = groupId,
+            onInviteClicked = { navController.navigate(InviteMemberRoute(groupId)) },
             onClosed = { navController.popBackStack() },
         )
     }

@@ -6,7 +6,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.neednot.renttracker.core.access.MemberPermissionLabel
 import net.neednot.renttracker.core.ui.MainDispatcherTest
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.members.domain.FakeMembersRepository
@@ -34,27 +33,24 @@ class TransferOwnershipViewModelTest : MainDispatcherTest() {
     }
 
     @Test
-    fun everyMemberButYouIsACandidateWithTheirPresetLabel() =
+    fun everyMemberButYouIsACandidateWithTheirEmail() =
         runTest {
             val state = openTransfer().uiState.value
 
             assertEquals("1st Street", state.groupName)
             assertEquals(
-                TransferCandidateUiState("m2", "SR", "Sam Rivera", MemberPermissionLabel.Manager),
+                TransferCandidateUiState("m2", "SR", "Sam Rivera", "sam@example.com"),
                 state.candidates.first(),
             )
             assertEquals(listOf("m2", "m3", "m4", "m5"), state.candidates.map { it.membershipId })
-            assertNull(state.selectedMembershipId)
         }
 
     @Test
-    fun nextAsksToConfirmTheChosenMember() =
+    fun clickingAMemberAsksToConfirmThem() =
         runTest {
             val viewModel = openTransfer()
 
-            viewModel.onCandidateSelected("m2")
-            runCurrent()
-            viewModel.onNextClicked()
+            viewModel.onCandidateClicked("m2")
             runCurrent()
 
             assertEquals(
@@ -69,9 +65,7 @@ class TransferOwnershipViewModelTest : MainDispatcherTest() {
             val viewModel = openTransfer()
             val events = mutableListOf<TransferOwnershipEvent>()
             backgroundScope.launch { viewModel.events.collect { events += it } }
-            viewModel.onCandidateSelected("m2")
-            runCurrent()
-            viewModel.onNextClicked()
+            viewModel.onCandidateClicked("m2")
 
             viewModel.onTransferConfirmed()
             runCurrent()
@@ -88,9 +82,7 @@ class TransferOwnershipViewModelTest : MainDispatcherTest() {
         runTest {
             repository.result = Err(MembersError.NotFound("This member no longer exists."))
             val viewModel = openTransfer()
-            viewModel.onCandidateSelected("m2")
-            runCurrent()
-            viewModel.onNextClicked()
+            viewModel.onCandidateClicked("m2")
 
             viewModel.onTransferConfirmed()
             runCurrent()

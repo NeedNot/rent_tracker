@@ -159,7 +159,7 @@ class MembersViewModelTest : MainDispatcherTest() {
             viewModel.onRemoveClicked(maria.membershipId)
             runCurrent()
             assertEquals(
-                RemoveMemberDialogUiState("m4", "Maria Lopez", "Maria", "1st Street"),
+                RemoveMemberDialogUiState("m4", "Maria Lopez", "Maria"),
                 viewModel.content().removeDialog,
             )
 
