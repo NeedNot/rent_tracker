@@ -1,50 +1,65 @@
 package net.neednot.renttracker.core.designsystem.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Contrast
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import net.neednot.renttracker.core.designsystem.theme.CalendarStateColor
+import net.neednot.renttracker.core.designsystem.theme.ContainerColors
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.ic_check_circle
+import net.neednot.renttracker.resources.ic_check_circle_fill
+import net.neednot.renttracker.resources.ic_contrast
+import net.neednot.renttracker.resources.ic_error_fill
+import net.neednot.renttracker.resources.ic_event
+import net.neednot.renttracker.resources.ic_remove
+import net.neednot.renttracker.resources.ic_schedule
+import org.jetbrains.compose.resources.DrawableResource
 
-internal fun CalendarState.icon(): ImageVector? =
+internal fun CalendarState.icon(): DrawableResource =
     when (this) {
-        CalendarState.Paid -> Icons.Filled.Check
-        CalendarState.Partial -> Icons.Filled.Contrast
-        CalendarState.Owed -> Icons.Outlined.ErrorOutline
-        CalendarState.DueNotLate -> Icons.Outlined.Schedule
-        CalendarState.Upcoming -> Icons.Outlined.Circle
-        CalendarState.Prepaid -> Icons.Outlined.CheckCircle
-        CalendarState.NotATenant -> null
+        CalendarState.Paid -> Res.drawable.ic_check_circle_fill
+        CalendarState.Partial -> Res.drawable.ic_contrast
+        CalendarState.Owed -> Res.drawable.ic_error_fill
+        CalendarState.DueNotLate -> Res.drawable.ic_schedule
+        CalendarState.Upcoming -> Res.drawable.ic_event
+        CalendarState.Prepaid -> Res.drawable.ic_check_circle
+        CalendarState.NotATenant -> Res.drawable.ic_remove
     }
 
-private const val DISABLED_ALPHA = 0.38f
-
 @Composable
-internal fun CalendarState.colors(): CalendarStateColor {
-    val colors = RentTrackerTheme.calendarColors
+internal fun CalendarState.colors(): ContainerColors {
+    val scheme = MaterialTheme.colorScheme
     return when (this) {
-        CalendarState.Paid -> colors.paid
-        CalendarState.Partial -> colors.partial
-        CalendarState.Owed -> colors.owed
-        CalendarState.DueNotLate -> colors.dueNotLate
-        CalendarState.Upcoming -> colors.upcoming
-        CalendarState.Prepaid -> colors.prepaid
-        CalendarState.NotATenant -> notATenantColors()
+        CalendarState.Paid, CalendarState.Prepaid -> {
+            RentTrackerTheme.colors.statusPaid
+        }
+
+        CalendarState.Partial -> {
+            RentTrackerTheme.colors.statusOwes
+        }
+
+        CalendarState.Owed -> {
+            RentTrackerTheme.colors.statusLate
+        }
+
+        CalendarState.DueNotLate -> {
+            ContainerColors(container = scheme.surfaceContainerLow, onContainer = scheme.onSurface)
+        }
+
+        CalendarState.Upcoming -> {
+            ContainerColors(container = scheme.surfaceContainer, onContainer = scheme.onSurfaceVariant)
+        }
+
+        CalendarState.NotATenant -> {
+            ContainerColors(container = Color.Transparent, onContainer = scheme.onSurfaceVariant)
+        }
     }
 }
 
-@Composable
-private fun notATenantColors(): CalendarStateColor =
-    CalendarStateColor(
-        container = Color.Transparent,
-        content = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA),
-        border = MaterialTheme.colorScheme.outlineVariant.copy(alpha = DISABLED_ALPHA),
-    )
+internal fun CalendarState.chipKind(): StatusChipKind =
+    when (this) {
+        CalendarState.Paid, CalendarState.Prepaid -> StatusChipKind.PaidUp
+        CalendarState.Partial -> StatusChipKind.Owes
+        CalendarState.Owed -> StatusChipKind.Late
+        CalendarState.DueNotLate, CalendarState.Upcoming, CalendarState.NotATenant -> StatusChipKind.Neutral
+    }

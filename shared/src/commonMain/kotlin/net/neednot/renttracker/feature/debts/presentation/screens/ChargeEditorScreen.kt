@@ -25,12 +25,12 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.DebtKind
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
 import net.neednot.renttracker.core.designsystem.components.DateField
 import net.neednot.renttracker.core.designsystem.components.FormTextField
-import net.neednot.renttracker.core.designsystem.components.InfoNotice
 import net.neednot.renttracker.core.designsystem.components.MoneyField
 import net.neednot.renttracker.core.designsystem.components.MonthField
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
@@ -160,9 +160,14 @@ private fun ChargeFields(
     onForMonthChanged: (YearMonth) -> Unit,
 ) {
     val isEnabled = !uiState.isSaving
-    uiState.conflictBanner?.let { banner -> WarningNotice(banner.asString()) }
+    uiState.conflictBanner?.let { banner -> Banner(text = banner.asString(), kind = BannerKind.Warning) }
     uiState.header?.let { header -> ChargeHeaderCard(header) }
-    if (uiState.isFromSuggestion) InfoNotice(stringResource(Res.string.charge_editor_suggestion_notice))
+    if (uiState.isFromSuggestion) {
+        Banner(
+            text = stringResource(Res.string.charge_editor_suggestion_notice),
+            kind = BannerKind.Note,
+        )
+    }
     if (uiState.isNewCharge) {
         ChargeKindToggle(selected = uiState.kind, onKindSelected = onKindSelected, enabled = isEnabled)
     } else {

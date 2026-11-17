@@ -4,8 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 @Immutable
-data class CalendarStateColor(
+data class ContainerColors(
     val container: Color,
-    val content: Color,
-    val border: Color? = null,
+    val onContainer: Color,
 )

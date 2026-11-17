@@ -27,12 +27,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.YearMonth
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
 import net.neednot.renttracker.core.designsystem.components.EditorTopBar
 import net.neednot.renttracker.core.designsystem.components.FormTextField
-import net.neednot.renttracker.core.designsystem.components.InfoNotice
 import net.neednot.renttracker.core.designsystem.components.MoneyField
 import net.neednot.renttracker.core.designsystem.components.MonthField
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.components.WholeNumberField
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.RentTermEditorRoute
@@ -177,7 +177,7 @@ private fun RentTermFields(
             enabled = isEnabled,
         )
     }
-    uiState.pastMonthWarning?.let { warning -> WarningNotice(warning.text()) }
+    uiState.pastMonthWarning?.let { warning -> Banner(text = warning.text(), kind = BannerKind.Warning) }
     MoneyField(
         label = stringResource(Res.string.tenant_editor_monthly_rent),
         text = uiState.amount,
@@ -192,7 +192,12 @@ private fun RentTermFields(
         error = uiState.fieldErrors[RentTermEditorField.DueDay],
         enabled = isEnabled,
     )
-    if (uiState.showsDueDayReminder) InfoNotice(stringResource(Res.string.rent_term_editor_due_day_reminder))
+    if (uiState.showsDueDayReminder) {
+        Banner(
+            text = stringResource(Res.string.rent_term_editor_due_day_reminder),
+            kind = BannerKind.Note,
+        )
+    }
     if (uiState.canDelete) {
         TextButton(
             onClick = onDeleteClicked,

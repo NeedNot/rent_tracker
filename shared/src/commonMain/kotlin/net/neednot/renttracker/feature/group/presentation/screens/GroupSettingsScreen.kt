@@ -37,10 +37,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.data.PaymentOrder
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
 import net.neednot.renttracker.core.designsystem.components.EditorTopBar
 import net.neednot.renttracker.core.designsystem.components.FormTextField
 import net.neednot.renttracker.core.designsystem.components.MoneyField
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.components.WholeNumberField
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
@@ -248,7 +249,7 @@ private fun EditableSettings(
                 .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        settings.conflictBanner?.let { WarningNotice(it.asString()) }
+        settings.conflictBanner?.let { Banner(text = it.asString(), kind = BannerKind.Warning) }
         settings.error?.let { error ->
             Text(
                 text = error.asString(),

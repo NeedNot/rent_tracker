@@ -12,18 +12,20 @@ fun RentTrackerTheme(
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
-        LocalCalendarColors provides if (darkTheme) DarkCalendarColors else LightCalendarColors,
+        LocalExtendedColors provides if (darkTheme) DarkExtendedColors else LightExtendedColors,
     ) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+            shapes = RentTrackerShapes,
+            typography = RentTrackerTypography,
             content = content,
         )
     }
 }
 
 object RentTrackerTheme {
-    val calendarColors: CalendarColors
+    val colors: ExtendedColors
         @Composable
         @ReadOnlyComposable
-        get() = LocalCalendarColors.current
+        get() = LocalExtendedColors.current
 }

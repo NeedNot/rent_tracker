@@ -2,14 +2,7 @@ package net.neednot.renttracker.core.designsystem.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,6 +14,9 @@ import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.common_choose_field
 import net.neednot.renttracker.resources.common_clear_field
+import net.neednot.renttracker.resources.ic_calendar_today
+import net.neednot.renttracker.resources.ic_close
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -29,40 +25,38 @@ internal fun PickerField(
     value: String,
     onOpenClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    labelNote: String? = null,
     error: UiText? = null,
     hint: String? = null,
     enabled: Boolean = true,
+    icon: DrawableResource = Res.drawable.ic_calendar_today,
     onCleared: (() -> Unit)? = null,
 ) {
-    val supportingText = error?.asString() ?: hint
-    OutlinedTextField(
+    FieldBox(
+        label = label,
         value = value,
         onValueChange = {},
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
+        labelNote = labelNote,
+        error = error?.asString(),
+        hint = hint,
         enabled = enabled,
         readOnly = true,
-        label = { Text(label) },
+        interactionSource = pressesOpening(onOpenClicked),
         trailingIcon = {
             if (onCleared != null && value.isNotEmpty()) {
                 IconButton(onClick = onCleared, enabled = enabled) {
-                    Icon(
-                        imageVector = Icons.Filled.Clear,
+                    AppIcon(
+                        icon = Res.drawable.ic_close,
                         contentDescription = stringResource(Res.string.common_clear_field, label),
                     )
                 }
             } else {
                 IconButton(onClick = onOpenClicked, enabled = enabled) {
-                    Icon(
-                        imageVector = Icons.Outlined.CalendarMonth,
-                        contentDescription = stringResource(Res.string.common_choose_field, label),
-                    )
+                    AppIcon(icon = icon, contentDescription = stringResource(Res.string.common_choose_field, label))
                 }
             }
         },
-        supportingText = supportingText?.let { { Text(it) } },
-        isError = error != null,
-        singleLine = true,
-        interactionSource = pressesOpening(onOpenClicked),
     )
 }
 

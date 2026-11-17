@@ -14,10 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.data.TenantBalanceState
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
 import net.neednot.renttracker.core.designsystem.components.SectionCard
 import net.neednot.renttracker.core.designsystem.components.TenantChipState
 import net.neednot.renttracker.core.designsystem.components.TenantStateChip
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.uistate.BalanceLineUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantBalanceUiState
@@ -52,7 +53,9 @@ internal fun BalanceCard(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            balance.partialMoveOutWarning?.let { warning -> WarningNotice(warning.asString()) }
+            balance.partialMoveOutWarning?.let { warning ->
+                Banner(text = warning.asString(), kind = BannerKind.Warning)
+            }
         }
     }
 }

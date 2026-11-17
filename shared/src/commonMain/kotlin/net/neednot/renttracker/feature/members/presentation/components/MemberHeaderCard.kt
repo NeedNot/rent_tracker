@@ -30,10 +30,7 @@ internal fun MemberHeaderCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            InitialsAvatar(
-                initials = header.initials,
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            )
+            InitialsAvatar(initials = header.initials)
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(text = header.name, style = MaterialTheme.typography.titleMedium)
                 header.email?.let { email ->

@@ -30,7 +30,8 @@ import net.neednot.renttracker.core.access.CallerAccess
 import net.neednot.renttracker.core.access.PermissionPreset
 import net.neednot.renttracker.core.data.AccessLevel
 import net.neednot.renttracker.core.data.MembershipRole
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.members.presentation.components.MemberHeaderCard
@@ -151,7 +152,7 @@ private fun PermissionsFields(
     onRemoveClicked: () -> Unit,
 ) {
     val isEnabled = !uiState.isSaving
-    uiState.conflictBanner?.let { banner -> WarningNotice(banner.asString()) }
+    uiState.conflictBanner?.let { banner -> Banner(text = banner.asString(), kind = BannerKind.Warning) }
     uiState.header?.let { header -> MemberHeaderCard(header) }
     uiState.error?.let { error ->
         Text(

@@ -1,9 +1,6 @@
 package net.neednot.renttracker.core.designsystem.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -17,23 +14,28 @@ internal fun FormTextField(
     text: String,
     onTextChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
+    labelNote: String? = null,
     error: UiText? = null,
     hint: String? = null,
+    counter: String? = null,
+    placeholder: String? = null,
     enabled: Boolean = true,
     singleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     prefix: String? = null,
 ) {
-    val supportingText = error?.asString() ?: hint
-    OutlinedTextField(
+    FieldBox(
+        label = label,
         value = text,
         onValueChange = onTextChanged,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
+        labelNote = labelNote,
+        error = error?.asString(),
+        hint = hint,
+        counter = counter,
+        placeholder = placeholder,
+        prefix = prefix,
         enabled = enabled,
-        label = { Text(label) },
-        prefix = prefix?.let { { Text(it) } },
-        supportingText = supportingText?.let { { Text(it) } },
-        isError = error != null,
         singleLine = singleLine,
         keyboardOptions = keyboardOptions,
     )
@@ -45,6 +47,7 @@ internal fun MoneyField(
     text: String,
     onTextChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
+    labelNote: String? = null,
     error: UiText? = null,
     hint: String? = null,
     enabled: Boolean = true,
@@ -54,6 +57,7 @@ internal fun MoneyField(
         text = text,
         onTextChanged = { typed -> onTextChanged(typed.filter { it.isDigit() || it == '.' || it == ',' }) },
         modifier = modifier,
+        labelNote = labelNote,
         error = error,
         hint = hint,
         enabled = enabled,
@@ -68,6 +72,7 @@ internal fun WholeNumberField(
     text: String,
     onTextChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
+    labelNote: String? = null,
     error: UiText? = null,
     hint: String? = null,
     enabled: Boolean = true,
@@ -77,6 +82,7 @@ internal fun WholeNumberField(
         text = text,
         onTextChanged = { typed -> onTextChanged(typed.filter { it.isDigit() }) },
         modifier = modifier,
+        labelNote = labelNote,
         error = error,
         hint = hint,
         enabled = enabled,

@@ -25,12 +25,12 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import net.neednot.renttracker.core.data.PaymentMethod
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
 import net.neednot.renttracker.core.designsystem.components.DateField
 import net.neednot.renttracker.core.designsystem.components.FormTextField
-import net.neednot.renttracker.core.designsystem.components.InfoNotice
 import net.neednot.renttracker.core.designsystem.components.MoneyField
 import net.neednot.renttracker.core.designsystem.components.OfflineBanner
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
@@ -186,7 +186,7 @@ private fun PaymentFields(
     onLateFeeToggled: (Boolean) -> Unit,
 ) {
     val isEnabled = !uiState.isSaving
-    uiState.conflictBanner?.let { banner -> WarningNotice(banner.asString()) }
+    uiState.conflictBanner?.let { banner -> Banner(text = banner.asString(), kind = BannerKind.Warning) }
     if (uiState.isOffline && uiState.isNewPayment) OfflinePaymentNote()
     uiState.header?.let { header -> PaymentHeaderCard(header) }
     MoneyField(
@@ -252,11 +252,11 @@ private fun MonthChangesNotice(changes: MonthChangesUiState) {
                         it.after.asString(),
                     )
                 }
-            InfoNotice((listOf(changes.heading.asString()) + lines).joinToString("\n"))
+            Banner(text = (listOf(changes.heading.asString()) + lines).joinToString("\n"), kind = BannerKind.Note)
         }
 
         MonthChangesUiState.CheckFailed -> {
-            InfoNotice(stringResource(Res.string.payment_preview_check_failed))
+            Banner(text = stringResource(Res.string.payment_preview_check_failed), kind = BannerKind.Note)
         }
     }
 }

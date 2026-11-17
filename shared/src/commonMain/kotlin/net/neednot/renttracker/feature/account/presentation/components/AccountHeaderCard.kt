@@ -20,7 +20,6 @@ import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.account_edit_name
 import org.jetbrains.compose.resources.stringResource
 
-private val AVATAR_SIZE = 48.dp
 private const val NAME_SIZE = 16
 private const val EMAIL_SIZE = 13
 
@@ -43,7 +42,7 @@ internal fun AccountHeaderCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            InitialsAvatar(initials = initials, size = AVATAR_SIZE)
+            InitialsAvatar(initials = initials)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(text = displayName, fontSize = NAME_SIZE.sp, fontWeight = FontWeight.Medium)
                 Text(

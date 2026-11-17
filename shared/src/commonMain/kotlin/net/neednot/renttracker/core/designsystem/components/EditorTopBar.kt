@@ -1,23 +1,15 @@
 package net.neednot.renttracker.core.designsystem.components
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.theme.Spacing
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.common_close_without_saving
 import net.neednot.renttracker.resources.common_save
+import net.neednot.renttracker.resources.common_saving
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EditorTopBar(
     title: String,
@@ -25,22 +17,25 @@ internal fun EditorTopBar(
     onSaveClicked: () -> Unit,
     onCloseClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    isSaving: Boolean = false,
+    saveLabel: String = stringResource(Res.string.common_save),
+    savingLabel: String = stringResource(Res.string.common_saving),
 ) {
-    TopAppBar(
-        title = { Text(title) },
+    RtTopAppBar(
+        title = title,
         modifier = modifier,
-        navigationIcon = {
-            IconButton(onClick = onCloseClicked) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(Res.string.common_close_without_saving),
-                )
-            }
-        },
+        navigation = TopBarNavigation.Close,
+        navigationDescription = stringResource(Res.string.common_close_without_saving),
+        onNavigationClicked = onCloseClicked,
         actions = {
-            Button(onClick = onSaveClicked, modifier = Modifier.padding(end = 8.dp), enabled = isSaveEnabled) {
-                Text(stringResource(Res.string.common_save))
-            }
+            RtButton(
+                text = if (isSaving) savingLabel else saveLabel,
+                onClick = onSaveClicked,
+                modifier = Modifier.padding(end = Spacing.sm),
+                size = ButtonSize.Small,
+                enabled = isSaveEnabled || isSaving,
+                isWorking = isSaving,
+            )
         },
     )
 }
