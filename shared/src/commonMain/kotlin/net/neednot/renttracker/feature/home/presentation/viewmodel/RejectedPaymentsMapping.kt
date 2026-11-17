@@ -8,7 +8,6 @@ import net.neednot.renttracker.feature.home.domain.RejectedPaymentReason
 import net.neednot.renttracker.feature.home.presentation.uistate.RejectedPaymentUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.RejectedPaymentsUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.home_rejected_payment_received
 import net.neednot.renttracker.resources.home_rejected_payment_title
 import net.neednot.renttracker.resources.home_rejected_payments_summary
 import net.neednot.renttracker.resources.pending_rejected_archived
@@ -29,7 +28,7 @@ private fun RejectedPayment.toUiState(): RejectedPaymentUiState =
         clientId = clientId,
         title = UiText.Resource(Res.string.home_rejected_payment_title, listOf(tenantName)),
         amount = formatMoney(amountCents),
-        dateReceived = UiText.Resource(Res.string.home_rejected_payment_received, listOf(formatDate(dateReceived))),
+        dateReceived = formatDate(dateReceived),
         reason = reasonText(),
     )
 

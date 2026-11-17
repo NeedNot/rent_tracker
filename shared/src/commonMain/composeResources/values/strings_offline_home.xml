@@ -1,6 +1,8 @@
 <resources>
     <string name="home_rejected_payment_title">Payment · %1$s</string>
-    <string name="home_rejected_payment_received">Received %1$s</string>
+    <string name="home_rejected_payment_date_received">Date received</string>
+    <string name="home_rejected_payment_why">Why</string>
+    <string name="home_rejected_payments_hint">Open to see what happened.</string>
     <string name="home_rejected_payment_rejected">Rejected</string>
     <string name="home_rejected_payment_dismiss">Dismiss</string>
     <string name="home_rejected_payments_sheet_title">Payments that couldn\'t sync</string>

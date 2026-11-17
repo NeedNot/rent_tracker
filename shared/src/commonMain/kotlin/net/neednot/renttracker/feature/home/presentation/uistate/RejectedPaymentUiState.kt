@@ -6,6 +6,6 @@ data class RejectedPaymentUiState(
     val clientId: String,
     val title: UiText,
     val amount: String,
-    val dateReceived: UiText,
+    val dateReceived: String,
     val reason: UiText,
 )
