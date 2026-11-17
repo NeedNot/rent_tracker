@@ -1,8 +1,6 @@
 package net.neednot.renttracker.app
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -11,10 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -22,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.Flow
 import net.neednot.renttracker.core.auth.AuthSessionState
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.HomeRoute
 import net.neednot.renttracker.core.navigation.SignInGraphRoute
@@ -35,9 +31,6 @@ import net.neednot.renttracker.feature.home.presentation.navigation.homeGraph
 import net.neednot.renttracker.feature.members.presentation.navigation.membersGraph
 import net.neednot.renttracker.feature.payments.presentation.navigation.paymentsGraph
 import net.neednot.renttracker.feature.tenants.presentation.navigation.tenantsGraph
-import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.auth_loading
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -100,11 +93,8 @@ private fun RootNavHost(
 
 @Composable
 private fun SessionLoading() {
-    val description = stringResource(Res.string.auth_loading)
     Surface(modifier = Modifier.fillMaxSize()) {
-        Box(contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
-        }
+        LoadingIndicator()
     }
 }
 

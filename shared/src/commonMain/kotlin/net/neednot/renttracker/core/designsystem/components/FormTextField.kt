@@ -1,8 +1,10 @@
 package net.neednot.renttracker.core.designsystem.components
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import net.neednot.renttracker.core.ui.UiText
@@ -23,6 +25,8 @@ internal fun FormTextField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    contentType: ContentType? = null,
     prefix: String? = null,
 ) {
     FieldBox(
@@ -40,6 +44,8 @@ internal fun FormTextField(
         singleLine = singleLine,
         minLines = minLines,
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        contentType = contentType,
     )
 }
 

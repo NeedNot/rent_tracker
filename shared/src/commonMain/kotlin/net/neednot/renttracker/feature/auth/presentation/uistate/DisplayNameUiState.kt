@@ -6,4 +6,5 @@ data class DisplayNameUiState(
     val displayName: String,
     val error: UiText? = null,
     val isSaving: Boolean = false,
+    val offlineBanner: UiText? = null,
 )

@@ -8,6 +8,7 @@ data class SignInCodeUiState(
     val isVerifying: Boolean = false,
     val isSendingNewCode: Boolean = false,
     val secondsUntilNewCode: Int = 0,
+    val offlineBanner: UiText? = null,
 ) {
     val isBusy: Boolean get() = isVerifying || isSendingNewCode
     val canSendNewCode: Boolean get() = !isBusy && secondsUntilNewCode == 0

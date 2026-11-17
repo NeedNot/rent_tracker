@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -12,9 +13,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import net.neednot.renttracker.core.designsystem.theme.Opacity
 import net.neednot.renttracker.core.designsystem.theme.Sizes
@@ -37,6 +40,8 @@ internal fun FieldBox(
     singleLine: Boolean = true,
     minLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    contentType: ContentType? = null,
     interactionSource: MutableInteractionSource? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
@@ -58,7 +63,10 @@ internal fun FieldBox(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = Sizes.field)
-                    .semantics { contentDescription = label },
+                    .semantics {
+                        contentDescription = label
+                        contentType?.let { this.contentType = it }
+                    },
             enabled = enabled,
             readOnly = readOnly,
             textStyle = MaterialTheme.typography.bodyLarge,
@@ -69,6 +77,7 @@ internal fun FieldBox(
             singleLine = singleLine,
             minLines = minLines,
             keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             interactionSource = interactionSource,
             shape = MaterialTheme.shapes.small,
             colors =
