@@ -14,7 +14,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.designsystem.components.ActionTone
 import net.neednot.renttracker.core.designsystem.components.ArchivedRow
 import net.neednot.renttracker.core.designsystem.components.Banner
@@ -34,6 +33,7 @@ import net.neednot.renttracker.core.designsystem.components.SectionHeader
 import net.neednot.renttracker.core.designsystem.components.TopBarNavigation
 import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.core.designsystem.theme.Sizes
 import net.neednot.renttracker.core.designsystem.theme.plus
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
@@ -62,8 +62,6 @@ import net.neednot.renttracker.resources.ic_add
 import net.neednot.renttracker.resources.ic_home_work
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-
-private val FabClearance = 72.dp
 
 @Composable
 fun HomeScreen(
@@ -170,7 +168,7 @@ private fun HomeList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = ContentLayout.List.padding + PaddingValues(bottom = FabClearance),
+        contentPadding = ContentLayout.List.padding + PaddingValues(bottom = Sizes.fabClearance),
         verticalArrangement = Arrangement.spacedBy(ContentLayout.List.spacing),
     ) {
         item(key = "search") {

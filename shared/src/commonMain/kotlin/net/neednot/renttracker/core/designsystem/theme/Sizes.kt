@@ -16,6 +16,7 @@ object Sizes {
     val calendarSquare = 64.dp
     val emptyIcon = 72.dp
     val menu = 220.dp
+    val fabClearance = 72.dp
     val iconSmall = 18.dp
     val icon = 24.dp
     val strokeThin = 1.dp

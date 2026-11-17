@@ -49,9 +49,12 @@ internal fun RtSegmentedButton(
                     ),
                 border = BorderStroke(Sizes.strokeThin, scheme.outline),
                 icon = {
-                    SegmentedButtonDefaults.Icon(active = index == selectedIndex) {
-                        AppIcon(icon = Res.drawable.ic_check, contentDescription = null, size = IconSize.Small)
-                    }
+                    SegmentedButtonDefaults.Icon(
+                        active = index == selectedIndex,
+                        activeContent = {
+                            AppIcon(icon = Res.drawable.ic_check, contentDescription = null, size = IconSize.Small)
+                        },
+                    )
                 },
             ) {
                 Text(text = option, maxLines = 1, overflow = TextOverflow.Ellipsis)

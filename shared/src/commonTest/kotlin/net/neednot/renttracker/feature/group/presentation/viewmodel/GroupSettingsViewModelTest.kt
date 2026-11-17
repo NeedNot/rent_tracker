@@ -25,13 +25,11 @@ import net.neednot.renttracker.feature.group.presentation.uistate.GroupSettingsF
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupSettingsUiState
 import net.neednot.renttracker.feature.group.presentation.uistate.TimeZoneOptionUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.create_group_error_name_required
 import net.neednot.renttracker.resources.group_settings_conflict_named
 import net.neednot.renttracker.resources.group_settings_conflict_unnamed
 import net.neednot.renttracker.resources.group_settings_error_grace_days
 import net.neednot.renttracker.resources.group_settings_error_late_fee
-import net.neednot.renttracker.resources.group_settings_late_fee_default
-import net.neednot.renttracker.resources.group_settings_payment_order_rent_first
+import net.neednot.renttracker.resources.group_settings_error_name
 import net.neednot.renttracker.resources.time_zone_pacific
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -106,22 +104,23 @@ class GroupSettingsViewModelTest : MainDispatcherTest() {
 
             val readOnly = assertIs<GroupSettingsUiState.ReadOnly>(viewModel.uiState.value)
 
-            assertEquals("1st Street", readOnly.groupName)
-            assertEquals(UiText.Resource(Res.string.time_zone_pacific), readOnly.timeZone)
-            assertEquals(UiText.Resource(Res.string.group_settings_payment_order_rent_first), readOnly.paymentOrder)
-            assertEquals(UiText.Plain("$50.00"), readOnly.lateFee)
+            assertEquals(
+                GroupSettingsForm("1st Street", "America/Los_Angeles", PaymentOrder.RentFirst, "5", "50.00"),
+                readOnly.form,
+            )
+            assertEquals(
+                UiText.Resource(Res.string.time_zone_pacific),
+                readOnly.timeZoneOptions.first { it.id == readOnly.form.timeZone }.label,
+            )
         }
 
     @Test
-    fun aReadOnlyViewWithoutASuggestedFeeExplainsTheDefault() =
+    fun aReadOnlyViewWithoutASuggestedFeeLeavesTheFeeEmpty() =
         runTest {
             load(groupDetails(access = memberAccess(), settings = groupSettings(lateFeeFlatCents = null)))
             settle()
 
-            assertEquals(
-                UiText.Resource(Res.string.group_settings_late_fee_default),
-                assertIs<GroupSettingsUiState.ReadOnly>(viewModel.uiState.value).lateFee,
-            )
+            assertEquals("", assertIs<GroupSettingsUiState.ReadOnly>(viewModel.uiState.value).form.lateFee)
         }
 
     @Test
@@ -152,7 +151,7 @@ class GroupSettingsViewModelTest : MainDispatcherTest() {
             viewModel.onSaveClicked()
 
             assertEquals(
-                mapOf(GroupSettingsField.Name to UiText.Resource(Res.string.create_group_error_name_required)),
+                mapOf(GroupSettingsField.Name to UiText.Resource(Res.string.group_settings_error_name)),
                 (viewModel.uiState.value as GroupSettingsUiState.Editing).fieldErrors,
             )
             assertEquals(emptyList(), repository.updatedSettings)
@@ -277,8 +276,8 @@ class GroupSettingsViewModelTest : MainDispatcherTest() {
             val editing = viewModel.uiState.value as GroupSettingsUiState.Editing
             assertEquals("3", editing.form.graceDays)
             assertEquals(
-                UiText.Resource(Res.string.group_settings_conflict_named, listOf("Sam Rivera", "Sam")),
-                editing.conflictBanner,
+                UiText.Resource(Res.string.group_settings_conflict_named, listOf("Sam Rivera")),
+                editing.conflictTitle,
             )
             repository.updateSettingsResult =
                 com.github.michaelbull.result
@@ -300,7 +299,7 @@ class GroupSettingsViewModelTest : MainDispatcherTest() {
 
             assertEquals(
                 UiText.Resource(Res.string.group_settings_conflict_unnamed),
-                (viewModel.uiState.value as GroupSettingsUiState.Editing).conflictBanner,
+                (viewModel.uiState.value as GroupSettingsUiState.Editing).conflictTitle,
             )
         }
 

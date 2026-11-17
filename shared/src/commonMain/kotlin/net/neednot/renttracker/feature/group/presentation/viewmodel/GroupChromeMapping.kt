@@ -1,10 +1,7 @@
 package net.neednot.renttracker.feature.group.presentation.viewmodel
 
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import net.neednot.renttracker.core.access.CallerAccess
 import net.neednot.renttracker.core.data.AccessLevel
-import net.neednot.renttracker.core.designsystem.format.formatDate
 import net.neednot.renttracker.core.designsystem.format.owesText
 import net.neednot.renttracker.core.sync.Freshness
 import net.neednot.renttracker.core.ui.UiText
@@ -15,20 +12,18 @@ import net.neednot.renttracker.feature.group.presentation.uistate.GroupMenuItem
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.balance_paid_up
 import net.neednot.renttracker.resources.group_archive_tenant_count
-import net.neednot.renttracker.resources.group_archived_banner
 
 internal fun GroupDetails.toChrome(
     overlay: GroupOverlay,
-    timeZone: TimeZone,
     freshness: Freshness,
 ): GroupChromeUiState {
     val isOnline = freshness == Freshness.Online
     return GroupChromeUiState(
         isViewOnly = access.isViewOnly,
+        isArchived = archivedAt != null,
         canAddTenants = isOnline && access.canAddTenants(),
         canUnarchive = isOnline,
         menuItems = if (isOnline) access.menuItems() else emptyList(),
-        archivedBanner = archivedBanner(timeZone),
         dialog = overlay.dialog?.toUiState(this),
         isWorking = overlay.isWorking,
     )
@@ -38,14 +33,22 @@ private fun CallerAccess.canAddTenants(): Boolean = !groupArchived && permission
 
 private fun CallerAccess.menuItems(): List<GroupMenuItem> =
     when {
-        groupArchived -> emptyList()
-        isOwner -> listOf(GroupMenuItem.Members, GroupMenuItem.Settings, GroupMenuItem.Archive)
-        else -> listOf(GroupMenuItem.Members, GroupMenuItem.Settings, GroupMenuItem.Leave)
-    }
+        groupArchived -> {
+            emptyList()
+        }
 
-private fun GroupDetails.archivedBanner(timeZone: TimeZone): UiText? =
-    archivedAt?.let { instant ->
-        UiText.Resource(Res.string.group_archived_banner, listOf(formatDate(instant.toLocalDateTime(timeZone).date)))
+        isOwner -> {
+            listOf(
+                GroupMenuItem.Members,
+                GroupMenuItem.Settings,
+                GroupMenuItem.TransferOwnership,
+                GroupMenuItem.Archive,
+            )
+        }
+
+        else -> {
+            listOf(GroupMenuItem.Members, GroupMenuItem.Settings, GroupMenuItem.Leave)
+        }
     }
 
 private fun GroupDialog.toUiState(group: GroupDetails): GroupDialogUiState =

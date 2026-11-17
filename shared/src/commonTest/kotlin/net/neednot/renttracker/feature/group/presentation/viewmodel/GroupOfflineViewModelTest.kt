@@ -140,7 +140,12 @@ class GroupOfflineViewModelTest : MainDispatcherTest() {
 
                 val chrome = (awaitItem() as GroupUiState.Content).chrome
                 assertEquals(
-                    listOf(GroupMenuItem.Members, GroupMenuItem.Settings, GroupMenuItem.Archive),
+                    listOf(
+                        GroupMenuItem.Members,
+                        GroupMenuItem.Settings,
+                        GroupMenuItem.TransferOwnership,
+                        GroupMenuItem.Archive,
+                    ),
                     chrome.menuItems,
                 )
                 assertTrue(chrome.canAddTenants)
