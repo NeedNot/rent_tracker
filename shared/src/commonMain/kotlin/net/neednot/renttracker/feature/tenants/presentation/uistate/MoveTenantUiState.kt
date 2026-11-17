@@ -5,13 +5,13 @@ import net.neednot.renttracker.core.ui.UiText
 sealed interface MoveTenantUiState {
     data object Loading : MoveTenantUiState
 
-    data class Empty(
-        val tenantName: String,
-    ) : MoveTenantUiState
+    data object Empty : MoveTenantUiState
 
     data class Content(
         val tenantName: String,
         val targets: List<MoveTargetUiState>,
+        val contactName: String? = null,
+        val balance: UiText? = null,
         val confirmation: MoveConfirmationUiState? = null,
         val isMoving: Boolean = false,
     ) : MoveTenantUiState

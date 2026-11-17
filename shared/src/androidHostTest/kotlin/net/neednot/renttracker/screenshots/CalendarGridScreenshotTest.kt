@@ -71,8 +71,9 @@ private fun square(
         monthName = monthName,
         state = state,
         stateLabel = UiText.Resource(label),
-        owed = owed?.let { UiText.Resource(Res.string.calendar_square_owed, listOf(it)) },
+        amount = owed?.let { UiText.Resource(Res.string.calendar_square_owed, listOf(it)) },
         feeMarker = fee?.let { UiText.Resource(Res.string.calendar_fee_marker, listOf(it)) },
         description = listOf(UiText.Plain(monthName), UiText.Resource(label)),
         isTappable = state != CalendarState.NotATenant,
+        isCurrentMonth = monthName == "Mar",
     )

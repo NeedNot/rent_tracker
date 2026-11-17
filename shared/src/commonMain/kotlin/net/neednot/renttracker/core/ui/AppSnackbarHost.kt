@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
@@ -26,7 +25,6 @@ import org.koin.compose.koinInject
 
 private val EdgeMargin = 8.dp
 private val BottomMargin = 16.dp
-private val SnackbarCorner = 8.dp
 
 @Composable
 fun AppSnackbarHost(content: @Composable () -> Unit) {
@@ -58,7 +56,7 @@ fun AppSnackbarHost(content: @Composable () -> Unit) {
                 val isError = (data.visuals as? MessageVisuals)?.variant == UiMessageVariant.Error
                 val colors = MaterialTheme.colorScheme
                 Snackbar(
-                    shape = RoundedCornerShape(SnackbarCorner),
+                    shape = MaterialTheme.shapes.small,
                     containerColor = if (isError) colors.errorContainer else colors.inverseSurface,
                     contentColor = if (isError) colors.onErrorContainer else colors.inverseOnSurface,
                 ) {

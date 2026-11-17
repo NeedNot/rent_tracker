@@ -1,12 +1,10 @@
 package net.neednot.renttracker.feature.auth.presentation.screens
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,25 +12,27 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.FormTextField
+import net.neednot.renttracker.core.designsystem.components.RtButton
+import net.neednot.renttracker.core.designsystem.components.RtTopAppBar
+import net.neednot.renttracker.core.designsystem.components.TopBarNavigation
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.ui.asString
-import net.neednot.renttracker.feature.auth.presentation.components.AuthButtonProgress
 import net.neednot.renttracker.feature.auth.presentation.components.AuthScreenLayout
 import net.neednot.renttracker.feature.auth.presentation.uistate.DisplayNameUiState
 import net.neednot.renttracker.feature.auth.presentation.viewmodel.DisplayNameEvent
 import net.neednot.renttracker.feature.auth.presentation.viewmodel.DisplayNameViewModel
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.auth_display_name_continue
+import net.neednot.renttracker.resources.auth_continue
 import net.neednot.renttracker.resources.auth_display_name_label
 import net.neednot.renttracker.resources.auth_display_name_subtitle
 import net.neednot.renttracker.resources.auth_display_name_title
+import net.neednot.renttracker.resources.common_saving
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -61,13 +61,17 @@ fun DisplayNameScreen(
 }
 
 @Composable
-private fun DisplayNameContent(
+internal fun DisplayNameContent(
     uiState: DisplayNameUiState,
     onDisplayNameChanged: (String) -> Unit,
     onContinueClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AuthScreenLayout(modifier = modifier) {
+    AuthScreenLayout(
+        modifier = modifier,
+        offlineBanner = uiState.offlineBanner?.asString(),
+        topBar = { RtTopAppBar(title = "", navigation = TopBarNavigation.None) },
+    ) {
         Text(
             text = stringResource(Res.string.auth_display_name_title),
             modifier = Modifier.semantics { heading() },
@@ -75,29 +79,31 @@ private fun DisplayNameContent(
         )
         Text(
             text = stringResource(Res.string.auth_display_name_subtitle),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
         )
-        OutlinedTextField(
-            value = uiState.displayName,
-            onValueChange = onDisplayNameChanged,
-            modifier = Modifier.fillMaxWidth().semantics { contentType = ContentType.PersonFullName },
+        FormTextField(
+            label = stringResource(Res.string.auth_display_name_label),
+            text = uiState.displayName,
+            onTextChanged = onDisplayNameChanged,
+            error = uiState.error,
             enabled = !uiState.isSaving,
-            label = { Text(stringResource(Res.string.auth_display_name_label)) },
-            supportingText = uiState.error?.let { error -> { Text(error.asString()) } },
-            isError = uiState.error != null,
-            singleLine = true,
             keyboardOptions =
-                KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done,
+                ),
             keyboardActions = KeyboardActions(onDone = { onContinueClicked() }),
+            contentType = ContentType.PersonFullName,
         )
-        Button(
+        Spacer(modifier = Modifier.weight(1f))
+        RtButton(
+            text = stringResource(if (uiState.isSaving) Res.string.common_saving else Res.string.auth_continue),
             onClick = onContinueClicked,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            enabled = !uiState.isSaving,
-        ) {
-            if (uiState.isSaving) AuthButtonProgress()
-            Text(stringResource(Res.string.auth_display_name_continue))
-        }
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.offlineBanner == null,
+            isWorking = uiState.isSaving,
+        )
     }
 }
 
@@ -106,7 +112,7 @@ private fun DisplayNameContent(
 private fun DisplayNameContentPreview() {
     RentTrackerTheme {
         DisplayNameContent(
-            uiState = DisplayNameUiState(displayName = "dalton.h"),
+            uiState = DisplayNameUiState(displayName = "Need_Not"),
             onDisplayNameChanged = {},
             onContinueClicked = {},
         )

@@ -8,6 +8,7 @@ data class SignInUiState(
     val error: UiText? = null,
     val isSendingCode: Boolean = false,
     val isSigningInWithGoogle: Boolean = false,
+    val offlineBanner: UiText? = null,
 ) {
     val isBusy: Boolean get() = isSendingCode || isSigningInWithGoogle
 }

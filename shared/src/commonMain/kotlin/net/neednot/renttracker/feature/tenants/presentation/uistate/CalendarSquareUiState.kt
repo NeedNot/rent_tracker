@@ -8,8 +8,9 @@ data class CalendarSquareUiState(
     val monthName: String,
     val state: CalendarState,
     val stateLabel: UiText,
-    val owed: UiText?,
+    val amount: UiText?,
     val feeMarker: UiText?,
     val description: List<UiText>,
     val isTappable: Boolean,
+    val isCurrentMonth: Boolean = false,
 )

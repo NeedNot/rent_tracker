@@ -40,15 +40,6 @@ import net.neednot.renttracker.resources.balance_owes
 import net.neednot.renttracker.resources.calendar_state_owed
 import net.neednot.renttracker.resources.calendar_state_paid
 import net.neednot.renttracker.resources.calendar_state_partial
-import net.neednot.renttracker.resources.payment_duplicate_intro_both
-import net.neednot.renttracker.resources.payment_duplicate_intro_payment
-import net.neednot.renttracker.resources.payment_duplicate_kind_late_fee
-import net.neednot.renttracker.resources.payment_duplicate_kind_payment
-import net.neednot.renttracker.resources.payment_duplicate_question_both
-import net.neednot.renttracker.resources.payment_duplicate_question_one
-import net.neednot.renttracker.resources.payment_duplicate_title_many
-import net.neednot.renttracker.resources.payment_duplicate_title_one
-import net.neednot.renttracker.resources.payment_duplicate_you
 import net.neednot.renttracker.resources.payment_editor_conflict_named
 import net.neednot.renttracker.resources.payment_editor_error_date_future
 import net.neednot.renttracker.resources.payment_editor_error_offline

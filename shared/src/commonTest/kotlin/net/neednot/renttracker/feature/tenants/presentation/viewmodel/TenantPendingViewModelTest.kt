@@ -37,8 +37,8 @@ import net.neednot.renttracker.resources.ledger_amount_paid
 import net.neednot.renttracker.resources.ledger_payment_title_zelle
 import net.neednot.renttracker.resources.offline_banner_minutes
 import net.neednot.renttracker.resources.pending_banner_attention
+import net.neednot.renttracker.resources.pending_banner_attention_body
 import net.neednot.renttracker.resources.pending_banner_waiting
-import net.neednot.renttracker.resources.pending_banner_waiting_subtitle
 import net.neednot.renttracker.resources.pending_row_not_saved
 import net.neednot.renttracker.resources.pending_row_possible_duplicate
 import net.neednot.renttracker.resources.pending_row_saved_on_phone
@@ -115,7 +115,6 @@ class TenantPendingViewModelTest : MainDispatcherTest() {
             assertEquals(
                 PendingBannerUiState.Waiting(
                     title = UiText.Plural(Res.plurals.pending_banner_waiting, 1, listOf(1)),
-                    subtitle = UiText.Resource(Res.string.pending_banner_waiting_subtitle),
                 ),
                 content.pendingBanner,
             )
@@ -146,6 +145,7 @@ class TenantPendingViewModelTest : MainDispatcherTest() {
             assertEquals(
                 PendingBannerUiState.Attention(
                     title = UiText.Plural(Res.plurals.pending_banner_attention, 2, listOf(2)),
+                    message = UiText.Plural(Res.plurals.pending_banner_attention_body, 2, listOf(2)),
                     reviewClientId = "c2",
                 ),
                 banner,

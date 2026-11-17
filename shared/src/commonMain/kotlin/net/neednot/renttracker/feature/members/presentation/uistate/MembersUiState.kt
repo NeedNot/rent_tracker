@@ -14,6 +14,7 @@ sealed interface MembersUiState {
         val canTransferOwnership: Boolean,
         val syncError: UiText? = null,
         val removeDialog: RemoveMemberDialogUiState? = null,
+        val offlineBanner: UiText? = null,
     ) : MembersUiState
 
     data class Error(

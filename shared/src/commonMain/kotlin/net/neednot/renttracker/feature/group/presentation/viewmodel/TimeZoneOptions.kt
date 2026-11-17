@@ -28,5 +28,3 @@ internal fun timeZoneOptions(currentZoneId: String): List<TimeZoneOptionUiState>
     } else {
         CuratedTimeZones + TimeZoneOptionUiState(currentZoneId, UiText.Plain(currentZoneId))
     }
-
-internal fun timeZoneLabel(zoneId: String): UiText = timeZoneOptions(zoneId).first { it.id == zoneId }.label

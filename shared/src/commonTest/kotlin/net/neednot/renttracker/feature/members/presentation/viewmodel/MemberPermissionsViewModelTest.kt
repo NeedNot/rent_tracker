@@ -27,7 +27,7 @@ import net.neednot.renttracker.feature.members.presentation.uistate.MemberHeader
 import net.neednot.renttracker.feature.members.presentation.uistate.PermissionArea
 import net.neednot.renttracker.feature.members.presentation.uistate.RemoveMemberDialogUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.members_conflict_named
+import net.neednot.renttracker.resources.members_conflict_body
 import net.neednot.renttracker.resources.members_error_member_gone
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -128,7 +128,7 @@ class MemberPermissionsViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun anEditConflictShowsWhoChangedItAndReloadsTheirSavedValues() =
+    fun anEditConflictSaysTheMembersPermissionsWereReloadedAndShowsTheSavedValues() =
         runTest {
             val viewModel = openEditor(kevin)
             repository.result = Err(MembersError.EditConflict("Sam Rivera changed this.", editedByName = "Sam Rivera"))
@@ -142,7 +142,7 @@ class MemberPermissionsViewModelTest : MainDispatcherTest() {
             runCurrent()
 
             val state = viewModel.uiState.value
-            assertEquals(UiText.Resource(Res.string.members_conflict_named, listOf("Sam")), state.conflictBanner)
+            assertEquals(UiText.Resource(Res.string.members_conflict_body, listOf("Kevin")), state.conflictBanner)
             assertEquals(PermissionPreset.Manager, state.form?.selectedPreset)
             assertFalse(state.isSaving)
 
@@ -177,7 +177,7 @@ class MemberPermissionsViewModelTest : MainDispatcherTest() {
             viewModel.onRemoveClicked()
             runCurrent()
             assertEquals(
-                RemoveMemberDialogUiState("m4", "Maria Lopez", "Maria", "1st Street"),
+                RemoveMemberDialogUiState("m4", "Maria Lopez", "Maria"),
                 viewModel.uiState.value.removeDialog,
             )
 

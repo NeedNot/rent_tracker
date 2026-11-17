@@ -88,7 +88,7 @@ class GroupSettingsViewModel(
 
     private suspend fun onSaveFailed(error: GroupError) {
         if (error is GroupError.EditConflict) {
-            show(groupRepository.groupFromServer(groupId), settingsConflictBanner(error.editedByName))
+            show(groupRepository.groupFromServer(groupId), settingsConflictTitle(error.editedByName))
             return
         }
         val field = (error as? GroupError.ValidationFailed)?.let { groupSettingsFieldOf(it.field) }
@@ -114,14 +114,14 @@ class GroupSettingsViewModel(
 
     private fun show(
         snapshot: Synced<GroupDetails?, GroupError>,
-        conflictBanner: UiText? = null,
+        conflictTitle: UiText? = null,
     ) {
         val group = snapshot.value
         expectedVersion = group?.version
         hasTriedSaving = false
         mutableUiState.value =
             when {
-                group != null -> group.toSettingsUiState(conflictBanner)
+                group != null -> group.toSettingsUiState(conflictTitle)
                 snapshot.status is SyncStatus.Failed -> GroupSettingsUiState.Error(snapshot.status.error.text())
                 else -> GroupSettingsUiState.Loading
             }

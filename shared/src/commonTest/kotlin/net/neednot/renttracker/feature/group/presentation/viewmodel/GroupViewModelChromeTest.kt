@@ -21,10 +21,12 @@ import net.neednot.renttracker.feature.group.presentation.uistate.GroupChromeUiS
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupMenuItem
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.group_archived_banner
+import net.neednot.renttracker.resources.group_tenant_archived
+import net.neednot.renttracker.resources.group_tenant_contact_and_archived
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -49,11 +51,19 @@ class GroupViewModelChromeTest : MainDispatcherTest() {
     }
 
     @Test
-    fun theOwnerMenuListsMembersSettingsAndArchive() =
+    fun theOwnerMenuListsMembersSettingsTransferAndArchive() =
         runTest {
             val chrome = chromeOf(groupDetails(activeTenants = tenants, access = ownerAccess()))
 
-            assertEquals(listOf(GroupMenuItem.Members, GroupMenuItem.Settings, GroupMenuItem.Archive), chrome.menuItems)
+            assertEquals(
+                listOf(
+                    GroupMenuItem.Members,
+                    GroupMenuItem.Settings,
+                    GroupMenuItem.TransferOwnership,
+                    GroupMenuItem.Archive,
+                ),
+                chrome.menuItems,
+            )
         }
 
     @Test
@@ -96,7 +106,7 @@ class GroupViewModelChromeTest : MainDispatcherTest() {
         }
 
     @Test
-    fun anArchivedGroupHasABannerNoMenuAndNoAddTenant() =
+    fun anArchivedGroupIsMarkedArchivedWithNoMenuAndNoAddTenant() =
         runTest {
             val chrome =
                 chromeOf(
@@ -107,17 +117,39 @@ class GroupViewModelChromeTest : MainDispatcherTest() {
                     ),
                 )
 
-            assertEquals(
-                UiText.Resource(Res.string.group_archived_banner, listOf("Jan 5, 2026")),
-                chrome.archivedBanner,
-            )
+            assertTrue(chrome.isArchived)
             assertEquals(emptyList(), chrome.menuItems)
             assertEquals(false, chrome.canAddTenants)
         }
 
     @Test
-    fun aGroupThatIsNotArchivedHasNoBanner() =
+    fun aGroupThatIsNotArchivedIsNotMarkedArchived() =
         runTest {
-            assertNull(chromeOf(groupDetails(activeTenants = tenants)).archivedBanner)
+            assertFalse(chromeOf(groupDetails(activeTenants = tenants)).isArchived)
+        }
+
+    @Test
+    fun tenantsOfAnArchivedGroupShowWhenTheGroupWasArchived() =
+        runTest {
+            val archivedTenants = listOf(groupTenant("t1", contactName = "Noor Aziz"), groupTenant("t2"))
+            val details =
+                groupDetails(
+                    activeTenants = archivedTenants,
+                    access = ownerAccess(groupArchived = true),
+                    archivedAt = Instant.parse("2026-02-02T15:00:00Z"),
+                )
+
+            viewModel.uiState.test {
+                skipItems(1)
+                repository.group.value = Synced(details, SyncStatus.Synced)
+
+                assertEquals(
+                    listOf(
+                        UiText.Resource(Res.string.group_tenant_contact_and_archived, listOf("Noor Aziz", "Feb 2")),
+                        UiText.Resource(Res.string.group_tenant_archived, listOf("Feb 2")),
+                    ),
+                    (awaitItem() as GroupUiState.Content).tenants.map { it.detail },
+                )
+            }
         }
 }

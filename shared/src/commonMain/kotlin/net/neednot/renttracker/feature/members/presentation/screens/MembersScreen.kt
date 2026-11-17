@@ -1,49 +1,39 @@
 package net.neednot.renttracker.feature.members.presentation.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.WorkspacePremium
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.access.MemberPermissionLabel
+import net.neednot.renttracker.core.designsystem.components.AppIcon
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.ErrorState
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
+import net.neednot.renttracker.core.designsystem.components.OfflineBanner
+import net.neednot.renttracker.core.designsystem.components.RtFab
+import net.neednot.renttracker.core.designsystem.components.RtListCard
+import net.neednot.renttracker.core.designsystem.components.RtListItem
+import net.neednot.renttracker.core.designsystem.components.RtTopAppBar
+import net.neednot.renttracker.core.designsystem.components.SectionHeader
+import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.core.designsystem.theme.Sizes
+import net.neednot.renttracker.core.designsystem.theme.plus
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.members.presentation.components.InviteRow
 import net.neednot.renttracker.feature.members.presentation.components.MemberRow
-import net.neednot.renttracker.feature.members.presentation.components.MembersListCard
 import net.neednot.renttracker.feature.members.presentation.components.RemoveMemberDialog
 import net.neednot.renttracker.feature.members.presentation.uistate.InviteRowUiState
 import net.neednot.renttracker.feature.members.presentation.uistate.MemberRowAction
@@ -51,9 +41,12 @@ import net.neednot.renttracker.feature.members.presentation.uistate.MemberRowUiS
 import net.neednot.renttracker.feature.members.presentation.uistate.MembersUiState
 import net.neednot.renttracker.feature.members.presentation.viewmodel.MembersViewModel
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.members_back
-import net.neednot.renttracker.resources.members_invite
-import net.neednot.renttracker.resources.members_loading
+import net.neednot.renttracker.resources.ic_add
+import net.neednot.renttracker.resources.ic_chevron_right
+import net.neednot.renttracker.resources.ic_swap_horiz
+import net.neednot.renttracker.resources.ic_visibility
+import net.neednot.renttracker.resources.members_error_title
+import net.neednot.renttracker.resources.members_invite_title
 import net.neednot.renttracker.resources.members_pending_invites
 import net.neednot.renttracker.resources.members_title
 import net.neednot.renttracker.resources.members_transfer_ownership
@@ -61,8 +54,6 @@ import net.neednot.renttracker.resources.members_view_only_info
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-
-private const val FAB_CLEARANCE = 96
 
 @Composable
 fun MembersScreen(
@@ -77,15 +68,12 @@ fun MembersScreen(
     val uiState by viewModel.uiState.collectAsState()
     MembersContent(
         uiState = uiState,
-        navigation =
-            MembersNavigation(
+        actions =
+            MembersActions(
                 onBackClicked = onBackClicked,
                 onInviteClicked = onInviteClicked,
                 onMemberClicked = onMemberClicked,
                 onTransferOwnershipClicked = onTransferOwnershipClicked,
-            ),
-        actions =
-            MembersActions(
                 onRemoveClicked = viewModel::onRemoveClicked,
                 onRemoveConfirmed = viewModel::onRemoveConfirmed,
                 onRemoveDismissed = viewModel::onRemoveDismissed,
@@ -95,25 +83,9 @@ fun MembersScreen(
     )
 }
 
-private class MembersNavigation(
-    val onBackClicked: () -> Unit,
-    val onInviteClicked: () -> Unit,
-    val onMemberClicked: (membershipId: String) -> Unit,
-    val onTransferOwnershipClicked: () -> Unit,
-)
-
-private class MembersActions(
-    val onRemoveClicked: (membershipId: String) -> Unit,
-    val onRemoveConfirmed: () -> Unit,
-    val onRemoveDismissed: () -> Unit,
-    val onRevokeClicked: (inviteId: String) -> Unit,
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MembersContent(
+internal fun MembersContent(
     uiState: MembersUiState,
-    navigation: MembersNavigation,
     actions: MembersActions,
     modifier: Modifier = Modifier,
 ) {
@@ -121,61 +93,40 @@ private fun MembersContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(Res.string.members_title))
-                        content?.let { Text(text = it.groupName, style = MaterialTheme.typography.bodySmall) }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = navigation.onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.members_back),
-                        )
-                    }
-                },
+            RtTopAppBar(
+                title = stringResource(Res.string.members_title),
+                subtitle = content?.groupName,
+                onNavigationClicked = actions.onBackClicked,
             )
         },
         floatingActionButton = {
             if (content?.canInvite == true) {
-                ExtendedFloatingActionButton(
-                    onClick = navigation.onInviteClicked,
-                    icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = null) },
-                    text = { Text(stringResource(Res.string.members_invite)) },
+                RtFab(
+                    text = stringResource(Res.string.members_invite_title),
+                    icon = Res.drawable.ic_add,
+                    onClick = actions.onInviteClicked,
                 )
             }
         },
     ) { contentPadding ->
-        when (uiState) {
-            MembersUiState.Loading -> {
-                val description = stringResource(Res.string.members_loading)
-                Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
+        Column(modifier = Modifier.padding(contentPadding)) {
+            content?.offlineBanner?.let { OfflineBanner(text = it.asString()) }
+            when (uiState) {
+                MembersUiState.Loading -> {
+                    LoadingIndicator()
                 }
-            }
 
-            is MembersUiState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(contentPadding).padding(32.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
+                is MembersUiState.Error -> {
+                    ErrorState(
+                        title = stringResource(Res.string.members_error_title),
                         text = uiState.message.asString(),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
+                        onRetryClicked = UnimplementedAction,
                     )
                 }
-            }
 
-            is MembersUiState.Content -> {
-                MembersList(
-                    content = uiState,
-                    navigation = navigation,
-                    actions = actions,
-                    contentPadding = contentPadding,
-                )
+                is MembersUiState.Content -> {
+                    MembersList(content = uiState, actions = actions)
+                }
             }
         }
     }
@@ -191,106 +142,68 @@ private fun MembersContent(
 @Composable
 private fun MembersList(
     content: MembersUiState.Content,
-    navigation: MembersNavigation,
     actions: MembersActions,
-    contentPadding: PaddingValues,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(contentPadding),
-        contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = FAB_CLEARANCE.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = ContentLayout.List.padding + PaddingValues(bottom = Sizes.fabClearance),
+        verticalArrangement = Arrangement.spacedBy(ContentLayout.List.spacing),
     ) {
         content.syncError?.let { error ->
-            item(key = "syncError") {
-                Text(
-                    text = error.asString(),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
+            item(key = "syncError") { Banner(text = error.asString(), kind = BannerKind.Error) }
+        }
+        if (content.showsViewOnlyInfo) {
+            item(key = "viewOnlyInfo") {
+                Banner(
+                    text = stringResource(Res.string.members_view_only_info),
+                    kind = BannerKind.Info,
+                    icon = Res.drawable.ic_visibility,
                 )
             }
         }
-        if (content.showsViewOnlyInfo) {
-            item(key = "viewOnlyInfo") { ViewOnlyInfo() }
-        }
         item(key = "members") {
-            MembersListCard(items = content.members) { member ->
+            RtListCard(items = content.members) { member ->
                 MemberRow(
                     member = member,
-                    onClick = { navigation.onMemberClicked(member.membershipId) },
+                    onClick = { actions.onMemberClicked(member.membershipId) },
                     onRemoveClicked = { actions.onRemoveClicked(member.membershipId) },
                 )
             }
         }
-        if (content.invites.isNotEmpty()) {
-            item(key = "invitesHeading") {
-                Text(
-                    text = stringResource(Res.string.members_pending_invites),
-                    modifier = Modifier.padding(start = 4.dp, top = 8.dp).semantics { heading() },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleSmall,
-                )
-            }
-            item(key = "invites") {
-                MembersListCard(items = content.invites) { invite ->
-                    InviteRow(invite = invite, onRevokeClicked = { actions.onRevokeClicked(invite.inviteId) })
-                }
-            }
-        }
+        inviteItems(content.invites, actions)
         if (content.canTransferOwnership) {
-            item(key = "transfer") {
-                MembersListCard(items = listOf(Unit), modifier = Modifier.padding(top = 4.dp)) {
-                    TransferOwnershipLink(onClick = navigation.onTransferOwnershipClicked)
-                }
-            }
+            item(key = "transfer") { TransferOwnershipLink(onClick = actions.onTransferOwnershipClicked) }
         }
     }
 }
 
-@Composable
-private fun ViewOnlyInfo() {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Info,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = stringResource(Res.string.members_view_only_info),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+private fun LazyListScope.inviteItems(
+    invites: List<InviteRowUiState>,
+    actions: MembersActions,
+) {
+    if (invites.isEmpty()) return
+    item(key = "invitesHeading") { SectionHeader(text = stringResource(Res.string.members_pending_invites)) }
+    item(key = "invites") {
+        RtListCard(items = invites) { invite ->
+            InviteRow(invite = invite, onRevokeClicked = { actions.onRevokeClicked(invite.inviteId) })
+        }
     }
 }
 
 @Composable
 private fun TransferOwnershipLink(onClick: () -> Unit) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable(
-                    onClick = onClick,
-                ).heightIn(min = 56.dp)
-                .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Icon(imageVector = Icons.Outlined.WorkspacePremium, contentDescription = null, modifier = Modifier.size(22.dp))
-        Text(
+    RtListCard(items = listOf(Unit)) {
+        RtListItem(
             text = stringResource(Res.string.members_transfer_ownership),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            leadingIcon = Res.drawable.ic_swap_horiz,
+            onClick = onClick,
+            trailing = {
+                AppIcon(
+                    icon = Res.drawable.ic_chevron_right,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
         )
     }
 }
@@ -307,39 +220,38 @@ private fun MembersContentPreview() {
                     members =
                         listOf(
                             MemberRowUiState(
-                                "m1",
-                                "NN",
-                                "Need_Not",
-                                "you@example.com",
-                                true,
-                                MemberPermissionLabel.Owner,
-                                MemberRowAction.None,
+                                membershipId = "m1",
+                                initials = "NN",
+                                name = "Need_Not",
+                                email = "you@example.com",
+                                isYou = true,
+                                label = MemberPermissionLabel.Owner,
+                                action = MemberRowAction.None,
                             ),
                             MemberRowUiState(
-                                "m2",
-                                "SR",
-                                "Sam Rivera",
-                                "sam.rivera@example.com",
-                                false,
-                                MemberPermissionLabel.Manager,
-                                MemberRowAction.OpenPermissions,
+                                membershipId = "m2",
+                                initials = "SR",
+                                name = "Sam Rivera",
+                                email = "sam.rivera@example.com",
+                                isYou = false,
+                                label = MemberPermissionLabel.Manager,
+                                action = MemberRowAction.OpenPermissions,
                             ),
                         ),
                     invites =
                         listOf(
                             InviteRowUiState(
-                                "i1",
-                                "alex.m@example.com",
-                                MemberPermissionLabel.Bookkeeper,
-                                "Mar 16",
-                                true,
+                                inviteId = "i1",
+                                email = "alex.m@example.com",
+                                label = MemberPermissionLabel.Bookkeeper,
+                                expiresOn = "Mar 16",
+                                canRevoke = true,
                             ),
                         ),
                     canInvite = true,
-                    canTransferOwnership = true,
+                    canTransferOwnership = false,
                 ),
-            navigation = MembersNavigation({}, {}, {}, {}),
-            actions = MembersActions({}, {}, {}, {}),
+            actions = MembersActions(),
         )
     }
 }

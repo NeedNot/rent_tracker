@@ -10,18 +10,15 @@ sealed interface GroupSettingsUiState {
     ) : GroupSettingsUiState
 
     data class ReadOnly(
-        val groupName: String,
-        val timeZone: UiText,
-        val paymentOrder: UiText,
-        val graceDays: UiText,
-        val lateFee: UiText,
+        val form: GroupSettingsForm,
+        val timeZoneOptions: List<TimeZoneOptionUiState>,
     ) : GroupSettingsUiState
 
     data class Editing(
         val form: GroupSettingsForm,
         val timeZoneOptions: List<TimeZoneOptionUiState>,
         val fieldErrors: Map<GroupSettingsField, UiText> = emptyMap(),
-        val conflictBanner: UiText? = null,
+        val conflictTitle: UiText? = null,
         val error: UiText? = null,
         val isSaving: Boolean = false,
     ) : GroupSettingsUiState

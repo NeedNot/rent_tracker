@@ -20,8 +20,7 @@ internal class SignOutFlow(
 
     fun request() {
         scope.launch {
-            val unsynced = accountRepository.observeUnsyncedPaymentCount().first()
-            if (unsynced > 0) mutableUnsyncedPayments.value = unsynced else signOut()
+            mutableUnsyncedPayments.value = accountRepository.observeUnsyncedPaymentCount().first()
         }
     }
 

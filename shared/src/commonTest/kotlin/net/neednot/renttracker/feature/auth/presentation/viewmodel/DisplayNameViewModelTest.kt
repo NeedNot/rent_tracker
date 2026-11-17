@@ -9,6 +9,7 @@ import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.feature.auth.domain.AuthError
 import net.neednot.renttracker.feature.auth.domain.FakeAuthRepository
 import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.auth_error_display_name_empty
 import net.neednot.renttracker.resources.auth_error_display_name_length
 import net.neednot.renttracker.resources.auth_error_offline
 import kotlin.test.Test
@@ -54,12 +55,16 @@ class DisplayNameViewModelTest : MainDispatcherTest() {
     @Test
     fun blankAndOverlongNamesAreRejectedBeforeSaving() =
         runTest {
-            listOf("", "   ", "x".repeat(101)).forEach { name ->
+            mapOf(
+                "" to Res.string.auth_error_display_name_empty,
+                "   " to Res.string.auth_error_display_name_empty,
+                "x".repeat(101) to Res.string.auth_error_display_name_length,
+            ).forEach { (name, error) ->
                 viewModel.onDisplayNameChanged(name)
                 viewModel.onContinueClicked()
                 runCurrent()
 
-                assertEquals(UiText.Resource(Res.string.auth_error_display_name_length), viewModel.uiState.value.error)
+                assertEquals(UiText.Resource(error), viewModel.uiState.value.error)
             }
             assertTrue(repository.savedDisplayNames.isEmpty())
         }

@@ -13,6 +13,7 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.PendingSheet
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.ledger_field_date_received
 import net.neednot.renttracker.resources.ledger_field_method
+import net.neednot.renttracker.resources.ledger_sheet_payment
 import net.neednot.renttracker.resources.pending_changed_intro
 import net.neednot.renttracker.resources.pending_changed_title
 import net.neednot.renttracker.resources.pending_duplicate_intro
@@ -22,12 +23,11 @@ import net.neednot.renttracker.resources.pending_rejected_moved
 import net.neednot.renttracker.resources.pending_rejected_no_permission
 import net.neednot.renttracker.resources.pending_rejected_not_saved
 import net.neednot.renttracker.resources.pending_sheet_not_sent
-import net.neednot.renttracker.resources.pending_sheet_title
 
 internal fun PendingPaymentReview.toSheetUiState(): PendingSheetUiState =
     PendingSheetUiState(
         clientId = payment.clientId,
-        title = UiText.Resource(Res.string.pending_sheet_title, listOf(payment.tenantName)),
+        title = UiText.Resource(Res.string.ledger_sheet_payment),
         chip = payment.state.chip(),
         amount = formatMoney(payment.amountCents),
         body = body(),

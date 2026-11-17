@@ -1,64 +1,53 @@
 package net.neednot.renttracker.feature.members.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.access.CallerAccess
 import net.neednot.renttracker.core.access.PermissionPreset
-import net.neednot.renttracker.core.data.AccessLevel
 import net.neednot.renttracker.core.data.MembershipRole
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ButtonVariant
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.EditorTopBar
+import net.neednot.renttracker.core.designsystem.components.ErrorState
+import net.neednot.renttracker.core.designsystem.components.FormTextField
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
+import net.neednot.renttracker.core.designsystem.components.RtButton
+import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
-import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
-import net.neednot.renttracker.feature.members.presentation.components.MembersEditorTopBar
-import net.neednot.renttracker.feature.members.presentation.components.PermissionLevelsCard
-import net.neednot.renttracker.feature.members.presentation.components.PresetChips
-import net.neednot.renttracker.feature.members.presentation.uistate.EditOthersUiState
+import net.neednot.renttracker.feature.members.presentation.components.PermissionEditor
+import net.neednot.renttracker.feature.members.presentation.components.PermissionEditorActions
 import net.neednot.renttracker.feature.members.presentation.uistate.InviteMemberUiState
-import net.neednot.renttracker.feature.members.presentation.uistate.PermissionArea
-import net.neednot.renttracker.feature.members.presentation.uistate.PermissionsFormUiState
 import net.neednot.renttracker.feature.members.presentation.viewmodel.InviteMemberEvent
 import net.neednot.renttracker.feature.members.presentation.viewmodel.InviteMemberViewModel
+import net.neednot.renttracker.feature.members.presentation.viewmodel.permissionsForm
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.members_customize
+import net.neednot.renttracker.resources.members_error_title
 import net.neednot.renttracker.resources.members_invite_email
 import net.neednot.renttracker.resources.members_invite_email_hint
 import net.neednot.renttracker.resources.members_invite_email_placeholder
 import net.neednot.renttracker.resources.members_invite_limited
 import net.neednot.renttracker.resources.members_invite_send
-import net.neednot.renttracker.resources.members_invite_sending
 import net.neednot.renttracker.resources.members_invite_title
-import net.neednot.renttracker.resources.members_loading
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -80,150 +69,108 @@ fun InviteMemberScreen(
     }
     InviteMemberContent(
         uiState = uiState,
-        onEmailChanged = viewModel::onEmailChanged,
-        onPresetClicked = viewModel::onPresetClicked,
-        onCustomizeClicked = viewModel::onCustomizeClicked,
-        onLevelSelected = viewModel::onLevelSelected,
-        onEditOthersChanged = viewModel::onEditOthersChanged,
-        onSendClicked = viewModel::onSendClicked,
-        onCloseClicked = onClosed,
+        actions =
+            InviteMemberActions(
+                editor =
+                    PermissionEditorActions(
+                        onPresetClicked = viewModel::onPresetClicked,
+                        onLevelSelected = viewModel::onLevelSelected,
+                        onEditOthersChanged = viewModel::onEditOthersChanged,
+                    ),
+                onEmailChanged = viewModel::onEmailChanged,
+                onCustomizeClicked = viewModel::onCustomizeClicked,
+                onSendClicked = viewModel::onSendClicked,
+                onCloseClicked = onClosed,
+            ),
         modifier = modifier,
     )
 }
 
 @Composable
-private fun InviteMemberContent(
+internal fun InviteMemberContent(
     uiState: InviteMemberUiState,
-    onEmailChanged: (String) -> Unit,
-    onPresetClicked: (PermissionPreset) -> Unit,
-    onCustomizeClicked: () -> Unit,
-    onLevelSelected: (PermissionArea, AccessLevel) -> Unit,
-    onEditOthersChanged: (Boolean) -> Unit,
-    onSendClicked: () -> Unit,
-    onCloseClicked: () -> Unit,
+    actions: InviteMemberActions,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            MembersEditorTopBar(
+            EditorTopBar(
                 title = stringResource(Res.string.members_invite_title),
-                actionLabel = stringResource(Res.string.members_invite_send),
-                workingLabel = stringResource(Res.string.members_invite_sending),
-                isWorking = uiState.isSending,
-                isActionEnabled = !uiState.isSending && uiState.form != null,
-                onActionClicked = onSendClicked,
-                onCloseClicked = onCloseClicked,
+                isSaveEnabled = uiState.form != null,
+                onSaveClicked = actions.onSendClicked,
+                onCloseClicked = actions.onCloseClicked,
+                isSaving = uiState.isSending,
+                saveLabel = stringResource(Res.string.members_invite_send),
             )
         },
     ) { contentPadding ->
-        if (uiState.isLoading) {
-            val description = stringResource(Res.string.members_loading)
-            Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
+        val bodyModifier = Modifier.padding(contentPadding)
+        when {
+            uiState.isLoading -> {
+                LoadingIndicator(modifier = bodyModifier)
             }
-        } else {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                        .imePadding()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                InviteFields(
-                    uiState = uiState,
-                    onEmailChanged = onEmailChanged,
-                    onPresetClicked = onPresetClicked,
-                    onCustomizeClicked = onCustomizeClicked,
-                    onLevelSelected = onLevelSelected,
-                    onEditOthersChanged = onEditOthersChanged,
+
+            uiState.form == null -> {
+                ErrorState(
+                    title = stringResource(Res.string.members_error_title),
+                    text = uiState.error?.asString(),
+                    onRetryClicked = UnimplementedAction,
+                    modifier = bodyModifier,
                 )
+            }
+
+            else -> {
+                InviteForm(uiState = uiState, actions = actions, modifier = bodyModifier)
             }
         }
     }
 }
 
 @Composable
-private fun InviteFields(
+private fun InviteForm(
     uiState: InviteMemberUiState,
-    onEmailChanged: (String) -> Unit,
-    onPresetClicked: (PermissionPreset) -> Unit,
-    onCustomizeClicked: () -> Unit,
-    onLevelSelected: (PermissionArea, AccessLevel) -> Unit,
-    onEditOthersChanged: (Boolean) -> Unit,
+    actions: InviteMemberActions,
+    modifier: Modifier = Modifier,
 ) {
-    val isEnabled = !uiState.isSending
-    uiState.error?.let { error ->
-        Text(
-            text = error.asString(),
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-    EmailField(email = uiState.email, error = uiState.emailError, onEmailChanged = onEmailChanged, enabled = isEnabled)
-    uiState.limitedInviterName?.let { name ->
-        Text(
-            text = stringResource(Res.string.members_invite_limited, name),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
     val form = uiState.form ?: return
-    PresetChips(
-        presets = form.presets,
-        selected = form.selectedPreset,
-        onPresetClicked = onPresetClicked,
-        enabled = isEnabled,
-    )
-    CustomizeToggle(isExpanded = uiState.isCustomizeExpanded, onClick = onCustomizeClicked)
-    if (uiState.isCustomizeExpanded) {
-        PermissionLevelsCard(
+    val isEnabled = !uiState.isSending
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(ContentLayout.Form.padding),
+        verticalArrangement = Arrangement.spacedBy(ContentLayout.Form.spacing),
+    ) {
+        uiState.error?.let { Banner(text = it.asString(), kind = BannerKind.Error) }
+        FormTextField(
+            label = stringResource(Res.string.members_invite_email),
+            text = uiState.email,
+            onTextChanged = actions.onEmailChanged,
+            error = uiState.emailError,
+            hint = stringResource(Res.string.members_invite_email_hint),
+            placeholder = stringResource(Res.string.members_invite_email_placeholder),
+            enabled = isEnabled,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
+        )
+        PermissionEditor(
             form = form,
-            onLevelSelected = onLevelSelected,
-            onEditOthersChanged = onEditOthersChanged,
+            showsCategories = uiState.isCustomizeExpanded,
+            actions = actions.editor,
+            presetHint = uiState.limitedInviterName?.let { stringResource(Res.string.members_invite_limited, it) },
             enabled = isEnabled,
         )
-    }
-}
-
-@Composable
-private fun EmailField(
-    email: String,
-    error: UiText?,
-    onEmailChanged: (String) -> Unit,
-    enabled: Boolean,
-) {
-    OutlinedTextField(
-        value = email,
-        onValueChange = onEmailChanged,
-        modifier = Modifier.fillMaxWidth(),
-        enabled = enabled,
-        label = { Text(stringResource(Res.string.members_invite_email)) },
-        placeholder = { Text(stringResource(Res.string.members_invite_email_placeholder)) },
-        supportingText = { Text(error?.asString() ?: stringResource(Res.string.members_invite_email_hint)) },
-        isError = error != null,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
-    )
-}
-
-@Composable
-private fun CustomizeToggle(
-    isExpanded: Boolean,
-    onClick: () -> Unit,
-) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.heightIn(min = 48.dp),
-    ) {
-        Text(stringResource(Res.string.members_customize))
-        Icon(
-            imageVector = if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-            contentDescription = null,
-        )
+        if (!uiState.isCustomizeExpanded) {
+            RtButton(
+                text = stringResource(Res.string.members_customize),
+                onClick = actions.onCustomizeClicked,
+                modifier = Modifier.fillMaxWidth(),
+                variant = ButtonVariant.Text,
+                enabled = isEnabled,
+            )
+        }
     }
 }
 
@@ -244,21 +191,9 @@ private fun InviteMemberContentPreview() {
                 InviteMemberUiState(
                     isLoading = false,
                     email = "alex.m@example.com",
-                    form =
-                        PermissionsFormUiState(
-                            permissions = PermissionPreset.Bookkeeper.permissions,
-                            presets = access.grantablePresets(),
-                            levelRows = emptyList(),
-                            editOthers = EditOthersUiState(isOn = false, appliesNow = true, isEnabled = true),
-                        ),
+                    form = access.permissionsForm(PermissionPreset.Bookkeeper.permissions),
                 ),
-            onEmailChanged = {},
-            onPresetClicked = {},
-            onCustomizeClicked = {},
-            onLevelSelected = { _, _ -> },
-            onEditOthersChanged = {},
-            onSendClicked = {},
-            onCloseClicked = {},
+            actions = InviteMemberActions(),
         )
     }
 }

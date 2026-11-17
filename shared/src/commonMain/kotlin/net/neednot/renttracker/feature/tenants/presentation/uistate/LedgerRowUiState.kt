@@ -8,6 +8,7 @@ data class LedgerRowUiState(
     val title: UiText,
     val details: List<UiText>,
     val amount: UiText,
+    val isPaidAmount: Boolean,
     val balance: UiText?,
     val chips: List<EntryChip>,
     val isStruckThrough: Boolean,

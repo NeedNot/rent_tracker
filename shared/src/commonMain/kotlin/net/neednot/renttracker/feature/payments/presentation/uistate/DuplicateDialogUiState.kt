@@ -6,5 +6,4 @@ data class DuplicateDialogUiState(
     val title: UiText,
     val intro: UiText,
     val matches: List<DuplicateMatchUiState>,
-    val question: UiText,
 )

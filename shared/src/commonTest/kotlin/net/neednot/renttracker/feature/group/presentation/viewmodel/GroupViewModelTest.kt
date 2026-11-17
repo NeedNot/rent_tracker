@@ -253,6 +253,7 @@ class GroupViewModelTest : MainDispatcherTest() {
                                     listOf(
                                         GroupMenuItem.Members,
                                         GroupMenuItem.Settings,
+                                        GroupMenuItem.TransferOwnership,
                                         GroupMenuItem.Archive,
                                     ),
                             ),

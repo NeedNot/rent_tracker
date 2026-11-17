@@ -5,12 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,17 +22,22 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.number
 import net.neednot.renttracker.core.designsystem.format.formatMonth
+import net.neednot.renttracker.core.designsystem.theme.Sizes
+import net.neednot.renttracker.core.designsystem.theme.Spacing
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.common_cancel
 import net.neednot.renttracker.resources.common_next_year
 import net.neednot.renttracker.resources.common_previous_year
+import net.neednot.renttracker.resources.ic_calendar_today
+import net.neednot.renttracker.resources.ic_chevron_left
+import net.neednot.renttracker.resources.ic_chevron_right
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val MONTHS_PER_ROW = 3
@@ -49,7 +49,9 @@ internal fun MonthField(
     onMonthChanged: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
     error: UiText? = null,
+    hint: String? = null,
     enabled: Boolean = true,
+    icon: DrawableResource = Res.drawable.ic_calendar_today,
 ) {
     var isPickerOpen by rememberSaveable { mutableStateOf(false) }
     PickerField(
@@ -58,7 +60,9 @@ internal fun MonthField(
         onOpenClicked = { isPickerOpen = true },
         modifier = modifier,
         error = error,
+        hint = hint,
         enabled = enabled,
+        icon = icon,
     )
     if (isPickerOpen) {
         MonthPickerDialog(
@@ -81,31 +85,28 @@ private fun MonthPickerDialog(
     onDismissed: () -> Unit,
 ) {
     var year by rememberSaveable { mutableIntStateOf(selected.year) }
-    AlertDialog(
-        onDismissRequest = onDismissed,
-        confirmButton = {
-            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) }
-        },
-        title = { Text(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                YearStepper(year = year, onYearChanged = { year = it })
-                Month.entries.chunked(MONTHS_PER_ROW).forEach { monthsInRow ->
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        monthsInRow.forEach { month ->
-                            MonthButton(
-                                month = month,
-                                year = year,
-                                isSelected = selected == YearMonth(year, month),
-                                onClick = { onMonthChosen(YearMonth(year, month)) },
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
+    RtDialog(
+        title = title,
+        onDismissed = onDismissed,
+        confirmButton = { DialogButton(text = stringResource(Res.string.common_cancel), onClick = onDismissed) },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            YearStepper(year = year, onYearChanged = { year = it })
+            Month.entries.chunked(MONTHS_PER_ROW).forEach { monthsInRow ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    monthsInRow.forEach { month ->
+                        MonthButton(
+                            month = month,
+                            year = year,
+                            isSelected = selected == YearMonth(year, month),
+                            onClick = { onMonthChosen(YearMonth(year, month)) },
+                            modifier = Modifier.weight(1f),
+                        )
                     }
                 }
             }
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -115,8 +116,8 @@ private fun YearStepper(
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { onYearChanged(year - 1) }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            AppIcon(
+                icon = Res.drawable.ic_chevron_left,
                 contentDescription = stringResource(Res.string.common_previous_year),
             )
         }
@@ -127,8 +128,8 @@ private fun YearStepper(
             style = MaterialTheme.typography.titleMedium,
         )
         IconButton(onClick = { onYearChanged(year + 1) }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            AppIcon(
+                icon = Res.drawable.ic_chevron_right,
                 contentDescription = stringResource(Res.string.common_next_year),
             )
         }
@@ -156,7 +157,7 @@ private fun MonthButton(
     TextButton(
         onClick = onClick,
         modifier =
-            modifier.heightIn(min = 48.dp).semantics {
+            modifier.heightIn(min = Sizes.touchTarget).semantics {
                 contentDescription = spokenName
                 selected = isSelected
             },

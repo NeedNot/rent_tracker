@@ -17,6 +17,7 @@ import net.neednot.renttracker.core.validation.InputLimits
 import net.neednot.renttracker.feature.auth.domain.AuthRepository
 import net.neednot.renttracker.feature.auth.presentation.uistate.DisplayNameUiState
 import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.auth_error_display_name_empty
 import net.neednot.renttracker.resources.auth_error_display_name_length
 
 class DisplayNameViewModel(
@@ -37,8 +38,12 @@ class DisplayNameViewModel(
         if (uiState.value.isSaving) return
         val displayName = uiState.value.displayName.trim()
         when {
-            displayName.isEmpty() || lengthError(displayName) != null -> {
-                mutableUiState.update { it.copy(error = UiText.Resource(Res.string.auth_error_display_name_length)) }
+            displayName.isEmpty() -> {
+                mutableUiState.update { it.copy(error = UiText.Resource(Res.string.auth_error_display_name_empty)) }
+            }
+
+            lengthError(displayName) != null -> {
+                mutableUiState.update { it.copy(error = lengthError(displayName)) }
             }
 
             displayName == defaultDisplayName -> {

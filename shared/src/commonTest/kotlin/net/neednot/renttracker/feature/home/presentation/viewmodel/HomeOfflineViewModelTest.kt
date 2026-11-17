@@ -25,7 +25,6 @@ import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.RejectedPaymentUiState
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.home_archived_groups_row
-import net.neednot.renttracker.resources.home_rejected_payment_received
 import net.neednot.renttracker.resources.home_rejected_payment_title
 import net.neednot.renttracker.resources.home_rejected_payments_summary
 import net.neednot.renttracker.resources.offline_banner_hours
@@ -286,7 +285,7 @@ class HomeOfflineViewModelTest : MainDispatcherTest() {
         clientId = clientId,
         title = UiText.Resource(Res.string.home_rejected_payment_title, listOf(tenantName)),
         amount = "$550.00",
-        dateReceived = UiText.Resource(Res.string.home_rejected_payment_received, listOf("Mar 2, 2026")),
+        dateReceived = "Mar 2, 2026",
         reason = reason,
     )
 }

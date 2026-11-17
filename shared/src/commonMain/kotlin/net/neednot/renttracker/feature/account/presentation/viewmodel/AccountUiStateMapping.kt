@@ -31,7 +31,7 @@ internal fun Synced<AccountProfile?, AccountError>.toAccountUiState(
         }
 
         failure != null -> {
-            AccountUiState.Error(failure.text())
+            AccountUiState.Error(failure.loadText())
         }
 
         else -> {

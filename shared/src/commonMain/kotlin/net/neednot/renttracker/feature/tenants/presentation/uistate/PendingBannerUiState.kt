@@ -7,11 +7,11 @@ sealed interface PendingBannerUiState {
 
     data class Waiting(
         override val title: UiText,
-        val subtitle: UiText,
     ) : PendingBannerUiState
 
     data class Attention(
         override val title: UiText,
+        val message: UiText,
         val reviewClientId: String,
     ) : PendingBannerUiState
 }

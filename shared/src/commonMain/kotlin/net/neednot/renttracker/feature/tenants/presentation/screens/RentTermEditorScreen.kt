@@ -1,38 +1,35 @@
 package net.neednot.renttracker.feature.tenants.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import kotlinx.datetime.YearMonth
+import net.neednot.renttracker.core.designsystem.components.ActionTone
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ButtonVariant
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.DialogButton
 import net.neednot.renttracker.core.designsystem.components.EditorTopBar
 import net.neednot.renttracker.core.designsystem.components.FormTextField
-import net.neednot.renttracker.core.designsystem.components.InfoNotice
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
 import net.neednot.renttracker.core.designsystem.components.MoneyField
 import net.neednot.renttracker.core.designsystem.components.MonthField
-import net.neednot.renttracker.core.designsystem.components.WarningNotice
+import net.neednot.renttracker.core.designsystem.components.RtButton
+import net.neednot.renttracker.core.designsystem.components.RtDialog
 import net.neednot.renttracker.core.designsystem.components.WholeNumberField
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.navigation.RentTermEditorRoute
@@ -59,7 +56,6 @@ import net.neednot.renttracker.resources.rent_term_editor_start_month
 import net.neednot.renttracker.resources.rent_term_editor_title_add
 import net.neednot.renttracker.resources.rent_term_editor_title_edit
 import net.neednot.renttracker.resources.tenant_editor_due_day
-import net.neednot.renttracker.resources.tenant_editor_loading
 import net.neednot.renttracker.resources.tenant_editor_monthly_rent
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -82,27 +78,24 @@ fun RentTermEditorScreen(
     }
     RentTermEditorContent(
         uiState = uiState,
-        onStartMonthChanged = viewModel::onStartMonthChanged,
-        onFieldChanged = viewModel::onFieldChanged,
-        onSaveClicked = viewModel::onSaveClicked,
-        onDeleteClicked = viewModel::onDeleteClicked,
-        onDeleteConfirmed = viewModel::onDeleteConfirmed,
-        onDeleteDismissed = viewModel::onDeleteDismissed,
-        onCloseClicked = onClosed,
+        actions =
+            RentTermEditorActions(
+                onStartMonthChanged = viewModel::onStartMonthChanged,
+                onFieldChanged = viewModel::onFieldChanged,
+                onSaveClicked = viewModel::onSaveClicked,
+                onDeleteClicked = viewModel::onDeleteClicked,
+                onDeleteConfirmed = viewModel::onDeleteConfirmed,
+                onDeleteDismissed = viewModel::onDeleteDismissed,
+                onCloseClicked = onClosed,
+            ),
         modifier = modifier,
     )
 }
 
 @Composable
-private fun RentTermEditorContent(
+internal fun RentTermEditorContent(
     uiState: RentTermEditorUiState,
-    onStartMonthChanged: (YearMonth) -> Unit,
-    onFieldChanged: (RentTermEditorField, String) -> Unit,
-    onSaveClicked: () -> Unit,
-    onDeleteClicked: () -> Unit,
-    onDeleteConfirmed: () -> Unit,
-    onDeleteDismissed: () -> Unit,
-    onCloseClicked: () -> Unit,
+    actions: RentTermEditorActions,
     modifier: Modifier = Modifier,
 ) {
     val title =
@@ -113,16 +106,14 @@ private fun RentTermEditorContent(
             EditorTopBar(
                 title = stringResource(title),
                 isSaveEnabled = !uiState.isSaving && !uiState.isLoading,
-                onSaveClicked = onSaveClicked,
-                onCloseClicked = onCloseClicked,
+                onSaveClicked = actions.onSaveClicked,
+                onCloseClicked = actions.onCloseClicked,
+                isSaving = uiState.isSaving,
             )
         },
     ) { contentPadding ->
         if (uiState.isLoading) {
-            val description = stringResource(Res.string.tenant_editor_loading)
-            Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
-            }
+            LoadingIndicator(modifier = Modifier.padding(contentPadding))
         } else {
             Column(
                 modifier =
@@ -131,24 +122,19 @@ private fun RentTermEditorContent(
                         .padding(contentPadding)
                         .imePadding()
                         .verticalScroll(rememberScrollState())
-                        .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(ContentLayout.Form.padding),
+                verticalArrangement = Arrangement.spacedBy(ContentLayout.Form.spacing),
             ) {
-                RentTermFields(
-                    uiState = uiState,
-                    onStartMonthChanged = onStartMonthChanged,
-                    onFieldChanged = onFieldChanged,
-                    onDeleteClicked = onDeleteClicked,
-                )
+                RentTermFields(uiState = uiState, actions = actions)
             }
         }
     }
     uiState.deletion?.let { deletion ->
         DeleteRentTermDialog(
             deletion = deletion,
-            onReasonChanged = { onFieldChanged(RentTermEditorField.DeleteReason, it) },
-            onConfirmed = onDeleteConfirmed,
-            onDismissed = onDeleteDismissed,
+            onReasonChanged = { actions.onFieldChanged(RentTermEditorField.DeleteReason, it) },
+            onConfirmed = actions.onDeleteConfirmed,
+            onDismissed = actions.onDeleteDismissed,
         )
     }
 }
@@ -156,52 +142,46 @@ private fun RentTermEditorContent(
 @Composable
 private fun RentTermFields(
     uiState: RentTermEditorUiState,
-    onStartMonthChanged: (YearMonth) -> Unit,
-    onFieldChanged: (RentTermEditorField, String) -> Unit,
-    onDeleteClicked: () -> Unit,
+    actions: RentTermEditorActions,
 ) {
     val isEnabled = !uiState.isSaving
-    uiState.error?.let { error ->
-        Text(
-            text = error.asString(),
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
+    uiState.error?.let { error -> Banner(text = error.asString(), kind = BannerKind.Error) }
     uiState.startMonth?.let { startMonth ->
         MonthField(
             label = stringResource(Res.string.rent_term_editor_start_month),
             month = startMonth,
-            onMonthChanged = onStartMonthChanged,
+            onMonthChanged = actions.onStartMonthChanged,
             error = uiState.fieldErrors[RentTermEditorField.StartMonth],
             enabled = isEnabled,
         )
     }
-    uiState.pastMonthWarning?.let { warning -> WarningNotice(warning.text()) }
+    uiState.pastMonthWarning?.let { warning -> Banner(text = warning.text(), kind = BannerKind.Warning) }
     MoneyField(
         label = stringResource(Res.string.tenant_editor_monthly_rent),
         text = uiState.amount,
-        onTextChanged = { onFieldChanged(RentTermEditorField.Amount, it) },
+        onTextChanged = { actions.onFieldChanged(RentTermEditorField.Amount, it) },
         error = uiState.fieldErrors[RentTermEditorField.Amount],
         enabled = isEnabled,
     )
     WholeNumberField(
         label = stringResource(Res.string.tenant_editor_due_day),
         text = uiState.dueDay,
-        onTextChanged = { onFieldChanged(RentTermEditorField.DueDay, it) },
+        onTextChanged = { actions.onFieldChanged(RentTermEditorField.DueDay, it) },
         error = uiState.fieldErrors[RentTermEditorField.DueDay],
         enabled = isEnabled,
     )
-    if (uiState.showsDueDayReminder) InfoNotice(stringResource(Res.string.rent_term_editor_due_day_reminder))
+    if (uiState.showsDueDayReminder) {
+        Banner(text = stringResource(Res.string.rent_term_editor_due_day_reminder), kind = BannerKind.Note)
+    }
     if (uiState.canDelete) {
-        TextButton(
-            onClick = onDeleteClicked,
-            modifier = Modifier.heightIn(min = 48.dp),
+        RtButton(
+            text = stringResource(Res.string.rent_term_editor_delete),
+            onClick = actions.onDeleteClicked,
+            modifier = Modifier.fillMaxWidth(),
+            variant = ButtonVariant.Outlined,
+            tone = ActionTone.Destructive,
             enabled = isEnabled,
-            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-        ) {
-            Text(stringResource(Res.string.rent_term_editor_delete))
-        }
+        )
     }
 }
 
@@ -228,30 +208,28 @@ private fun DeleteRentTermDialog(
     onConfirmed: () -> Unit,
     onDismissed: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissed,
+    RtDialog(
+        title = stringResource(Res.string.rent_term_editor_delete_title),
+        onDismissed = onDismissed,
         confirmButton = {
-            TextButton(onClick = onConfirmed, enabled = !deletion.isDeleting) {
-                Text(stringResource(Res.string.rent_term_editor_delete_confirm))
-            }
+            DialogButton(
+                text = stringResource(Res.string.rent_term_editor_delete_confirm),
+                onClick = onConfirmed,
+                tone = ActionTone.Destructive,
+                isWorking = deletion.isDeleting,
+            )
         },
-        dismissButton = {
-            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) }
-        },
-        title = { Text(stringResource(Res.string.rent_term_editor_delete_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(Res.string.rent_term_editor_delete_message))
-                FormTextField(
-                    label = stringResource(Res.string.rent_term_editor_delete_reason),
-                    text = deletion.reason,
-                    onTextChanged = onReasonChanged,
-                    error = deletion.error,
-                    enabled = !deletion.isDeleting,
-                )
-            }
-        },
-    )
+        dismissButton = { DialogButton(text = stringResource(Res.string.common_cancel), onClick = onDismissed) },
+    ) {
+        Text(stringResource(Res.string.rent_term_editor_delete_message))
+        FormTextField(
+            label = stringResource(Res.string.rent_term_editor_delete_reason),
+            text = deletion.reason,
+            onTextChanged = onReasonChanged,
+            error = deletion.error,
+            enabled = !deletion.isDeleting,
+        )
+    }
 }
 
 @Preview
@@ -274,13 +252,7 @@ private fun RentTermEditorContentPreview() {
                     showsDueDayReminder = true,
                     canDelete = true,
                 ),
-            onStartMonthChanged = {},
-            onFieldChanged = { _, _ -> },
-            onSaveClicked = {},
-            onDeleteClicked = {},
-            onDeleteConfirmed = {},
-            onDeleteDismissed = {},
-            onCloseClicked = {},
+            actions = RentTermEditorActions(),
         )
     }
 }

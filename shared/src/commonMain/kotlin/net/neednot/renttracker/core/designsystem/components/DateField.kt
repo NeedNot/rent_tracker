@@ -3,8 +3,6 @@ package net.neednot.renttracker.core.designsystem.components
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +26,7 @@ internal fun DateField(
     date: LocalDate?,
     onDateChanged: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
+    labelNote: String? = null,
     error: UiText? = null,
     hint: String? = null,
     enabled: Boolean = true,
@@ -39,6 +38,7 @@ internal fun DateField(
         value = date?.let(::formatDate).orEmpty(),
         onOpenClicked = { isPickerOpen = true },
         modifier = modifier,
+        labelNote = labelNote,
         error = error,
         hint = hint,
         enabled = enabled,
@@ -69,19 +69,18 @@ private fun DatePickerPopup(
     DatePickerDialog(
         onDismissRequest = onDismissed,
         confirmButton = {
-            TextButton(
+            DialogButton(
+                text = stringResource(Res.string.common_ok),
                 onClick = {
                     pickerState.selectedDateMillis?.let { millis ->
                         onDateChosen(LocalDate.fromEpochDays(millis / MILLIS_PER_DAY))
                     }
                 },
                 enabled = pickerState.selectedDateMillis != null,
-            ) {
-                Text(stringResource(Res.string.common_ok))
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) }
+            DialogButton(text = stringResource(Res.string.common_cancel), onClick = onDismissed)
         },
     ) {
         DatePicker(state = pickerState)

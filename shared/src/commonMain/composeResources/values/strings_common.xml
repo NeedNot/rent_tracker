@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_back">Back</string>
+    <string name="common_close">Close</string>
+    <string name="common_loading">Loading</string>
+    <string name="common_saving">Saving</string>
+    <string name="common_try_again">Try again</string>
+    <string name="common_more_options">More options</string>
+</resources>

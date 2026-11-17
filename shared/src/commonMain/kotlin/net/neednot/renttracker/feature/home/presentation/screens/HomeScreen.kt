@@ -1,64 +1,65 @@
 package net.neednot.renttracker.feature.home.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import net.neednot.renttracker.core.designsystem.components.ActionTone
+import net.neednot.renttracker.core.designsystem.components.ArchivedRow
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ButtonVariant
+import net.neednot.renttracker.core.designsystem.components.ConfirmDialog
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.EmptyState
+import net.neednot.renttracker.core.designsystem.components.ErrorState
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
 import net.neednot.renttracker.core.designsystem.components.OfflineBanner
+import net.neednot.renttracker.core.designsystem.components.RtButton
+import net.neednot.renttracker.core.designsystem.components.RtFab
+import net.neednot.renttracker.core.designsystem.components.RtSearchBar
+import net.neednot.renttracker.core.designsystem.components.RtTopAppBar
+import net.neednot.renttracker.core.designsystem.components.SectionHeader
+import net.neednot.renttracker.core.designsystem.components.TopBarNavigation
+import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.core.designsystem.theme.Sizes
+import net.neednot.renttracker.core.designsystem.theme.plus
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.home.presentation.components.AccountButton
-import net.neednot.renttracker.feature.home.presentation.components.ArchivedGroupsRow
 import net.neednot.renttracker.feature.home.presentation.components.GroupCard
 import net.neednot.renttracker.feature.home.presentation.components.InvitationActions
 import net.neednot.renttracker.feature.home.presentation.components.InvitationCard
 import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentActions
 import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentsCard
 import net.neednot.renttracker.feature.home.presentation.components.RejectedPaymentsSheet
-import net.neednot.renttracker.feature.home.presentation.uistate.DeclineInviteUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.GroupCardUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.HomeUiState
 import net.neednot.renttracker.feature.home.presentation.uistate.InvitationCardUiState
 import net.neednot.renttracker.feature.home.presentation.viewmodel.HomeViewModel
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.app_name
-import net.neednot.renttracker.resources.common_cancel
 import net.neednot.renttracker.resources.home_empty_body
 import net.neednot.renttracker.resources.home_empty_title
+import net.neednot.renttracker.resources.home_error_title
 import net.neednot.renttracker.resources.home_groups_heading
 import net.neednot.renttracker.resources.home_invitation_decline
 import net.neednot.renttracker.resources.home_invitations_heading
-import net.neednot.renttracker.resources.home_loading
 import net.neednot.renttracker.resources.home_new_group
+import net.neednot.renttracker.resources.home_search_placeholder
+import net.neednot.renttracker.resources.ic_add
+import net.neednot.renttracker.resources.ic_home_work
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -95,9 +96,8 @@ fun HomeScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeContent(
+internal fun HomeContent(
     uiState: HomeUiState,
     invitationActions: InvitationActions,
     rejectedPaymentActions: RejectedPaymentActions,
@@ -110,34 +110,30 @@ private fun HomeContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.app_name)) },
+            RtTopAppBar(
+                title = stringResource(Res.string.app_name),
+                navigation = TopBarNavigation.None,
                 actions = { AccountButton(initial = uiState.accountInitial, onClick = onAccountClicked) },
             )
         },
         floatingActionButton = {
-            if (uiState.canCreateGroup) {
-                ExtendedFloatingActionButton(
+            if (uiState is HomeUiState.Content && uiState.canCreateGroup) {
+                RtFab(
+                    text = stringResource(Res.string.home_new_group),
+                    icon = Res.drawable.ic_add,
                     onClick = onNewGroupClicked,
-                    icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = null) },
-                    text = { Text(stringResource(Res.string.home_new_group)) },
                 )
             }
         },
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
             uiState.offlineBanner?.let { OfflineBanner(text = it.asString()) }
-            uiState.rejectedPayments?.let { rejected ->
-                RejectedPaymentsCard(
-                    summary = rejected.summary,
-                    onClick = rejectedPaymentActions.onCardClicked,
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp),
-                )
-            }
-            HomeBody(
+            HomeList(
                 uiState = uiState,
                 invitationActions = invitationActions,
+                onRejectedPaymentsClicked = rejectedPaymentActions.onCardClicked,
                 onGroupClicked = onGroupClicked,
+                onNewGroupClicked = onNewGroupClicked,
                 onArchivedGroupsClicked = onArchivedGroupsClicked,
             )
         }
@@ -150,149 +146,108 @@ private fun HomeContent(
         )
     }
     (uiState as? HomeUiState.Content)?.declineDialog?.let { dialog ->
-        DeclineInviteDialog(
-            dialog = dialog,
+        ConfirmDialog(
+            title = dialog.title.asString(),
+            text = dialog.message.asString(),
+            confirmLabel = stringResource(Res.string.home_invitation_decline),
             onConfirmed = invitationActions.onDeclineConfirmed,
             onDismissed = invitationActions.onDeclineDismissed,
+            confirmTone = ActionTone.Destructive,
         )
     }
 }
 
 @Composable
-private fun HomeBody(
+private fun HomeList(
     uiState: HomeUiState,
     invitationActions: InvitationActions,
+    onRejectedPaymentsClicked: () -> Unit,
     onGroupClicked: (groupId: String) -> Unit,
+    onNewGroupClicked: () -> Unit,
     onArchivedGroupsClicked: () -> Unit,
 ) {
-    when (uiState) {
-        is HomeUiState.Loading -> {
-            Loading()
-        }
-
-        is HomeUiState.Empty -> {
-            Message(
-                title = stringResource(Res.string.home_empty_title),
-                body = stringResource(Res.string.home_empty_body),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = ContentLayout.List.padding + PaddingValues(bottom = Sizes.fabClearance),
+        verticalArrangement = Arrangement.spacedBy(ContentLayout.List.spacing),
+    ) {
+        item(key = "search") {
+            RtSearchBar(
+                placeholder = stringResource(Res.string.home_search_placeholder),
+                onClick = UnimplementedAction,
             )
         }
-
-        is HomeUiState.Error -> {
-            Message(title = uiState.message.asString(), body = null)
+        uiState.rejectedPayments?.let { rejected ->
+            item(key = "rejectedPayments") {
+                RejectedPaymentsCard(summary = rejected.summary, onClick = onRejectedPaymentsClicked)
+            }
         }
-
-        is HomeUiState.Content -> {
-            HomeList(
-                content = uiState,
-                invitationActions = invitationActions,
-                onGroupClicked = onGroupClicked,
-                onArchivedGroupsClicked = onArchivedGroupsClicked,
-            )
+        when (uiState) {
+            is HomeUiState.Loading -> item(key = "loading") { LoadingIndicator(Modifier.fillParentMaxHeight(0.6f)) }
+            is HomeUiState.Empty -> item(key = "empty") { NoGroups(uiState.canCreateGroup, onNewGroupClicked) }
+            is HomeUiState.Error -> item(key = "error") { GroupsNotLoaded(uiState.message) }
+            is HomeUiState.Content -> groupItems(uiState, invitationActions, onGroupClicked, onArchivedGroupsClicked)
         }
     }
 }
 
-@Composable
-private fun HomeList(
+private fun LazyListScope.groupItems(
     content: HomeUiState.Content,
     invitationActions: InvitationActions,
     onGroupClicked: (groupId: String) -> Unit,
     onArchivedGroupsClicked: () -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        content.syncError?.let { error ->
-            item(key = "syncError") {
-                Text(
-                    text = error.asString(),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-        }
-        if (content.invitations.isNotEmpty()) {
-            item(key = "invitationsHeading") { SectionHeading(stringResource(Res.string.home_invitations_heading)) }
-            items(content.invitations, key = { "invitation:${it.inviteId}" }) { invitation ->
-                InvitationCard(
-                    invitation = invitation,
-                    onAcceptClicked = { invitationActions.onAcceptClicked(invitation.inviteId) },
-                    onDeclineClicked = { invitationActions.onDeclineClicked(invitation.inviteId) },
-                )
-            }
-        }
-        if (content.groups.isNotEmpty()) {
-            item(key = "groupsHeading") { SectionHeading(stringResource(Res.string.home_groups_heading)) }
-            items(content.groups, key = { it.groupId }) { group ->
-                GroupCard(group = group, onClick = { onGroupClicked(group.groupId) })
-            }
-        }
-        content.archivedGroupsRow?.let { row ->
-            item(key = "archivedGroups") { ArchivedGroupsRow(text = row, onClick = onArchivedGroupsClicked) }
-        }
+    content.syncError?.let { error ->
+        item(key = "syncError") { Banner(text = error.asString(), kind = BannerKind.Error) }
     }
-}
-
-@Composable
-private fun SectionHeading(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.padding(top = 8.dp).semantics { heading() },
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        style = MaterialTheme.typography.titleSmall,
-    )
-}
-
-@Composable
-private fun DeclineInviteDialog(
-    dialog: DeclineInviteUiState,
-    onConfirmed: () -> Unit,
-    onDismissed: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismissed,
-        confirmButton = {
-            TextButton(onClick = onConfirmed) {
-                Text(text = stringResource(Res.string.home_invitation_decline), color = MaterialTheme.colorScheme.error)
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) } },
-        title = { Text(dialog.title.asString()) },
-        text = { Text(dialog.message.asString()) },
-    )
-}
-
-@Composable
-private fun Loading() {
-    val description = stringResource(Res.string.home_loading)
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
-    }
-}
-
-@Composable
-private fun Message(
-    title: String,
-    body: String?,
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(text = title, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
-        body?.let {
-            Text(
-                text = it,
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
+    if (content.invitations.isNotEmpty()) {
+        item(key = "invitationsHeading") { SectionHeader(stringResource(Res.string.home_invitations_heading)) }
+        items(content.invitations, key = { "invitation:${it.inviteId}" }) { invitation ->
+            InvitationCard(
+                invitation = invitation,
+                onAcceptClicked = { invitationActions.onAcceptClicked(invitation.inviteId) },
+                onDeclineClicked = { invitationActions.onDeclineClicked(invitation.inviteId) },
             )
         }
     }
+    if (content.groups.isNotEmpty()) {
+        item(key = "groupsHeading") { SectionHeader(stringResource(Res.string.home_groups_heading)) }
+        items(content.groups, key = { it.groupId }) { group ->
+            GroupCard(group = group, onClick = { onGroupClicked(group.groupId) })
+        }
+    }
+    content.archivedGroupsRow?.let { row ->
+        item(key = "archivedGroups") { ArchivedRow(text = row.asString(), onClick = onArchivedGroupsClicked) }
+    }
+}
+
+@Composable
+private fun NoGroups(
+    canCreateGroup: Boolean,
+    onNewGroupClicked: () -> Unit,
+) {
+    EmptyState(
+        icon = Res.drawable.ic_home_work,
+        title = stringResource(Res.string.home_empty_title),
+        text = stringResource(Res.string.home_empty_body),
+        action = {
+            RtButton(
+                text = stringResource(Res.string.home_new_group),
+                onClick = onNewGroupClicked,
+                variant = ButtonVariant.Outlined,
+                enabled = canCreateGroup,
+            )
+        },
+    )
+}
+
+@Composable
+private fun GroupsNotLoaded(message: UiText) {
+    ErrorState(
+        title = stringResource(Res.string.home_error_title),
+        text = message.asString(),
+        onRetryClicked = UnimplementedAction,
+    )
 }
 
 @Preview

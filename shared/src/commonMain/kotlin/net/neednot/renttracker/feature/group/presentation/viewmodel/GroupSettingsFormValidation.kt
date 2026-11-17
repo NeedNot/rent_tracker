@@ -13,9 +13,9 @@ import net.neednot.renttracker.feature.group.domain.GroupSettings
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupSettingsField
 import net.neednot.renttracker.feature.group.presentation.uistate.GroupSettingsForm
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.create_group_error_name_required
 import net.neednot.renttracker.resources.group_settings_error_grace_days
 import net.neednot.renttracker.resources.group_settings_error_late_fee
+import net.neednot.renttracker.resources.group_settings_error_name
 
 private val SERVER_FIELDS =
     mapOf(
@@ -63,7 +63,7 @@ private fun GroupSettingsForm.lateFeeError(): UiText? =
 private fun GroupSettingsForm.missingError(field: GroupSettingsField): UiText? =
     when {
         field == GroupSettingsField.Name && name.isBlank() -> {
-            UiText.Resource(Res.string.create_group_error_name_required)
+            UiText.Resource(Res.string.group_settings_error_name)
         }
 
         field == GroupSettingsField.GraceDays && graceDays.isBlank() -> {

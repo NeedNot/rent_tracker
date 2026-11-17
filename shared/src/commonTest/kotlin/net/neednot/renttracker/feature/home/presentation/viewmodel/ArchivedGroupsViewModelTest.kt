@@ -15,8 +15,6 @@ import net.neednot.renttracker.feature.home.presentation.uistate.ArchivedGroupCa
 import net.neednot.renttracker.feature.home.presentation.uistate.ArchivedGroupsUiState
 import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.archived_groups_summary
-import net.neednot.renttracker.resources.balance_owes
-import net.neednot.renttracker.resources.balance_paid_up
 import net.neednot.renttracker.resources.home_error_offline
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -57,7 +55,7 @@ class ArchivedGroupsViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun aGroupShowsWhatItOwesItsTenantCountAndTheDayItWasArchivedInThePhonesZone() =
+    fun aGroupShowsItsTenantCountAndTheDayItWasArchivedInThePhonesZone() =
         runTest {
             viewModel.uiState.test {
                 skipItems(1)
@@ -68,23 +66,9 @@ class ArchivedGroupsViewModelTest : MainDispatcherTest() {
                     ArchivedGroupCardUiState(
                         groupId = "g9",
                         name = "Old Mill Road",
-                        balance = UiText.Resource(Res.string.balance_owes, listOf("$900.00")),
                         summary = UiText.Plural(Res.plurals.archived_groups_summary, 3, listOf(3, "Jan 5, 2026")),
                     )
                 assertEquals(ArchivedGroupsUiState.Content(listOf(expected)), awaitItem())
-            }
-        }
-
-    @Test
-    fun aGroupThatOwesNothingIsPaidUp() =
-        runTest {
-            viewModel.uiState.test {
-                skipItems(1)
-
-                repository.archivedGroups.value = Synced(listOf(oldMill.copy(totalOwedCents = 0)), SyncStatus.Synced)
-
-                val content = awaitItem() as ArchivedGroupsUiState.Content
-                assertEquals(UiText.Resource(Res.string.balance_paid_up), content.groups.single().balance)
             }
         }
 

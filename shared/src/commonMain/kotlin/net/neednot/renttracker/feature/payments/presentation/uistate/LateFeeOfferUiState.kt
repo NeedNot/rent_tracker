@@ -6,4 +6,5 @@ data class LateFeeOfferUiState(
     val month: YearMonth,
     val isChecked: Boolean,
     val amount: String,
+    val suggestedAmount: String,
 )

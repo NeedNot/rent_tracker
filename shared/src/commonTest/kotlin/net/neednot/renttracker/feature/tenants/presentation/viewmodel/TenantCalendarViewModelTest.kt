@@ -35,6 +35,7 @@ import net.neednot.renttracker.feature.tenants.domain.tenantOverview
 import net.neednot.renttracker.feature.tenants.presentation.uistate.AddFeeUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantUiState
 import net.neednot.renttracker.resources.Res
+import net.neednot.renttracker.resources.calendar_description_due_not_late
 import net.neednot.renttracker.resources.calendar_description_fee_unpaid
 import net.neednot.renttracker.resources.calendar_fee_added_named
 import net.neednot.renttracker.resources.calendar_fee_marker
@@ -46,7 +47,9 @@ import net.neednot.renttracker.resources.calendar_other_many
 import net.neednot.renttracker.resources.calendar_paid_after_grace
 import net.neednot.renttracker.resources.calendar_paid_note
 import net.neednot.renttracker.resources.calendar_prepaid_note
+import net.neednot.renttracker.resources.calendar_square_due
 import net.neednot.renttracker.resources.calendar_square_owed
+import net.neednot.renttracker.resources.calendar_state_due_not_late
 import net.neednot.renttracker.resources.calendar_state_partial
 import net.neednot.renttracker.resources.calendar_total_owed
 import net.neednot.renttracker.resources.calendar_total_owed_on_rent
@@ -154,7 +157,38 @@ class TenantCalendarViewModelTest : MainDispatcherTest() {
                 ),
                 square.description,
             )
-            assertEquals(UiText.Resource(Res.string.calendar_square_owed, listOf("$500.00")), square.owed)
+            assertEquals(UiText.Resource(Res.string.calendar_square_owed, listOf("$500.00")), square.amount)
+        }
+
+    @Test
+    fun aMonthDueButNotLateShowsItsDueDateAndIsAnnouncedAsNotLate() =
+        runTest {
+            repository.calendar.value =
+                syncedCalendar(
+                    2026,
+                    calendarMonth("2026-03", CalendarMonthState.DueNotLate, dueDate = LocalDate(2026, 3, 15)),
+                )
+
+            val square = assertNotNull(contentOf().calendar).squares[2]
+
+            assertEquals(UiText.Resource(Res.string.calendar_state_due_not_late), square.stateLabel)
+            assertEquals(UiText.Resource(Res.string.calendar_square_due, listOf("Mar 15")), square.amount)
+            assertEquals(
+                listOf(
+                    UiText.Plain("March"),
+                    UiText.Resource(Res.string.calendar_description_due_not_late),
+                    UiText.Resource(Res.string.calendar_square_due, listOf("Mar 15")),
+                ),
+                square.description,
+            )
+        }
+
+    @Test
+    fun onlyTodaysMonthIsMarkedAsTheCurrentMonth() =
+        runTest {
+            val squares = assertNotNull(contentOf().calendar).squares
+
+            assertEquals(listOf("2026-03"), squares.filter { it.isCurrentMonth }.map { it.month })
         }
 
     @Test

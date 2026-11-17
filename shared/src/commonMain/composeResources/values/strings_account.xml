@@ -1,9 +1,12 @@
 <resources>
     <string name="home_account">Account</string>
     <string name="account_title">Account</string>
-    <string name="account_back">Back</string>
-    <string name="account_loading">Loading account</string>
     <string name="account_edit_name">Edit name</string>
+    <string name="account_section_security">Security</string>
+    <string name="account_app_lock">App lock</string>
+    <string name="account_app_lock_hint">Ask for fingerprint, face or PIN when the app opens</string>
+    <string name="account_section_notifications">Late-rent notifications</string>
+    <string name="account_notifications_all_groups">All groups</string>
     <string name="account_sign_out">Sign out</string>
     <string name="account_request_deletion">Request account deletion</string>
     <string name="account_request_deletion_hint">Handled by our team. Transfer groups you own first.</string>
@@ -12,8 +15,10 @@
     <string name="account_edit_name_title">Edit name</string>
     <string name="account_edit_name_label">Name</string>
     <string name="account_delete_dialog_title">Request account deletion?</string>
-    <string name="account_delete_dialog_message">Our team will delete your account. Your name will show as \"Deleted user\" on past entries, and the money records stay with each group. This can\'t be undone from the app.</string>
+    <string name="account_delete_dialog_message">Our team will delete your account. Your name will show as "Deleted user" on past entries, and the money records stay with each group. This can't be undone from the app.</string>
     <string name="account_delete_dialog_confirm">Request deletion</string>
+    <string name="account_error_title">Couldn't load your account</string>
+    <string name="account_error_load_unexpected">Something went wrong on our side.</string>
     <string name="account_error_name_length">Enter a name between 1 and 100 characters.</string>
     <string name="account_error_offline">No connection. Check your internet and try again.</string>
     <string name="account_error_unexpected">Something went wrong. Please try again.</string>

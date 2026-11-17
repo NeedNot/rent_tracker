@@ -1,6 +1,5 @@
 package net.neednot.renttracker.feature.members.presentation.viewmodel
 
-import net.neednot.renttracker.core.access.MemberPermissionLabel
 import net.neednot.renttracker.core.sync.SyncStatus
 import net.neednot.renttracker.core.sync.Synced
 import net.neednot.renttracker.core.ui.initialsOf
@@ -24,7 +23,6 @@ internal fun Synced<MembersOverview?, MembersError>.toTransferOwnershipUiState(
         isLoading = false,
         groupName = overview.groupName,
         candidates = candidates,
-        selectedMembershipId = choice.selectedMembershipId?.takeIf { id -> candidates.any { it.membershipId == id } },
         error = choice.error ?: syncErrorText(),
     )
 }
@@ -34,5 +32,5 @@ private fun Member.toCandidateUiState(): TransferCandidateUiState =
         membershipId = membershipId,
         initials = initialsOf(displayName),
         name = displayName,
-        label = MemberPermissionLabel.of(role, permissions),
+        email = email,
     )

@@ -8,7 +8,6 @@ import net.neednot.renttracker.feature.debts.domain.DuplicateLateFee
 import net.neednot.renttracker.feature.debts.presentation.uistate.DuplicateLateFeeUiState
 import net.neednot.renttracker.feature.debts.presentation.uistate.LateFeeDuplicateUiState
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.charge_duplicate_intro
 import net.neednot.renttracker.resources.charge_duplicate_you
 
 internal fun List<DuplicateLateFee>.toDialog(
@@ -16,7 +15,7 @@ internal fun List<DuplicateLateFee>.toDialog(
     callerAccountId: String?,
 ): LateFeeDuplicateUiState =
     LateFeeDuplicateUiState(
-        intro = UiText.Resource(Res.string.charge_duplicate_intro, listOf(month.monthName())),
+        month = month.monthName(),
         matches = map { it.toUiState(callerAccountId) },
     )
 

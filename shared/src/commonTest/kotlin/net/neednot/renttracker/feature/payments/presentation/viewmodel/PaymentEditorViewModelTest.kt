@@ -48,11 +48,9 @@ import net.neednot.renttracker.resources.payment_duplicate_intro_both
 import net.neednot.renttracker.resources.payment_duplicate_intro_payment
 import net.neednot.renttracker.resources.payment_duplicate_kind_late_fee
 import net.neednot.renttracker.resources.payment_duplicate_kind_payment
-import net.neednot.renttracker.resources.payment_duplicate_question_both
-import net.neednot.renttracker.resources.payment_duplicate_question_one
+import net.neednot.renttracker.resources.payment_duplicate_paid
 import net.neednot.renttracker.resources.payment_duplicate_title_many
 import net.neednot.renttracker.resources.payment_duplicate_title_one
-import net.neednot.renttracker.resources.payment_duplicate_you
 import net.neednot.renttracker.resources.payment_editor_conflict_named
 import net.neednot.renttracker.resources.payment_editor_error_date_future
 import net.neednot.renttracker.resources.payment_editor_error_offline
@@ -127,7 +125,15 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
 
             val offer = openEditor().uiState.value.lateFeeOffer
 
-            assertEquals(LateFeeOfferUiState(YearMonth(2026, 3), isChecked = false, amount = "50.00"), offer)
+            assertEquals(
+                LateFeeOfferUiState(
+                    YearMonth(2026, 3),
+                    isChecked = false,
+                    amount = "50.00",
+                    suggestedAmount = "$50.00",
+                ),
+                offer,
+            )
         }
 
     @Test
@@ -447,7 +453,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun aPossibleDuplicateAsksBeforeSavingAndShowsTheMatchWithYouForTheCallersOwnEntry() =
+    fun aPossibleDuplicateAsksBeforeSavingAndShowsTheMatch() =
         runTest {
             showOverview()
             val match =
@@ -468,16 +474,14 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
 
             val dialog = checkNotNull(editor.uiState.value.duplicate)
             assertEquals(UiText.Resource(Res.string.payment_duplicate_title_one), dialog.title)
-            assertEquals(UiText.Resource(Res.string.payment_duplicate_intro_payment), dialog.intro)
-            assertEquals(UiText.Resource(Res.string.payment_duplicate_question_one), dialog.question)
+            assertEquals(UiText.Resource(Res.string.payment_duplicate_intro_payment, listOf("Apt 3B")), dialog.intro)
             assertEquals(
                 listOf(
                     DuplicateMatchUiState(
                         kind = null,
                         date = "Mar 2",
                         method = PaymentMethod.Zelle,
-                        by = UiText.Resource(Res.string.payment_duplicate_you),
-                        amount = "$1,500.00",
+                        amount = UiText.Resource(Res.string.payment_duplicate_paid, listOf("$1,500.00")),
                     ),
                 ),
                 dialog.matches,
@@ -487,36 +491,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun aDuplicateByAnotherMemberShowsTheirName() =
-        runTest {
-            showOverview()
-            val match =
-                DuplicateMatch(
-                    DuplicateKind.Payment,
-                    LocalDate(2026, 3, 2),
-                    150_000,
-                    null,
-                    "Sam Rivera",
-                    "sam-account",
-                )
-            repository.logResult = Err(PaymentError.PossibleDuplicate(listOf(match)))
-            val editor = openEditor()
-            enterAmount(editor, "1,500.00")
-
-            editor.onSaveClicked()
-            runCurrent()
-
-            assertEquals(
-                UiText.Plain("Sam Rivera"),
-                editor.uiState.value.duplicate
-                    ?.matches
-                    ?.single()
-                    ?.by,
-            )
-        }
-
-    @Test
-    fun aPaymentAndLateFeeDuplicateAreListedTogetherUnderOneQuestion() =
+    fun aPaymentAndLateFeeDuplicateAreListedTogetherInOneDialog() =
         runTest {
             showOverview()
             val matches =
@@ -548,8 +523,7 @@ class PaymentEditorViewModelTest : MainDispatcherTest() {
 
             val dialog = checkNotNull(editor.uiState.value.duplicate)
             assertEquals(UiText.Resource(Res.string.payment_duplicate_title_many), dialog.title)
-            assertEquals(UiText.Resource(Res.string.payment_duplicate_intro_both), dialog.intro)
-            assertEquals(UiText.Resource(Res.string.payment_duplicate_question_both), dialog.question)
+            assertEquals(UiText.Resource(Res.string.payment_duplicate_intro_both, listOf("Apt 3B")), dialog.intro)
             assertEquals(
                 listOf(
                     UiText.Resource(Res.string.payment_duplicate_kind_payment),

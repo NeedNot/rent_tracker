@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="calendar_heading">Calendar</string>
     <string name="calendar_previous_year">Previous year</string>
     <string name="calendar_next_year">Next year</string>
     <string name="calendar_caption">Tap a month to see which payments covered it.</string>
 
     <string name="calendar_square_owed">%1$s owed</string>
+    <string name="calendar_square_due">Due %1$s</string>
+    <string name="calendar_description_due_not_late">Due, not late</string>
     <string name="calendar_fee_marker">Fee %1$s</string>
     <string name="calendar_description_fee_unpaid">%1$s late fee unpaid</string>
 
