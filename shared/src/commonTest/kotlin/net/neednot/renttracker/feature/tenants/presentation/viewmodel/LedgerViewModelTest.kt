@@ -128,6 +128,7 @@ class LedgerViewModelTest : MainDispatcherTest() {
                     title = UiText.Resource(Res.string.ledger_rent_title, listOf("March")),
                     details = emptyList(),
                     amount = UiText.Plain("$1,500.00"),
+                    isPaidAmount = false,
                     balance = UiText.Resource(Res.string.balance_owes, listOf("$2,050.00")),
                     chips = emptyList(),
                     isStruckThrough = false,
@@ -257,7 +258,7 @@ class LedgerViewModelTest : MainDispatcherTest() {
             val row = rowOf(paymentEntry(status = bounced, balance = null))
 
             assertEquals(listOf(EntryChip.Bounced), row.chips)
-            assertEquals(false, row.isStruckThrough)
+            assertEquals(true, row.isStruckThrough)
             assertEquals(listOf(UiText.Resource(Res.string.ledger_date_by_you, listOf("Feb 19"))), row.details)
             assertEquals(UiText.Plain("$1,500.00"), row.amount)
             assertEquals(true, row.canRestore)

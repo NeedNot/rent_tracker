@@ -39,9 +39,11 @@ internal fun ComposeContentTestRule.captureScreen(
 internal fun ComposeContentTestRule.captureScreenWithDialog(
     name: String,
     isDark: Boolean,
+    beforeCapture: ComposeContentTestRule.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     setThemedContent(isDark, content)
+    beforeCapture()
     waitForIdle()
     captureScreenRoboImage(goldenPath(name, isDark))
 }

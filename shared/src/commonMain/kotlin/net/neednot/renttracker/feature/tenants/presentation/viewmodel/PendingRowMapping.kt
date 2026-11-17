@@ -12,8 +12,8 @@ import net.neednot.renttracker.resources.Res
 import net.neednot.renttracker.resources.ledger_amount_paid
 import net.neednot.renttracker.resources.ledger_payment_title
 import net.neednot.renttracker.resources.pending_banner_attention
+import net.neednot.renttracker.resources.pending_banner_attention_body
 import net.neednot.renttracker.resources.pending_banner_waiting
-import net.neednot.renttracker.resources.pending_banner_waiting_subtitle
 import net.neednot.renttracker.resources.pending_row_not_saved
 import net.neednot.renttracker.resources.pending_row_possible_duplicate
 import net.neednot.renttracker.resources.pending_row_saved_on_phone
@@ -56,6 +56,7 @@ internal fun List<PendingPayment>.toBannerUiState(): PendingBannerUiState? {
         firstToReview != null -> {
             PendingBannerUiState.Attention(
                 title = countText(Res.plurals.pending_banner_attention, needingAttention.size),
+                message = countText(Res.plurals.pending_banner_attention_body, needingAttention.size),
                 reviewClientId = firstToReview.clientId,
             )
         }
@@ -63,7 +64,6 @@ internal fun List<PendingPayment>.toBannerUiState(): PendingBannerUiState? {
         isNotEmpty() -> {
             PendingBannerUiState.Waiting(
                 title = countText(Res.plurals.pending_banner_waiting, size),
-                subtitle = UiText.Resource(Res.string.pending_banner_waiting_subtitle),
             )
         }
 

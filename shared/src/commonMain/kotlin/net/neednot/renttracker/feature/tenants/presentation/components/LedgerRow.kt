@@ -1,10 +1,12 @@
 package net.neednot.renttracker.feature.tenants.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -12,90 +14,98 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
-import net.neednot.renttracker.core.ui.asString
-import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerRowUiState
-import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.ledger_may_not_apply
-import net.neednot.renttracker.resources.ledger_restore
-import org.jetbrains.compose.resources.stringResource
-
-private val DateColumnWidth = 56.dp
+import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.core.designsystem.theme.Sizes
+import net.neednot.renttracker.core.designsystem.theme.Spacing
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun LedgerRow(
-    row: LedgerRowUiState,
-    onClicked: () -> Unit,
-    onRestoreClicked: () -> Unit,
+    date: String,
+    title: String,
+    amount: String,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    style: LedgerRowStyle = LedgerRowStyle.Normal,
+    isPaidAmount: Boolean = false,
+    balance: String? = null,
+    meta: (@Composable FlowRowScope.() -> Unit)? = null,
+    endAction: (@Composable () -> Unit)? = null,
 ) {
-    val strike = if (row.isStruckThrough) TextDecoration.LineThrough else TextDecoration.None
+    val scheme = MaterialTheme.colorScheme
+    val inactive = RentTrackerTheme.colors.entryInactive
+    val isInactive = style != LedgerRowStyle.Normal
+    val strongColor = if (isInactive) inactive.onContainer else scheme.onSurface
+    val dateColor = if (isInactive) inactive.onContainer else scheme.onSurfaceVariant
+    val amountColor =
+        when {
+            isInactive -> inactive.onContainer
+            isPaidAmount -> RentTrackerTheme.colors.statusPaid.onContainer
+            else -> scheme.onSurface
+        }
+    val decoration = if (style == LedgerRowStyle.Void) TextDecoration.LineThrough else TextDecoration.None
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp)
-                .clickable(enabled = row.isTappable, role = Role.Button, onClick = onClicked)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .background(if (isInactive) inactive.container else Color.Transparent)
+                .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+                .heightIn(min = Sizes.touchTarget)
+                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         Text(
-            text = row.date,
-            modifier = Modifier.width(DateColumnWidth),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
+            text = date,
+            modifier = Modifier.width(Sizes.touchTarget),
+            color = dateColor,
+            style = MaterialTheme.typography.bodySmall,
         )
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(text = row.title.asString(), textDecoration = strike, style = MaterialTheme.typography.bodyLarge)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                row.chips.forEach { chip -> EntryChipLabel(chip) }
-            }
-            row.details.forEach { detail ->
-                Text(
-                    text = detail.asString(),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Text(
+                text = title,
+                color = strongColor,
+                textDecoration = decoration,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            meta?.let {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                    content = it,
                 )
-            }
-            if (row.mayNotApply) {
-                Text(
-                    text = stringResource(Res.string.ledger_may_not_apply),
-                    color = MaterialTheme.colorScheme.tertiary,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-            if (row.canRestore) {
-                TextButton(onClick = onRestoreClicked, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(Res.string.ledger_restore))
-                }
             }
         }
-        Column(horizontalAlignment = Alignment.End) {
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(
-                text = row.amount.asString(),
+                text = amount,
+                color = amountColor,
                 textAlign = TextAlign.End,
-                textDecoration = strike,
-                style = MaterialTheme.typography.bodyLarge,
+                textDecoration = decoration,
+                maxLines = 1,
+                style = MaterialTheme.typography.titleSmall,
             )
-            row.balance?.let { balance ->
+            balance?.let {
                 Text(
-                    text = balance.asString(),
+                    text = it,
+                    color = scheme.onSurfaceVariant,
                     textAlign = TextAlign.End,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
+            endAction?.invoke()
         }
     }
+}
+
+@Composable
+internal fun LedgerMeta(text: String) {
+    Text(text = text, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
 }

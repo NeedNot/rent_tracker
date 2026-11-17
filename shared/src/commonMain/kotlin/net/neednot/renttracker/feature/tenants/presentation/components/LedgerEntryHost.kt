@@ -1,10 +1,9 @@
 package net.neednot.renttracker.feature.tenants.presentation.components
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import net.neednot.renttracker.core.designsystem.components.RtBottomSheet
 import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryEditTarget
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerDialogUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.LedgerSheetAction
@@ -59,7 +58,6 @@ internal fun LedgerEntryHost(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EntrySheet(
     sheet: LedgerSheetUiState,
@@ -67,7 +65,7 @@ private fun EntrySheet(
     onActionClicked: (LedgerSheetAction) -> Unit,
     onDismissed: () -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismissed) {
+    RtBottomSheet(onDismissed = onDismissed) {
         LedgerEntrySheet(sheet = sheet, isWorking = isWorking, onActionClicked = onActionClicked)
     }
 }

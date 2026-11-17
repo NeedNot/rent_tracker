@@ -77,7 +77,11 @@ private fun TenantOverview.toContent(
         hasMenu = isOnline,
         canEditDetails = isOnline && !tenant.isArchived,
         lateFeeSuggestion = lateFeeSuggestion?.takeIf { isOnline }?.toUiState(),
-        calendar = parts.calendar?.toCalendarUiState(firstYear = tenant.details.moveIn.year),
+        calendar =
+            parts.calendar?.toCalendarUiState(
+                firstYear = tenant.details.moveIn.year,
+                currentMonth = today.yearMonth,
+            ),
         monthDetail = parts.monthDetail,
         offlineBanner = parts.freshness.offlineBannerText(),
         pendingBanner = parts.pendingPayments.toBannerUiState(),

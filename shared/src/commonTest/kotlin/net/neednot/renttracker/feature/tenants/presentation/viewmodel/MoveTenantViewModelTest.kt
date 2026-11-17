@@ -113,14 +113,14 @@ class MoveTenantViewModelTest : MainDispatcherTest() {
         }
 
     @Test
-    fun withNoTargetsTheEmptyStateNamesTheTenant() =
+    fun withNoTargetsTheEmptyStateIsShown() =
         runTest {
             showing(emptyList())
 
             viewModel.uiState.test {
                 skipItems(1)
 
-                assertEquals(MoveTenantUiState.Empty("Apt 3B"), awaitItem())
+                assertEquals(MoveTenantUiState.Empty, awaitItem())
             }
         }
 

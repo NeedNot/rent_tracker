@@ -46,7 +46,6 @@ internal fun SectionCard(
             )
             actionLabel?.let { RtButton(text = it, onClick = onActionClicked, variant = ButtonVariant.Text) }
         }
-        RtDivider()
         content()
         footerLabel?.let { SectionCardFooter(label = it, onClick = onFooterClicked) }
     }

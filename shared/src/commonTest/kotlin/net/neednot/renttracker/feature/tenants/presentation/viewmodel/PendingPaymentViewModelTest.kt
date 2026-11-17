@@ -40,6 +40,7 @@ import net.neednot.renttracker.resources.ledger_field_date_received
 import net.neednot.renttracker.resources.ledger_field_method
 import net.neednot.renttracker.resources.ledger_method_zelle
 import net.neednot.renttracker.resources.ledger_payment_title
+import net.neednot.renttracker.resources.ledger_sheet_payment
 import net.neednot.renttracker.resources.pending_changed_intro
 import net.neednot.renttracker.resources.pending_changed_title
 import net.neednot.renttracker.resources.pending_duplicate_intro
@@ -52,7 +53,6 @@ import net.neednot.renttracker.resources.pending_rejected_no_permission
 import net.neednot.renttracker.resources.pending_rejected_not_saved
 import net.neednot.renttracker.resources.pending_removed
 import net.neednot.renttracker.resources.pending_sheet_not_sent
-import net.neednot.renttracker.resources.pending_sheet_title
 import net.neednot.renttracker.resources.tenant_error_not_found
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -92,7 +92,7 @@ class PendingPaymentViewModelTest : MainDispatcherTest() {
             assertEquals(
                 PendingSheetUiState(
                     clientId = "c1",
-                    title = UiText.Resource(Res.string.pending_sheet_title, listOf("Apt 3B")),
+                    title = UiText.Resource(Res.string.ledger_sheet_payment),
                     chip = PendingChip.Pending,
                     amount = "$550.00",
                     body =

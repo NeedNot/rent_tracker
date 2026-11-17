@@ -1,49 +1,37 @@
 package net.neednot.renttracker.feature.tenants.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import net.neednot.renttracker.core.data.TenantBalanceState
+import net.neednot.renttracker.core.designsystem.components.Banner
+import net.neednot.renttracker.core.designsystem.components.BannerKind
+import net.neednot.renttracker.core.designsystem.components.ConfirmDialog
+import net.neednot.renttracker.core.designsystem.components.ContentLayout
+import net.neednot.renttracker.core.designsystem.components.ErrorState
+import net.neednot.renttracker.core.designsystem.components.LoadingIndicator
 import net.neednot.renttracker.core.designsystem.components.OfflineBanner
+import net.neednot.renttracker.core.designsystem.components.RtTopAppBar
+import net.neednot.renttracker.core.designsystem.components.StatusChip
+import net.neednot.renttracker.core.designsystem.components.StatusChipKind
+import net.neednot.renttracker.core.designsystem.components.UnimplementedAction
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
+import net.neednot.renttracker.core.designsystem.theme.Spacing
 import net.neednot.renttracker.core.navigation.TenantRoute
 import net.neednot.renttracker.core.ui.UiText
 import net.neednot.renttracker.core.ui.asString
 import net.neednot.renttracker.feature.tenants.presentation.components.BalanceCard
 import net.neednot.renttracker.feature.tenants.presentation.components.CalendarActions
 import net.neednot.renttracker.feature.tenants.presentation.components.CalendarCard
-import net.neednot.renttracker.feature.tenants.presentation.components.EntryActionButtons
 import net.neednot.renttracker.feature.tenants.presentation.components.LateFeeSnackbar
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerEntryHost
 import net.neednot.renttracker.feature.tenants.presentation.components.LedgerItemActions
@@ -55,7 +43,6 @@ import net.neednot.renttracker.feature.tenants.presentation.components.RentTerms
 import net.neednot.renttracker.feature.tenants.presentation.components.TenantDetailsCard
 import net.neednot.renttracker.feature.tenants.presentation.components.TenantMenu
 import net.neednot.renttracker.feature.tenants.presentation.uistate.EntryEditTarget
-import net.neednot.renttracker.feature.tenants.presentation.uistate.LateFeeSuggestionUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.RentTermRowUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantBalanceUiState
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantConfirmationUiState
@@ -64,12 +51,11 @@ import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantStatus
 import net.neednot.renttracker.feature.tenants.presentation.uistate.TenantUiState
 import net.neednot.renttracker.feature.tenants.presentation.viewmodel.TenantViewModel
 import net.neednot.renttracker.resources.Res
-import net.neednot.renttracker.resources.common_cancel
+import net.neednot.renttracker.resources.ic_inventory_2
 import net.neednot.renttracker.resources.tenant_archive_confirm
 import net.neednot.renttracker.resources.tenant_archive_title
 import net.neednot.renttracker.resources.tenant_archived_label
-import net.neednot.renttracker.resources.tenant_back
-import net.neednot.renttracker.resources.tenant_loading
+import net.neednot.renttracker.resources.tenant_error_title
 import net.neednot.renttracker.resources.tenant_restore_confirm
 import net.neednot.renttracker.resources.tenant_restore_title
 import org.jetbrains.compose.resources.stringResource
@@ -103,13 +89,25 @@ fun TenantScreen(
             content = { onLedgerRowClicked, onLedgerRestoreClicked ->
                 TenantContent(
                     uiState = uiState,
-                    onBackClicked = onBackClicked,
-                    onEditDetailsClicked = onEditDetailsClicked,
-                    onChangeRentClicked = onChangeRentClicked,
-                    onRentTermClicked = onRentTermClicked,
-                    onLogPaymentClicked = onLogPaymentClicked,
-                    onAddChargeClicked = { onAddChargeClicked(null, null) },
-                    onViewLedgerClicked = onViewLedgerClicked,
+                    actions =
+                        TenantActions(
+                            onBackClicked = onBackClicked,
+                            onEditDetailsClicked = onEditDetailsClicked,
+                            onChangeRentClicked = onChangeRentClicked,
+                            onRentTermClicked = onRentTermClicked,
+                            onLogPaymentClicked = onLogPaymentClicked,
+                            onAddChargeClicked = { onAddChargeClicked(null, null) },
+                            onViewLedgerClicked = onViewLedgerClicked,
+                            onLateFeeAddClicked = { suggestion ->
+                                onAddChargeClicked(suggestion.month, suggestion.cents)
+                            },
+                            onLateFeeDismissed = viewModel::onLateFeeDismissed,
+                            onMoveClicked = onMoveClicked,
+                            onArchiveClicked = viewModel::onArchiveClicked,
+                            onRestoreClicked = viewModel::onRestoreClicked,
+                            onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
+                            onStatusChangeDismissed = viewModel::onStatusChangeDismissed,
+                        ),
                     itemActions = LedgerItemActions(onLedgerRowClicked, onLedgerRestoreClicked, onPendingClicked),
                     calendarActions =
                         CalendarActions(
@@ -122,13 +120,6 @@ fun TenantScreen(
                                 onAddChargeClicked(addFee.month, addFee.suggestedCents)
                             },
                         ),
-                    onLateFeeAddClicked = { suggestion -> onAddChargeClicked(suggestion.month, suggestion.cents) },
-                    onLateFeeDismissed = viewModel::onLateFeeDismissed,
-                    onMoveClicked = onMoveClicked,
-                    onArchiveClicked = viewModel::onArchiveClicked,
-                    onRestoreClicked = viewModel::onRestoreClicked,
-                    onStatusChangeConfirmed = viewModel::onStatusChangeConfirmed,
-                    onStatusChangeDismissed = viewModel::onStatusChangeDismissed,
                     modifier = modifier,
                 )
             },
@@ -136,209 +127,147 @@ fun TenantScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TenantContent(
+internal fun TenantContent(
     uiState: TenantUiState,
-    onBackClicked: () -> Unit,
-    onEditDetailsClicked: (groupId: String) -> Unit,
-    onChangeRentClicked: () -> Unit,
-    onRentTermClicked: (rentTermId: String) -> Unit,
-    onLogPaymentClicked: () -> Unit,
-    onAddChargeClicked: () -> Unit,
-    onViewLedgerClicked: () -> Unit,
-    itemActions: LedgerItemActions,
-    calendarActions: CalendarActions,
-    onLateFeeAddClicked: (LateFeeSuggestionUiState) -> Unit,
-    onLateFeeDismissed: () -> Unit,
-    onMoveClicked: () -> Unit,
-    onArchiveClicked: () -> Unit,
-    onRestoreClicked: () -> Unit,
-    onStatusChangeConfirmed: () -> Unit,
-    onStatusChangeDismissed: () -> Unit,
+    actions: TenantActions,
     modifier: Modifier = Modifier,
+    itemActions: LedgerItemActions = LedgerItemActions.None,
+    calendarActions: CalendarActions = CalendarActions.None,
 ) {
     val content = uiState as? TenantUiState.Content
     Scaffold(
         modifier = modifier,
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = { content?.let { TenantTitle(name = it.name, groupName = it.groupName) } },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClicked) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(Res.string.tenant_back),
-                            )
-                        }
-                    },
-                    actions = {
-                        content?.takeIf { it.hasMenu }?.let {
-                            TenantMenu(
-                                isArchived = it.isArchived,
-                                canMove = it.canMove,
-                                onEditDetailsClicked = { onEditDetailsClicked(it.groupId) },
-                                onMoveClicked = onMoveClicked,
-                                onArchiveClicked = onArchiveClicked,
-                                onRestoreClicked = onRestoreClicked,
-                            )
-                        }
-                    },
-                )
-                content?.offlineBanner?.let { OfflineBanner(it.asString()) }
-            }
-        },
+        topBar = { TenantTopBar(uiState, actions) },
         bottomBar = {
             content?.lateFeeSuggestion?.let { suggestion ->
                 LateFeeSnackbar(
                     suggestion = suggestion,
-                    onDismissClicked = onLateFeeDismissed,
-                    onAddClicked = { onLateFeeAddClicked(suggestion) },
+                    onDismissClicked = actions.onLateFeeDismissed,
+                    onAddClicked = { actions.onLateFeeAddClicked(suggestion) },
                 )
             }
         },
     ) { contentPadding ->
-        when (uiState) {
-            TenantUiState.Loading -> {
-                Loading(contentPadding)
-            }
+        Column(modifier = Modifier.padding(contentPadding)) {
+            content?.offlineBanner?.let { OfflineBanner(text = it.asString()) }
+            when (uiState) {
+                TenantUiState.Loading -> {
+                    LoadingIndicator()
+                }
 
-            is TenantUiState.Error -> {
-                ErrorMessage(message = uiState.message, contentPadding = contentPadding)
-            }
+                is TenantUiState.Error -> {
+                    ErrorState(
+                        title = stringResource(Res.string.tenant_error_title),
+                        text = uiState.message.asString(),
+                        onRetryClicked = UnimplementedAction,
+                        modifier = Modifier.padding(ContentLayout.List.padding),
+                    )
+                }
 
-            is TenantUiState.Content -> {
-                TenantSections(
-                    tenant = uiState,
-                    onEditDetailsClicked = { onEditDetailsClicked(uiState.groupId) },
-                    onChangeRentClicked = onChangeRentClicked,
-                    onRentTermClicked = onRentTermClicked,
-                    onLogPaymentClicked = onLogPaymentClicked,
-                    onAddChargeClicked = onAddChargeClicked,
-                    onViewLedgerClicked = onViewLedgerClicked,
-                    itemActions = itemActions,
-                    calendarActions = calendarActions,
-                    contentPadding = contentPadding,
-                )
+                is TenantUiState.Content -> {
+                    TenantSections(uiState, actions, itemActions, calendarActions)
+                }
             }
         }
     }
-    content?.monthDetail?.let { detail ->
-        MonthDetailHost(detail = detail, actions = calendarActions)
-    }
+    content?.monthDetail?.let { detail -> MonthDetailHost(detail = detail, actions = calendarActions) }
     content?.statusChange?.confirmation?.let { confirmation ->
         StatusChangeDialog(
             confirmation = confirmation,
-            onConfirmed = onStatusChangeConfirmed,
-            onDismissed = onStatusChangeDismissed,
+            isWorking = content.statusChange.isSaving,
+            onConfirmed = actions.onStatusChangeConfirmed,
+            onDismissed = actions.onStatusChangeDismissed,
         )
     }
 }
 
 @Composable
-private fun TenantTitle(
-    name: String,
-    groupName: String,
+private fun TenantTopBar(
+    uiState: TenantUiState,
+    actions: TenantActions,
 ) {
-    Column {
-        Text(text = name, style = MaterialTheme.typography.titleLarge)
-        Text(
-            text = groupName,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
+    val content = uiState as? TenantUiState.Content
+    RtTopAppBar(
+        title = content?.name.orEmpty(),
+        subtitle = content?.groupName,
+        onNavigationClicked = actions.onBackClicked,
+        actions = {
+            if (content?.isArchived == true) {
+                StatusChip(
+                    text = stringResource(Res.string.tenant_archived_label),
+                    kind = StatusChipKind.Neutral,
+                    modifier = Modifier.padding(end = Spacing.xs),
+                    icon = Res.drawable.ic_inventory_2,
+                )
+            }
+            content?.takeIf { it.hasMenu }?.let {
+                TenantMenu(
+                    isArchived = it.isArchived,
+                    canMove = it.canMove,
+                    onEditDetailsClicked = { actions.onEditDetailsClicked(it.groupId) },
+                    onMoveClicked = actions.onMoveClicked,
+                    onArchiveClicked = actions.onArchiveClicked,
+                    onRestoreClicked = actions.onRestoreClicked,
+                )
+            }
+        },
+    )
 }
 
 @Composable
 private fun TenantSections(
     tenant: TenantUiState.Content,
-    onEditDetailsClicked: () -> Unit,
-    onChangeRentClicked: () -> Unit,
-    onRentTermClicked: (rentTermId: String) -> Unit,
-    onLogPaymentClicked: () -> Unit,
-    onAddChargeClicked: () -> Unit,
-    onViewLedgerClicked: () -> Unit,
+    actions: TenantActions,
     itemActions: LedgerItemActions,
     calendarActions: CalendarActions,
-    contentPadding: PaddingValues,
 ) {
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(contentPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(ContentLayout.List.padding),
+        verticalArrangement = Arrangement.spacedBy(ContentLayout.List.spacing),
     ) {
         tenant.pendingBanner?.let { banner ->
             PendingBanner(banner = banner, onReviewClicked = itemActions.onPendingClicked)
         }
         listOfNotNull(tenant.syncError, tenant.statusChange.error).forEach { error ->
-            Text(
-                text = error.asString(),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Banner(text = error.asString(), kind = BannerKind.Error)
         }
-        if (tenant.isArchived) ArchivedLabel()
-        tenant.balance?.let { balance -> BalanceCard(balance) }
-        EntryActionButtons(
+        BalanceCard(
+            balance = tenant.balance,
             canLogPayment = tenant.canLogPayment,
             canAddCharge = tenant.canAddCharge,
-            onLogPaymentClicked = onLogPaymentClicked,
-            onAddChargeClicked = onAddChargeClicked,
+            onLogPaymentClicked = actions.onLogPaymentClicked,
+            onAddChargeClicked = actions.onAddChargeClicked,
         )
-        tenant.calendar?.let { calendar ->
-            CalendarCard(
-                calendar = calendar,
-                onPreviousYearClicked = calendarActions.onPreviousYearClicked,
-                onNextYearClicked = calendarActions.onNextYearClicked,
-                onMonthClicked = calendarActions.onMonthClicked,
-            )
-        }
+        tenant.calendar?.let { calendar -> CalendarCard(calendar = calendar, actions = calendarActions) }
         LedgerPreviewCard(
+            tenantName = tenant.name,
             items = tenant.ledgerPreview,
             actions = itemActions,
-            onViewFullLedgerClicked = onViewLedgerClicked,
+            onViewFullLedgerClicked = actions.onViewLedgerClicked,
         )
         RentTermsCard(
             rentTerms = tenant.rentTerms,
             isEditable = tenant.canEditDetails,
-            onChangeRentClicked = onChangeRentClicked,
-            onRentTermClicked = onRentTermClicked,
+            onChangeRentClicked = actions.onChangeRentClicked,
+            onRentTermClicked = actions.onRentTermClicked,
         )
         TenantDetailsCard(
             details = tenant.details,
             isEditable = tenant.canEditDetails,
-            onEditClicked = onEditDetailsClicked,
+            onEditClicked = { actions.onEditDetailsClicked(tenant.groupId) },
         )
-    }
-}
-
-@Composable
-private fun ArchivedLabel() {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Icon(imageVector = Icons.Outlined.Inventory2, contentDescription = null, modifier = Modifier.size(16.dp))
-            Text(text = stringResource(Res.string.tenant_archived_label), style = MaterialTheme.typography.labelLarge)
-        }
     }
 }
 
 @Composable
 private fun StatusChangeDialog(
     confirmation: TenantConfirmationUiState,
+    isWorking: Boolean,
     onConfirmed: () -> Unit,
     onDismissed: () -> Unit,
 ) {
@@ -347,36 +276,14 @@ private fun StatusChangeDialog(
             TenantStatusAction.Archive -> Res.string.tenant_archive_title to Res.string.tenant_archive_confirm
             TenantStatusAction.Restore -> Res.string.tenant_restore_title to Res.string.tenant_restore_confirm
         }
-    AlertDialog(
-        onDismissRequest = onDismissed,
-        confirmButton = { TextButton(onClick = onConfirmed) { Text(stringResource(confirmLabel)) } },
-        dismissButton = {
-            TextButton(onClick = onDismissed) { Text(stringResource(Res.string.common_cancel)) }
-        },
-        title = { Text(stringResource(title)) },
-        text = { Text(confirmation.message.asString()) },
+    ConfirmDialog(
+        title = stringResource(title),
+        text = confirmation.message.asString(),
+        confirmLabel = stringResource(confirmLabel),
+        onConfirmed = onConfirmed,
+        onDismissed = onDismissed,
+        isConfirmEnabled = !isWorking,
     )
-}
-
-@Composable
-private fun Loading(contentPadding: PaddingValues) {
-    val description = stringResource(Res.string.tenant_loading)
-    Box(modifier = Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = description })
-    }
-}
-
-@Composable
-private fun ErrorMessage(
-    message: UiText,
-    contentPadding: PaddingValues,
-) {
-    Box(
-        modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 32.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = message.asString(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
-    }
 }
 
 @Preview
@@ -395,7 +302,7 @@ private fun TenantContentPreview() {
                             state = TenantBalanceState.Late,
                             total = UiText.Plain("Owes $550.00"),
                             lines = emptyList(),
-                            nextDue = UiText.Plain("Next rent due Apr 1, 2026"),
+                            nextDue = null,
                             partialMoveOutWarning = null,
                         ),
                     rentTerms =
@@ -406,42 +313,21 @@ private fun TenantContentPreview() {
                                 period = UiText.Plain("From Jan 2025"),
                                 isCurrent = true,
                             ),
-                            RentTermRowUiState(
-                                rentTermId = "r1",
-                                summary = UiText.Plain("$1,450.00 a month · due the 1st"),
-                                period = UiText.Plain("Jan 2024 – Dec 2024"),
-                                isCurrent = false,
-                            ),
                         ),
                     details =
                         TenantDetailsUiState(
                             contactName = "Dana Whitfield",
-                            phone = "(555) 014-2290",
-                            email = "dana.w@example.com",
+                            phone = null,
+                            email = null,
                             movedIn = "Jan 1, 2024",
                             lastDayInUnit = null,
-                            securityDeposit = "$1,500.00",
+                            securityDeposit = null,
                             gracePeriod = UiText.Plain("5 days (group)"),
                             lateFee = UiText.Plain("$50.00 (group)"),
-                            notes = "Two roommates on the lease; Dana sends rent for both.",
+                            notes = null,
                         ),
                 ),
-            onBackClicked = {},
-            onEditDetailsClicked = {},
-            onChangeRentClicked = {},
-            onRentTermClicked = {},
-            onLogPaymentClicked = {},
-            onAddChargeClicked = {},
-            onViewLedgerClicked = {},
-            itemActions = LedgerItemActions.None,
-            calendarActions = CalendarActions.None,
-            onLateFeeAddClicked = {},
-            onLateFeeDismissed = {},
-            onMoveClicked = {},
-            onArchiveClicked = {},
-            onRestoreClicked = {},
-            onStatusChangeConfirmed = {},
-            onStatusChangeDismissed = {},
+            actions = TenantActions(),
         )
     }
 }

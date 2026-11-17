@@ -105,13 +105,15 @@ class MoveTenantViewModel(
                 val selected = targets.selected(picked)
                 when {
                     selected == null -> {
-                        MoveTenantUiState.Empty(overview.tenant.details.name)
+                        MoveTenantUiState.Empty
                     }
 
                     else -> {
                         MoveTenantUiState.Content(
                             tenantName = overview.tenant.details.name,
                             targets = targets.map { it.toUiState(isSelected = it == selected) },
+                            contactName = overview.tenant.details.contactName,
+                            balance = overview.balance?.total?.inWords(),
                             confirmation = overview.moveConfirmation(selected).takeIf { confirming },
                             isMoving = moving,
                         )

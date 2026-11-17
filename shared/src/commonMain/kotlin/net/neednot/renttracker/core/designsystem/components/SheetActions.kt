@@ -13,7 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.Role
+import net.neednot.renttracker.core.designsystem.theme.Opacity
 import net.neednot.renttracker.core.designsystem.theme.RentTrackerTheme
 import net.neednot.renttracker.core.designsystem.theme.Sizes
 import net.neednot.renttracker.core.designsystem.theme.Spacing
@@ -37,6 +39,7 @@ internal fun SheetAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     tone: ActionTone = ActionTone.Default,
+    enabled: Boolean = true,
 ) {
     val scheme = MaterialTheme.colorScheme
     val color = if (tone == ActionTone.Destructive) scheme.error else scheme.onSurface
@@ -44,7 +47,8 @@ internal fun SheetAction(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(role = Role.Button, onClick = onClick)
+                .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                .alpha(if (enabled) 1f else Opacity.DISABLED)
                 .heightIn(min = Sizes.field)
                 .padding(horizontal = Spacing.xs),
         horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
